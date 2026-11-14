@@ -27,7 +27,7 @@ Lever les points bloquants du §4 du plan v2 avec de vraies livraisons, sur la b
 - [ ] **Remboursement partiel** (commande E, deux articles) → livraison avec `PARTIALLY_REFUNDED` ?
 - [ ] Vérifier sur chaque livraison : HMAC valide, en-têtes `Shopify-Webhook-Id` présents, forme exacte de la charge utile (champs d'enveloppe, emplacement de `data`), `statusPageUrl` rempli.
 - [ ] Lire le délai entre l'action dans l'admin et la livraison.
-- [ ] Reporter les résultats de `probe.php` (M1) : `fastcgi_finish_request` et GD.
+- [x] Reporter les résultats de `probe.php` (M1), relevés le 14/11 sur OVH : PHP 8.5.12 en `fpm-fcgi`, `fastcgi_finish_request` **oui** (traitement après réponse possible en M7), GD **oui** (PNG), Imagick oui, `pdo_mysql` oui. Fuseau PHP par défaut `Europe/Paris` : sans effet, l'API force UTC.
 - [ ] Copier une charge utile réelle de chaque cas (payée, non taguée, annulée, remboursée, avec `errors` si l'occasion se présente) dans `tests/fixtures/`, **e-mail remplacé par une adresse fictive**. Elles serviront aux tests de M3.
 - [ ] Supprimer `public/probe.php`.
 

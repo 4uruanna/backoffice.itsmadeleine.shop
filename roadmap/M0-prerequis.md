@@ -67,8 +67,8 @@ query commande_qr($orderId: ID!) {
 
 - [x] Créer le sous-domaine `app.itsmadeleine.shop` (multisite), dossier racine `backoffice/public`, SSL activé (domaine changé le 14/11, `backoffice.` abandonné).
 - [x] Choisir la version de PHP disponible la plus récente et la noter : **PHP 8.5**. : Docker (M1) et `.ovhconfig` utiliseront la même.
-- [ ] Vérifier sur `webhosting-infos.hosting.ovh.net` que l'extension **GD** est présente.
-- [ ] Créer la base MySQL et noter hôte, nom, utilisateur et mot de passe.
+- [x] Vérifier que l'extension **GD** est présente : oui (vu par `probe.php`).
+- [x] Créer la base MySQL et noter hôte, nom, utilisateur et mot de passe.
 - [ ] Préparer l'accès FTP/SFTP (identifiants, client FTP).
 
 ## Vérifications depuis ton poste
@@ -123,10 +123,10 @@ cd shopify && pnpm app:link && pnpm app:deploy
 | Boîte `commandes@` créée | Oui ; SMTP `ssl0.ovh.net:465` SSL/TLS, identifiant = adresse complète | 14/11 |
 | SPF / DKIM / DMARC publiés | | |
 | Test Gmail : `spf=` / `dkim=` | | |
-| Sous-domaine + SSL | `app.itsmadeleine.shop` créé ; HTTPS à confirmer par `/health` | 14/11 |
+| Sous-domaine + SSL | `app.itsmadeleine.shop` créé, HTTPS OK (`/health` → `ok`) | 14/11 |
 | Version de PHP OVH | 8.5 | 14/11 |
-| Extension GD | | |
-| Base MySQL (hôte, nom) | | |
+| Extension GD | Oui (PNG pris en charge) ; Imagick aussi présent | 14/11 |
+| Base MySQL (hôte, nom) | Créée, connexion OK depuis l'API (valeurs dans `.env` uniquement) | 14/11 |
 | Accès FTP/SFTP | | |
 
 ## Critères de fin
