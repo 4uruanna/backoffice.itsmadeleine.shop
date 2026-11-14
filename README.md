@@ -8,7 +8,21 @@ API du QR code de retrait en boutique : réception des Events Shopify, envoi du 
 
 ## Développement local
 
-Prérequis : Docker avec le plugin Compose v2 (`docker compose version` doit répondre). Sans lui, `docker compose …` échoue avec `unknown flag`. Sur Linux : paquet `docker-compose-plugin` ; sur Mac et Windows : Docker Desktop l'inclut.
+Prérequis : Docker avec le plugin Compose v2 (`docker compose version` doit répondre). Sans lui, `docker compose …` échoue avec `unknown flag`. Sur Linux : paquet `docker-compose-plugin`.
+
+Sur Mac avec Homebrew, la formule `docker` n'est que le client : il faut une VM, par exemple Colima.
+
+```bash
+brew install colima docker-compose docker-buildx
+```
+
+Ajouter `"cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]` dans `~/.docker/config.json`, puis démarrer la VM (après chaque redémarrage du Mac) :
+
+```bash
+colima start
+```
+
+Sans Docker, la release peut aussi se préparer avec Composer installé sur le poste (`brew install composer`) : `USE_HOST_COMPOSER=1 scripts/build-release.sh`.
 
 ```bash
 cp .env.example .env
