@@ -17,7 +17,8 @@ Tout ce qui ne demande pas de code et qui prend du temps calendaire : forfait, a
 - [ ] Déclarer l'accès aux données client protégées pour le champ **e-mail** (niveau 2), si le Dev Dashboard le demande pour une app personnalisée.
 - [x] Shopify CLI ajoutée au dépôt : `@shopify/cli` 5.0.1 en dépendance de dev dans `shopify/package.json`, gérée avec **pnpm 12.18.0** (champ `packageManager`, via Corepack ; Node ≥ 22.12). Installer avec `cd shopify && pnpm install --frozen-lockfile`, puis l'appeler par `pnpm exec shopify` (les Events demandent au moins la 3.92). Le script d'installation d'`esbuild` est autorisé dans `pnpm-workspace.yaml`. Ne pas taper `pnpm deploy` (commande intégrée de pnpm) : utiliser `pnpm app:deploy`. et relier le dossier `shopify/` à l'app (`shopify app config link`).
 - [x] Écrire `shopify/shopify.app.toml` (fait, reste le `client_id` après le link) : `client_id`, `application_url = "https://backoffice.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
-- [ ] `shopify app deploy`, puis installer l'app sur la boutique de production.
+- [x] `shopify app deploy` : version `itsmadeleine-love-2` publiée le 14/11.
+- [ ] Installer l'app sur la boutique de production.
 - [ ] Noter le **secret client** de l'app (servira pour le HMAC, dans `.env`).
 
 Abonnement (remplace celui du §5 du plan v2) :
@@ -114,7 +115,7 @@ cd shopify && pnpm app:link && pnpm app:deploy
 | Forfait Shopify | | |
 | Version Shopify CLI | | |
 | `client_id` de l'app | (dans `shopify/shopify.app.toml`) | |
-| Déclencheurs acceptés au deploy | `order.displayFinancialStatus` (validé) ; `order.cancellation` (à confirmer au 2e deploy) | 14/11 |
+| Déclencheurs acceptés au deploy | `order.displayFinancialStatus` et `order.cancellation`, un seul abonnement avec `$orderId` ; version `itsmadeleine-love-2` publiée | 14/11 |
 | Message de refus éventuel (exact) | 1er deploy : `order.cancelledAt` inconnu en 2026-10 ; scope `read_orders` non demandé (fichier réécrit par `config link` ?) | 14/11 |
 | App installée sur la boutique | | |
 | Accès données client protégées (e-mail) | | |
