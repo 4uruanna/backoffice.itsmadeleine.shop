@@ -1,0 +1,83 @@
+# M0 — Prérequis Shopify, OVH et mail
+
+**Quand** : samedi 14/11, en premier (le DNS doit commencer à se propager tôt).
+**Dépend de** : rien.
+**Débloque** : M1 et M2.
+
+## Objectif
+
+Tout ce qui ne demande pas de code et qui prend du temps calendaire : forfait, app Shopify, abonnement Events, boîte mail et DNS, vérifications de l'hébergement.
+
+## Tâches
+
+### Shopify
+
+- [ ] Lire le forfait de la boutique (admin → Paramètres → Forfait) et le noter dans `ROADMAP.md`. Sur Basic, préparer dès maintenant l'[annexe plan B](annexe-plan-b.md).
+- [ ] Créer l'app dans le Dev Dashboard (organisation de la boutique), non intégrée à l'admin (`embedded = false`).
+- [ ] Déclarer l'accès aux données client protégées pour le champ **e-mail** (niveau 2), si le Dev Dashboard le demande pour une app personnalisée.
+- [ ] Installer Shopify CLI en local (≥ 4.83) et relier le dossier `shopify/` à l'app (`shopify app config link`).
+- [ ] Écrire `shopify/shopify.app.toml` : `client_id`, `application_url = "https://backoffice.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
+- [ ] `shopify app deploy`, puis installer l'app sur la boutique de production.
+- [ ] Noter le **secret client** de l'app (servira pour le HMAC, dans `.env`).
+
+Abonnement (remplace celui du §5 du plan v2) :
+
+```toml
+[events]
+api_version = "2026-10"
+
+[[events.subscription]]
+handle = "commande-qr-retrait"
+topic = "Order"
+actions = ["create", "update"]
+triggers = ["order.displayFinancialStatus", "order.cancelledAt"]
+uri = "https://backoffice.itsmadeleine.shop/webhooks/shopify/order-paid"
+query = """
+query commande_qr($orderId: ID!) {
+  order(id: $orderId) {
+    legacyResourceId
+    name
+    email
+    statusPageUrl
+    displayFinancialStatus
+    cancelledAt
+    lineItems(first: 25) {
+      nodes { product { tags } }
+    }
+  }
+}
+"""
+```
+
+- Pas de `query_filter` : l'API reçoit les passages à « payée », les annulations et les remboursements, et décide elle-même (M3).
+- Si `shopify app deploy` refuse `order.cancelledAt` comme déclencheur ou la complexité de la requête (limite de 100 points), noter le message exact : le repli est décrit dans M3.
+
+### Mail (OVH MX Plan)
+
+- [ ] Créer la boîte `commandes@itsmadeleine.shop` dans l'espace client et noter son mot de passe (`.env` uniquement).
+- [ ] Vérifier l'enregistrement SPF : un seul TXT `v=spf1 include:mx.ovh.com ~all` (fusionner s'il en existe déjà un).
+- [ ] Activer le DKIM dans l'espace client MX Plan.
+- [ ] Ajouter un DMARC en surveillance : `_dmarc` TXT `v=DMARC1; p=none; rua=mailto:<adresse de rapport>`.
+- [ ] Envoyer un mail de test depuis le webmail vers une adresse Gmail et lire l'en-tête : `spf=pass`, `dkim=pass` (à refaire le soir si le DNS n'a pas fini de se propager).
+
+### Hébergement OVH Perso
+
+- [ ] Créer le sous-domaine `backoffice.itsmadeleine.shop` (multisite), dossier racine `backoffice/public`, SSL activé.
+- [ ] Choisir la version de PHP disponible la plus récente (8.3 ou 8.4) et la noter : Docker (M1) et `.ovhconfig` utiliseront la même.
+- [ ] Vérifier sur `webhosting-infos.hosting.ovh.net` que l'extension **GD** est présente.
+- [ ] Créer la base MySQL et noter hôte, nom, utilisateur et mot de passe.
+- [ ] Préparer l'accès FTP/SFTP (identifiants, client FTP).
+
+## Critères de fin
+
+- Forfait connu et noté.
+- App installée sur la boutique ; `shopify app deploy` a accepté l'abonnement (ou le refus est documenté).
+- `https://backoffice.itsmadeleine.shop` répond en HTTPS (même avec une page vide).
+- Boîte mail créée, DKIM activé, SPF et DMARC publiés.
+- Version de PHP, présence de GD et accès base notés.
+
+## Risques
+
+- **Propagation DNS** : jusqu'à quelques heures. À lancer en premier.
+- **Création du certificat SSL** sur le sous-domaine : parfois longue chez OVH. Shopify livre uniquement en HTTPS.
+- **Abonnement refusé** au déploiement : on perd du temps sur M2. Le message d'erreur exact oriente vers le repli.

@@ -1,0 +1,58 @@
+# M8 — Recette et mise en service
+
+**Quand** : mercredi 18/11. Mise en service le soir au plus tard.
+**Dépend de** : M7.
+**Débloque** : le service en production le 19/11.
+
+## Objectif
+
+Rejouer tous les scénarios sur la boutique de production, avec le code final déployé, puis ouvrir le service.
+
+## Préparation
+
+- [ ] Déploiement FTP de la version finale (`composer install --no-dev`), migration à jour, `.env` relu (`MAIL_MAX_PER_HOUR=120`, `DEBUG_DELIVERIES=0`).
+- [ ] Produit de test de M2 (tagué, non publié) toujours disponible.
+- [ ] Commandes passées par brouillon depuis l'admin (voir M2), client = ta propre adresse.
+
+## Scénarios
+
+| # | Scénario | Attendu |
+|---|---|---|
+| 1 | Commande taguée, payée à la création | Mail reçu en quelques secondes, ligne `sent` |
+| 2 | Commande taguée, payée plus tard | Un seul mail, au passage à payée |
+| 3 | Commande non taguée | Aucun mail, ligne `ignored` |
+| 4 | Panier mixte (tagué + non tagué) | Un mail |
+| 5 | Livraison en double (renvoyer depuis le tableau de bord de l'app si possible, sinon `curl` signé avec une fixture) | Aucun second mail |
+| 6 | SMTP en panne (mauvais mot de passe dans `.env`, cron lancé à la main) | `failed` → `error` au 3e échec, une alerte groupée |
+| 7 | Bucket saturé (`MAIL_MAX_PER_HOUR=1`, deux commandes) | Un mail, une commande `pending` / `rate_limited`, envoyée au passage suivant du cron après remise à 120 |
+| 8 | Commande sans e-mail client (brouillon sans client) | `error` / `no_email`, alerte |
+| 9 | Scan depuis le téléphone du staff connecté à l'admin | La commande s'ouvre (app Shopify ou navigateur) |
+| 10 | Scan depuis un téléphone non connecté | Page de connexion Shopify |
+| 11 | Commande annulée **après** l'envoi, puis scan | Page d'avertissement « annulée » avec le lien vers la commande |
+| 12 | Commande remboursée en totalité, puis scan | Page d'avertissement « remboursée » |
+| 13 | Commande remboursée partiellement, puis scan | Redirection normale |
+| 14 | Commande annulée **avant** l'envoi (bucket saturé) | Aucun mail ne part |
+| 15 | Jeton inventé (`/r/000…`) | `404` neutre |
+| 16 | Mail reçu sur Gmail et sur Outlook | Hors spam, QR affiché, lien de statut correct |
+| 17 | Si possible, une vraie commande en ligne payée avec un petit montant, puis remboursée | Même résultat que 1, puis 12 |
+
+- [ ] Rétablir `.env` après les scénarios 6 et 7 (mot de passe SMTP, plafond à 120).
+
+## Mise en service
+
+- [ ] Annuler et archiver toutes les commandes de test ; laisser le produit de test non publié (ou l'archiver).
+- [ ] Taguer `retrait-qr` sur les vrais produits à retirer en boutique.
+- [ ] Brief du staff (5 min) : scanner avec l'appareil photo, rester connecté à l'app Shopify sur le téléphone, marquer la commande comme retirée dans Shopify, ne rien remettre si la page rouge s'affiche.
+- [ ] Vider ou conserver les lignes de test en base (les supprimer pour un suivi propre).
+- [ ] Surveillance renforcée jeudi 19 et vendredi 20 : requêtes de suivi matin et soir, boîte d'alertes, journal du cron.
+
+## Critères de fin
+
+- Les 16 premiers scénarios passent (le 17 si possible).
+- Les produits concernés sont tagués.
+- Le staff sait scanner et réagir à la page d'avertissement.
+
+## Si un scénario bloque mercredi soir
+
+- Bloquant pour le client (pas de mail, mail en spam, QR illisible) : ne pas taguer les produits, le service reste inactif sans effet sur les commandes.
+- Non bloquant (alerte mal formée, purge) : mise en service, correction en M9.
