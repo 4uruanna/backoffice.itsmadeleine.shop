@@ -12,9 +12,9 @@ Tout ce qui ne demande pas de code et qui prend du temps calendaire : forfait, a
 
 ### Shopify
 
-- [ ] Lire le forfait de la boutique (admin → Paramètres → Forfait) et le noter dans `ROADMAP.md`. Sur Basic, préparer dès maintenant l'[annexe plan B](annexe-plan-b.md).
+- [x] Lire le forfait de la boutique (admin → Paramètres → Forfait) et le noter dans `ROADMAP.md` : **Basic**. Préparer dès maintenant l'[annexe plan B](annexe-plan-b.md), et avancer le test de la commande A (M2) au 14/11 au soir.
 - [x] Créer l'app dans le Dev Dashboard **de l'organisation du client** (le développeur y a été ajouté comme membre), non intégrée à l'admin (`embedded = false`) : `itsmadeleine.app`. La première app (`itsmadeleine.love`, organisation du développeur) ne pouvait pas s'installer : supprimée.
-- [ ] Déclarer l'accès aux données client protégées pour le champ **e-mail** (niveau 2), si le Dev Dashboard le demande pour une app personnalisée.
+- [x] Déclarer l'accès aux données client protégées pour le champ **e-mail** (niveau 2), si le Dev Dashboard le demande : aucune section de ce type dans le Dev Dashboard de `itsmadeleine.app` (14/11). Seule une vraie livraison dira si l'e-mail est accessible (M2, commande A).
 - [x] Shopify CLI ajoutée au dépôt : `@shopify/cli` 5.0.1 en dépendance de dev dans `shopify/package.json`, gérée avec **pnpm 12.18.0** (champ `packageManager`, via Corepack ; Node ≥ 22.12). Installer avec `cd shopify && pnpm install --frozen-lockfile`, puis l'appeler par `pnpm exec shopify` (les Events demandent au moins la 3.92). Le script d'installation d'`esbuild` est autorisé dans `pnpm-workspace.yaml`. Ne pas taper `pnpm deploy` (commande intégrée de pnpm) : utiliser `pnpm app:deploy`.
 - [x] Relier le dossier `shopify/` à l'app (`shopify app config link`). Le link crée un fichier `shopify.app.<nom>.toml` **sans `[events]`** : on n'en garde que le `client_id`, recopié dans `shopify.app.toml`, seul fichier versionné.
 - [x] Écrire `shopify/shopify.app.toml` : `client_id`, `application_url = "https://app.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
@@ -113,7 +113,7 @@ cd shopify && pnpm app:link && pnpm app:deploy
 
 | Élément | Valeur | Date |
 |---|---|---|
-| Forfait Shopify | | |
+| Forfait Shopify | **Basic** | 14/11 |
 | Version Shopify CLI | | |
 | `client_id` de l'app | `a977545e9444eb4c8d30c169b1ed4c6d` (`itsmadeleine.app`, organisation du client) | 14/11 |
 | Déclencheurs acceptés au deploy | `order.displayFinancialStatus` et `order.cancellation`, un seul abonnement avec `$orderId` (validé sur l'ancienne app, version `itsmadeleine-love-2`) ; redéployé sur `itsmadeleine.app` ; URI de livraison passée à `https://app.itsmadeleine.shop/webhooks/shopify/order-paid` (version active vérifiée dans le Dev Dashboard) | 14/11 |

@@ -73,7 +73,7 @@ Ces changements découlent des décisions ci-dessus ; ils sont détaillés dans 
 
 ## Points encore ouverts
 
-- **Forfait Shopify inconnu** : à lire dans l'admin (Paramètres → Forfait) dès M0. Sur le forfait Basic, le risque de no-go en M2 est élevé.
+- **Forfait Shopify : Basic** (relevé le 14/11). Risque de no-go élevé en M2 : sources contradictoires sur l'accès d'une app personnalisée à l'e-mail client sur ce forfait. Commande A testée dès le 14/11 au soir pour trancher plus tôt ; plan B préparé en parallèle.
 - Déclencheurs : `order.cancelledAt` n'existe pas (refusé au deploy du 14/11), remplacé par `order.cancellation`. Les livraisons réelles sur annulation et remboursement restent à vérifier en M2. Repli décrit dans M3.
 - Délais de réponse et nouveaux essais d'Events : on suppose les mêmes que pour les webhooks classiques (5 s, 8 essais sur 4 h).
 
