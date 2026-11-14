@@ -91,9 +91,11 @@ Par rapport au plan v2 : statut `error`, colonnes `status_page_url`, `error_code
 
 - [x] `docker compose up` puis `curl localhost:8080/health` → `200` (vérifié le 14/11).
 - [x] `https://app.itsmadeleine.shop/health` → `200` sur OVH (14/11).
-- [x] En local : un `POST` signé à la main (secret de test) est accepté et journalisé ; non signé → `401`. À refaire sur OVH avec le vrai secret.
+- [x] En local puis sur OVH (14/11, vrai secret) : un `POST` signé à la main est accepté (`200`) et journalisé ; non signé → `401`.
 - [x] `probe.php` a donné ses résultats ; ils sont notés dans M2.
-- `.env` absent du dépôt, présent sur le serveur, hors racine web.
+- [x] `.env` absent du dépôt, présent sur le serveur, hors racine web (`/.env` → refusé).
+
+**M1 terminé le 14/11.**
 
 ## Risques
 

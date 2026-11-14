@@ -24,7 +24,7 @@
 | # | Jalon | Dépend de | Bloquant pour le 19/11 |
 |---|---|---|---|
 | M0 | [Prérequis Shopify, OVH et mail](roadmap/M0-prerequis.md) | — | Oui |
-| M1 | [Socle de l'API et sonde de livraison](roadmap/M1-socle.md) | M0 | Oui |
+| M1 | [Socle de l'API et sonde de livraison](roadmap/M1-socle.md) ✅ 14/11 | M0 | Oui |
 | M2 | [Validation sur la boutique (go/no-go)](roadmap/M2-go-no-go.md) | M0, M1 | Oui, décide plan A ou plan B |
 | M3 | [Réception Events](roadmap/M3-reception-events.md) | M2 | Oui |
 | M4 | [QR code et route de scan](roadmap/M4-qr-et-scan.md) | M3 | Oui |
