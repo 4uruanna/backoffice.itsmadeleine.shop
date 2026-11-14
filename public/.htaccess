@@ -1,0 +1,11 @@
+# Aucun fichier caché servi (.ovhconfig, .htaccess…).
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+Options -Indexes
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

@@ -3,3 +3,4 @@
 /var/
 /shopify/.shopify/
 /shopify/node_modules/
+/build/

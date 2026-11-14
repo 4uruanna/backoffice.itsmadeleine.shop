@@ -25,21 +25,21 @@ docker-compose.yml, Dockerfile, composer.json, .env.example, .ovhconfig
 
 ## Tâches
 
-- [ ] `composer.json` : `slim/slim` 4, `slim/psr7`, `vlucas/phpdotenv`, `phpmailer/phpmailer`, `chillerlan/php-qrcode` ; en dev : `phpunit/phpunit`. Contrainte `config.platform.php` = version OVH.
-- [ ] `Dockerfile` (PHP-FPM ou Apache à la version OVH, extensions `pdo_mysql` et `gd`) + `docker-compose.yml` : `php`, `mysql:8`, `mailpit`.
-- [ ] `.env.example` avec toutes les clés, sans valeur secrète :
+- [x] `composer.json` : `slim/slim` 4, `slim/psr7`, `vlucas/phpdotenv`, `phpmailer/phpmailer`, `chillerlan/php-qrcode` ; en dev : `phpunit/phpunit`. Contrainte `config.platform.php` = version OVH (8.5.0). Versions résolues : Slim 4.15, slim/psr7 1.8, phpdotenv 5.8, PHPMailer 7.2, php-qrcode 6.0, PHPUnit 13.4.
+- [x] `Dockerfile` (`php:8.5-apache`, extensions `pdo_mysql`, `gd`, `zip`, racine web `public/`, `var/` dans un volume nommé) + `docker-compose.yml` : `php` (port 8080), `mysql:8.4` (schéma appliqué à la création du volume), `mailpit` (port 8025).
+- [x] `.env.example` avec toutes les clés, sans valeur secrète :
   `APP_URL`, `DB_*`, `SHOPIFY_CLIENT_SECRET`, `SHOPIFY_STORE_HANDLE`, `PICKUP_TAG=retrait-qr`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`, `MAIL_FROM_NAME`, `ALERT_EMAIL`, `MAIL_MAX_PER_HOUR=120`, `MAX_ATTEMPTS=3`, `RETENTION_MONTHS=12`, `MAIL_LOG_RETENTION_DAYS=30`.
   Valeurs SMTP connues (M0) : `SMTP_HOST=ssl0.ovh.net`, `SMTP_PORT=465`, `SMTP_USER=commandes@itsmadeleine.shop`, `MAIL_FROM=commandes@itsmadeleine.shop`. Le port 465 est en TLS implicite : côté PHPMailer, `SMTPSecure = PHPMailer::ENCRYPTION_SMTPS` (et non `STARTTLS`). Ajouter `SMTP_ENCRYPTION` (`smtps` en production, vide en local pour Mailpit, port 1025 sans chiffrement).
 - [x] `.gitignore` : `.env`, `vendor/`, `var/` (fait en M0).
-- [ ] Connexion PDO (exceptions activées, `utf8mb4`, `SET time_zone = '+00:00'`).
-- [ ] `migrations/001_init.sql` (schéma ci-dessous), lancé en local puis via phpMyAdmin.
-- [ ] `public/.htaccess` : tout vers `index.php` ; `.ovhconfig` : version PHP, `environment=production`.
-- [ ] `GET /health` : `SELECT 1` → `200 {"status":"ok"}`, sinon `503`.
-- [ ] Vérification HMAC (service partagé avec M3) : `base64_encode(hash_hmac('sha256', $rawBody, $secret, true))` comparé à `Shopify-Hmac-Sha256` par `hash_equals`. Signature invalide → `401`.
-- [ ] **Sonde** : `POST /webhooks/shopify/order-paid` → HMAC, puis écriture du corps brut et des en-têtes `Shopify-*` dans `var/log/deliveries/<date>-<Shopify-Webhook-Id>.json`, puis `200`. Retirée en M3.
-- [ ] Page de test `public/probe.php` (supprimée après M2) : affiche `function_exists('fastcgi_finish_request')`, `extension_loaded('gd')` et `PHP_VERSION`.
-- [ ] PHPUnit : test du HMAC (signature valide, invalide, en-tête absent).
-- [ ] Premier déploiement : `composer install --no-dev --optimize-autoloader` en local, envoi FTP de tout sauf `.git`, `tests/`, `docker-compose.yml` ; `.env` créé sur le serveur.
+- [x] Connexion PDO (exceptions activées, `utf8mb4`, `SET time_zone = '+00:00'`).
+- [x] `migrations/001_init.sql` (schéma ci-dessous, InnoDB, utf8mb4), lancé en local. **Reste : phpMyAdmin sur OVH.**
+- [x] `public/.htaccess` : tout vers `index.php`, fichiers cachés refusés ; `public/.ovhconfig` (racine du multisite) : PHP 8.5, `environment=production`.
+- [x] `GET /health` : `SELECT 1` → `200 {"status":"ok"}`, sinon `503`.
+- [x] Vérification HMAC (service partagé avec M3, `src/Service/ShopifyHmac.php`) : `base64_encode(hash_hmac('sha256', $rawBody, $secret, true))` comparé à `Shopify-Hmac-Sha256` par `hash_equals`. Signature invalide → `401`. Les deux noms d'en-tête sont acceptés (`Shopify-Hmac-Sha256` et `X-Shopify-Hmac-Sha256`), en attendant de voir lequel les Events envoient (M2).
+- [x] **Sonde** : `POST /webhooks/shopify/order-paid` → HMAC, puis écriture du corps brut (à l'octet près) et des en-têtes `Shopify-*` / `X-Shopify-*` dans `var/log/deliveries/<date>-<Shopify-Webhook-Id>.json`, puis `200`. Secret absent → `500` (Shopify réessaiera). Retirée en M3.
+- [x] Page de test `public/probe.php` (supprimée après M2) : affiche `function_exists('fastcgi_finish_request')`, `extension_loaded('gd')` et `PHP_VERSION`.
+- [x] PHPUnit : test du HMAC (signature valide, invalide, en-tête absent), de `/health` (200, 503) et de la sonde (signée, non signée, mauvaise signature, secret absent). 11 tests, verts sous PHP 8.5.12.
+- [ ] Premier déploiement : `scripts/build-release.sh` prépare `build/backoffice/` (code du commit + `vendor/` sans dev), à envoyer par FTP dans `~/backoffice/` ; `.env` créé sur le serveur. Pas à pas et vérifications : [`docs/deploiement.md`](../docs/deploiement.md).
 
 ## Schéma
 
@@ -89,9 +89,9 @@ Par rapport au plan v2 : statut `error`, colonnes `status_page_url`, `error_code
 
 ## Critères de fin
 
-- `docker compose up` puis `curl localhost/health` → `200`.
+- [x] `docker compose up` puis `curl localhost:8080/health` → `200` (vérifié le 14/11).
 - `https://backoffice.itsmadeleine.shop/health` → `200` sur OVH.
-- Un `POST` signé à la main (secret de test) est accepté et journalisé ; non signé → `401`.
+- [x] En local : un `POST` signé à la main (secret de test) est accepté et journalisé ; non signé → `401`. À refaire sur OVH avec le vrai secret.
 - `probe.php` a donné ses résultats ; ils sont notés dans M2.
 - `.env` absent du dépôt, présent sur le serveur, hors racine web.
 

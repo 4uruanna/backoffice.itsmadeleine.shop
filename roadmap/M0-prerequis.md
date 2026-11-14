@@ -66,7 +66,7 @@ query commande_qr($orderId: ID!) {
 ### Hébergement OVH Perso
 
 - [ ] Créer le sous-domaine `backoffice.itsmadeleine.shop` (multisite), dossier racine `backoffice/public`, SSL activé.
-- [ ] Choisir la version de PHP disponible la plus récente (8.3 ou 8.4) et la noter : Docker (M1) et `.ovhconfig` utiliseront la même.
+- [x] Choisir la version de PHP disponible la plus récente et la noter : **PHP 8.5**. : Docker (M1) et `.ovhconfig` utiliseront la même.
 - [ ] Vérifier sur `webhosting-infos.hosting.ovh.net` que l'extension **GD** est présente.
 - [ ] Créer la base MySQL et noter hôte, nom, utilisateur et mot de passe.
 - [ ] Préparer l'accès FTP/SFTP (identifiants, client FTP).
@@ -124,7 +124,7 @@ cd shopify && pnpm app:link && pnpm app:deploy
 | SPF / DKIM / DMARC publiés | | |
 | Test Gmail : `spf=` / `dkim=` | | |
 | Sous-domaine + SSL | | |
-| Version de PHP OVH | | |
+| Version de PHP OVH | 8.5 | 14/11 |
 | Extension GD | | |
 | Base MySQL (hôte, nom) | | |
 | Accès FTP/SFTP | | |

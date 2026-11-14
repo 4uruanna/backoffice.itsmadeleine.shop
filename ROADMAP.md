@@ -47,7 +47,7 @@ Plan v2 (§2), plus les décisions du 14/11 :
 | Dépôt | Ce dépôt contient l'API Slim (racine) et la config de l'app Shopify (`shopify/shopify.app.toml`) |
 | URL de l'API | `https://backoffice.itsmadeleine.shop` |
 | DNS et mail | Zone DNS et mails du domaine chez OVH ; envoi depuis `commandes@itsmadeleine.shop` (MX Plan) |
-| Développement local | Docker Compose (PHP à la version OVH, MySQL, Mailpit) + PHPUnit sur les parties critiques |
+| Développement local | Docker Compose (PHP 8.5 comme OVH, MySQL 8.4, Mailpit) + PHPUnit sur les parties critiques |
 | Déploiement | FTP/SFTP manuel, `vendor/` compris ; CI reportée en M9 |
 | Boutique de test | La boutique de production, avec des commandes provisoires marquées payées (voir M2 et M8) |
 | Appareil de scan | Téléphone du staff, appareil photo + app Shopify (ou navigateur connecté à l'admin) |
