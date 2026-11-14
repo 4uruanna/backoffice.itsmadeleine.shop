@@ -16,7 +16,7 @@
 |---|---|---|
 | M0 | Presque terminé | Mail de test vers Gmail (`spf=pass`, `dkim=pass`) une fois le DKIM propagé |
 | M1 | ✅ Terminé | — |
-| M2 | ✅ Go plan A (14/11) | Annulation, remboursements et produit non tagué validés. Restent : expliquer l'e-mail absent sur 6 commandes, paiement différé (B), fixtures à pousser, commandes de test à annuler |
+| M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), fixtures à pousser, commandes de test à annuler |
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
 | M4 à M8 | À faire | — |
 
@@ -92,7 +92,8 @@ Ces changements découlent des décisions ci-dessus ; ils sont détaillés dans 
 
 ## Points encore ouverts
 
-- **E-mail absent sur 6 commandes de test sur 9** (#1095, #1097, #1099 à #1102 ; `null`, sans `errors`). À expliquer en priorité : commandes sans adresse client (cas `no_email` prévu) ou accès à l'e-mail non fiable sur le forfait Basic (go à revoir).
+- ~~E-mail absent sur 6 commandes de test sur 9~~ : expliqué le 14/11, ces commandes n'avaient pas de client rattaché (cas `no_email` prévu). Go confirmé.
+- **Paiement différé** (commande B de M2 : en attente puis payée) : pas encore testé. Non bloquant, la table de décision ignore `PENDING` et traite le passage à `PAID`.
 - ~~Livraisons sur annulation et remboursement~~ : **confirmées le 14/11** (`order.cancellation` et `displayFinancialStatus` → `REFUNDED` / `PARTIALLY_REFUNDED`). Le repli de M3 n'est pas nécessaire.
 - **Nouveaux essais d'Events** : on suppose les mêmes que pour les webhooks classiques (5 s, 8 essais sur 4 h). Délai de livraison observé : moins d'une seconde (commande #1094).
 - **Produit réel tagué** : `LightStick#2027` porte `retrait-qr` et est en vente, sans être affiché sur la boutique. Une commande réelle avant la mise en service créerait une ligne `pending` ; aucun mail ne part avant M5. Risque jugé faible, accepté.

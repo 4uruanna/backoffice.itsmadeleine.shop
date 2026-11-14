@@ -2,7 +2,7 @@
 
 > **Décision : GO plan A** (samedi 14/11, 15 h, avancée d'un jour). Forfait Basic, et pourtant l'e-mail client arrive bien dans la charge utile, sans `errors`.
 > Preuves : `20261114-140219-7135bed4-….json` (`create`) et `20261114-140219-b1a5a273-….json` (`update`), commande #1094, signatures valides.
-> Commandes de test du 14/11 (#1095 à #1102) : annulation, remboursement total, remboursement partiel et produit non tagué **sont bien livrés** (voir ci-dessous). Restent : le paiement différé (B) et l'e-mail absent sur certaines commandes, à expliquer.
+> Commandes de test du 14/11 (#1095 à #1102) : annulation, remboursement total, remboursement partiel et produit non tagué **sont bien livrés** (voir ci-dessous). L'e-mail absent sur certaines commandes s'explique : aucun client rattaché. **Go confirmé.** Reste, non bloquant : le paiement différé (B).
 
 **Quand** : dimanche 15/11 au matin. **Décision au plus tard à midi.**
 **Dépend de** : M0 (app installée, abonnement déployé), M1 (sonde en ligne).
@@ -31,7 +31,7 @@ Lever les points bloquants du §4 du plan v2 avec de vraies livraisons, sur la b
 - [x] **Annulation** (#1094, #1096, #1097, #1098, #1100) → une livraison `update` avec `cancelledAt` rempli, `displayFinancialStatus` resté `PAID`. Le déclencheur `order.cancellation` fonctionne.
 - [x] **Remboursement total** (#1101) → une livraison `update` avec `REFUNDED`, `cancelledAt` nul.
 - [x] **Remboursement partiel** (#1102, deux articles tagués) → une livraison `update` avec `PARTIALLY_REFUNDED`.
-- [ ] **E-mail absent** (`null`, sans `errors`) sur #1095, #1097, #1099, #1100, #1101 et #1102, présent sur #1094, #1096 et #1098 : vérifier si ces commandes avaient un client avec une adresse e-mail. Si oui, l'accès à l'e-mail n'est pas fiable et la décision de go est à revoir ; si non, c'est le cas `no_email` prévu (ligne `error`, alerte).
+- [x] **E-mail absent** (`null`, sans `errors`) sur #1095, #1097, #1099, #1100, #1101 et #1102 : ces commandes n'avaient **aucun client rattaché** (confirmé le 14/11). C'est le cas `no_email` prévu (ligne `error`, alerte). L'e-mail arrive chaque fois qu'un client est rattaché (#1094, #1096, #1098) : **go confirmé**.
 - Constats : chaque commande payée à la création donne **deux** livraisons simultanées (`create` + `update`, même `Shopify-Triggered-At`) ; annulations et remboursements n'en donnent qu'une (`update`). Délai toujours sous la seconde.
 - [x] Vérifier sur chaque livraison : HMAC valide, en-têtes `Shopify-Webhook-Id` présents, forme exacte de la charge utile (champs d'enveloppe, emplacement de `data`), `statusPageUrl` rempli. Relevé du 14/11 :
   - enveloppe : `topic`, `action`, `handle`, `data`, `fields_changed`, `query_variables` ; la commande est dans `data.order` ;
