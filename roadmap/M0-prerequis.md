@@ -117,7 +117,7 @@ cd shopify && pnpm app:link && pnpm app:deploy
 | `client_id` de l'app | (dans `shopify/shopify.app.toml`) | |
 | Déclencheurs acceptés au deploy | `order.displayFinancialStatus` et `order.cancellation`, un seul abonnement avec `$orderId` ; version `itsmadeleine-love-2` publiée | 14/11 |
 | Message de refus éventuel (exact) | 1er deploy : `order.cancelledAt` inconnu en 2026-10 ; scope `read_orders` non demandé (fichier réécrit par `config link` ?) | 14/11 |
-| App installée sur la boutique | | |
+| App installée sur la boutique | Bloqué : l'app est dans l'organisation du développeur, la boutique dans celle du client (« Ce lien d'installation ne peut pas être utilisé »). Solution retenue : à décider (app recréée dans l'organisation du client, ou distribution personnalisée) | 14/11 |
 | Accès données client protégées (e-mail) | | |
 | Boîte `commandes@` créée | Oui ; SMTP `ssl0.ovh.net:465` SSL/TLS, identifiant = adresse complète | 14/11 |
 | SPF / DKIM / DMARC publiés | | |
@@ -140,4 +140,5 @@ cd shopify && pnpm app:link && pnpm app:deploy
 
 - **Propagation DNS** : jusqu'à quelques heures. À lancer en premier.
 - **Création du certificat SSL** sur le sous-domaine : parfois longue chez OVH. Shopify livre uniquement en HTTPS.
+- **App et boutique dans deux organisations différentes** (développeur prestataire, boutique du client) : l'installation depuis le Dev Dashboard est refusée. Il faut que l'app appartienne à l'organisation du client, ou passer par une distribution personnalisée.
 - **Abonnement refusé** au déploiement : on perd du temps sur M2. Le message d'erreur exact oriente vers le repli.
