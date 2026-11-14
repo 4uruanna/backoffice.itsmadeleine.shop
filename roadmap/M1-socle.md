@@ -1,0 +1,100 @@
+# M1 — Socle de l'API et sonde de livraison
+
+**Quand** : samedi 14/11, après M0.
+**Dépend de** : M0 (hébergement, base, version de PHP).
+**Débloque** : M2 (la sonde reçoit les livraisons de test).
+
+## Objectif
+
+Un squelette Slim déployé sur OVH, avec base, configuration et `/health`. Plus une **sonde** : la route de réception vérifie le HMAC et écrit la charge utile brute dans un fichier, pour mener les tests de M2 avant d'avoir écrit la logique métier.
+
+## Arborescence
+
+```
+public/            index.php, .htaccess (racine web)
+src/               Controller/, Service/, Repository/, Config.php
+cron/              retry.php
+migrations/        001_init.sql
+templates/         mail/, scan/
+shopify/           shopify.app.toml
+tests/             PHPUnit (+ fixtures/)
+docs/              requetes-suivi.sql
+var/log/           journaux (hors racine web, non versionné)
+docker-compose.yml, Dockerfile, composer.json, .env.example, .ovhconfig
+```
+
+## Tâches
+
+- [ ] `composer.json` : `slim/slim` 4, `slim/psr7`, `vlucas/phpdotenv`, `phpmailer/phpmailer`, `chillerlan/php-qrcode` ; en dev : `phpunit/phpunit`. Contrainte `config.platform.php` = version OVH.
+- [ ] `Dockerfile` (PHP-FPM ou Apache à la version OVH, extensions `pdo_mysql` et `gd`) + `docker-compose.yml` : `php`, `mysql:8`, `mailpit`.
+- [ ] `.env.example` avec toutes les clés, sans valeur secrète :
+  `APP_URL`, `DB_*`, `SHOPIFY_CLIENT_SECRET`, `SHOPIFY_STORE_HANDLE`, `PICKUP_TAG=retrait-qr`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`, `MAIL_FROM_NAME`, `ALERT_EMAIL`, `MAIL_MAX_PER_HOUR=120`, `MAX_ATTEMPTS=3`, `RETENTION_MONTHS=12`, `MAIL_LOG_RETENTION_DAYS=30`.
+- [ ] `.gitignore` : `.env`, `vendor/`, `var/`.
+- [ ] Connexion PDO (exceptions activées, `utf8mb4`, `SET time_zone = '+00:00'`).
+- [ ] `migrations/001_init.sql` (schéma ci-dessous), lancé en local puis via phpMyAdmin.
+- [ ] `public/.htaccess` : tout vers `index.php` ; `.ovhconfig` : version PHP, `environment=production`.
+- [ ] `GET /health` : `SELECT 1` → `200 {"status":"ok"}`, sinon `503`.
+- [ ] Vérification HMAC (service partagé avec M3) : `base64_encode(hash_hmac('sha256', $rawBody, $secret, true))` comparé à `Shopify-Hmac-Sha256` par `hash_equals`. Signature invalide → `401`.
+- [ ] **Sonde** : `POST /webhooks/shopify/order-paid` → HMAC, puis écriture du corps brut et des en-têtes `Shopify-*` dans `var/log/deliveries/<date>-<Shopify-Webhook-Id>.json`, puis `200`. Retirée en M3.
+- [ ] Page de test `public/probe.php` (supprimée après M2) : affiche `function_exists('fastcgi_finish_request')`, `extension_loaded('gd')` et `PHP_VERSION`.
+- [ ] PHPUnit : test du HMAC (signature valide, invalide, en-tête absent).
+- [ ] Premier déploiement : `composer install --no-dev --optimize-autoloader` en local, envoi FTP de tout sauf `.git`, `tests/`, `docker-compose.yml` ; `.env` créé sur le serveur.
+
+## Schéma
+
+```sql
+CREATE TABLE pickup_orders (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  shopify_order_id BIGINT UNSIGNED NOT NULL UNIQUE,
+  order_name VARCHAR(32) NOT NULL,
+  customer_email VARCHAR(255) NULL,
+  status_page_url VARCHAR(500) NULL,
+  token CHAR(32) NULL UNIQUE,
+  status ENUM('pending','processing','ignored','sent','failed','error') NOT NULL DEFAULT 'pending',
+  pending_reason VARCHAR(32) NULL,          -- ex. rate_limited
+  error_code VARCHAR(32) NULL,              -- payload_errors, no_email, max_attempts
+  attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  last_error VARCHAR(500) NULL,
+  webhook_id VARCHAR(64) NULL,
+  revoked_at DATETIME NULL,
+  revoked_reason ENUM('cancelled','refunded') NULL,
+  locked_at DATETIME NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  sent_at DATETIME NULL,
+  KEY idx_status (status, created_at)
+);
+
+CREATE TABLE scans (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  pickup_order_id INT UNSIGNED NOT NULL,
+  result ENUM('redirected','revoked') NOT NULL,
+  scanned_at DATETIME NOT NULL,
+  ip VARCHAR(45) NULL,
+  user_agent VARCHAR(255) NULL,
+  FOREIGN KEY (pickup_order_id) REFERENCES pickup_orders(id) ON DELETE CASCADE
+);
+
+CREATE TABLE mail_log (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  pickup_order_id INT UNSIGNED NULL,
+  kind ENUM('qr','alert') NOT NULL,
+  sent_at DATETIME NOT NULL,
+  KEY idx_sent_at (sent_at)
+);
+```
+
+Par rapport au plan v2 : statut `error`, colonnes `status_page_url`, `error_code`, `revoked_at`, `revoked_reason`, `updated_at`, `scans.result`, `ON DELETE CASCADE` pour la purge.
+
+## Critères de fin
+
+- `docker compose up` puis `curl localhost/health` → `200`.
+- `https://backoffice.itsmadeleine.shop/health` → `200` sur OVH.
+- Un `POST` signé à la main (secret de test) est accepté et journalisé ; non signé → `401`.
+- `probe.php` a donné ses résultats ; ils sont notés dans M2.
+- `.env` absent du dépôt, présent sur le serveur, hors racine web.
+
+## Risques
+
+- Écart de version PHP entre Docker et OVH → toujours lancer `composer install` dans le conteneur, avec `config.platform.php`.
+- Racine web mal réglée → `.env` lisible publiquement. Vérifier que `https://backoffice.itsmadeleine.shop/../.env` et `/.env` renvoient bien `404`.
