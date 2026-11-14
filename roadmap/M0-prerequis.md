@@ -4,6 +4,8 @@
 **Dépend de** : rien.
 **Débloque** : M1 et M2.
 
+> **État au 14/11** : tout est fait sauf le mail de test vers Gmail, à lancer une fois le DKIM propagé.
+
 ## Objectif
 
 Tout ce qui ne demande pas de code et qui prend du temps calendaire : forfait, app Shopify, abonnement Events, boîte mail et DNS, vérifications de l'hébergement.
@@ -131,11 +133,12 @@ cd shopify && pnpm app:link && pnpm app:deploy
 
 ## Critères de fin
 
-- Forfait connu et noté.
-- App installée sur la boutique ; `shopify app deploy` a accepté l'abonnement (ou le refus est documenté).
-- `https://app.itsmadeleine.shop` répond en HTTPS (même avec une page vide).
-- Boîte mail créée, DKIM activé, SPF et DMARC publiés.
-- Version de PHP, présence de GD et accès base notés.
+- [x] Forfait connu et noté (Basic).
+- [x] App installée sur la boutique ; `shopify app deploy` a accepté l'abonnement.
+- [x] `https://app.itsmadeleine.shop` répond en HTTPS.
+- [x] Boîte mail créée, DKIM activé, SPF et DMARC publiés.
+- [x] Version de PHP, présence de GD et accès base notés.
+- [ ] Mail de test vers Gmail : `spf=pass`, `dkim=pass`.
 
 ## Risques
 

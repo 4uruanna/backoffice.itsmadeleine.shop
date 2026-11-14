@@ -24,6 +24,8 @@ Lever les points bloquants du §4 du plan v2 avec de vraies livraisons, sur la b
 ## Tâches
 
 - [x] **Commande A** (#1094, 14/11) : produit tagué, payée à la création → **deux** livraisons reçues à la même seconde, `create` **et** `update` (même `Shopify-Triggered-At`), toutes deux `PAID` avec e-mail et `statusPageUrl`, sans `errors`. Le dédoublonnage de M3 (`INSERT IGNORE`) doit tenir face à deux requêtes simultanées.
+> Les commandes B à E servent aussi de recette de M3 en production : déployer M3 d'abord (avec `DEBUG_DELIVERIES=1`), puis vérifier après chaque commande la table `pickup_orders` (attendus dans M3).
+
 - [ ] **Commande B** : produit tagué, paiement en attente puis payée → livraison à la création (`PENDING`) **et** au passage à `PAID` ?
 - [ ] **Commande C** : produit non tagué, payée → `tags` lisibles et sans le tag ?
 - [ ] **Annulation** de la commande A → livraison avec `cancelledAt` rempli ?
@@ -33,10 +35,10 @@ Lever les points bloquants du §4 du plan v2 avec de vraies livraisons, sur la b
   - enveloppe : `topic`, `action`, `handle`, `data`, `fields_changed`, `query_variables` ; la commande est dans `data.order` ;
   - en-têtes (sans préfixe `X-`) : `Shopify-Topic` (`Order`), `Shopify-Action` (`create`/`update`), `Shopify-Handle`, `Shopify-Webhook-Id` (UUID), `Shopify-Triggered-At`, `Shopify-Shop-Domain` (`itsmadeleine-love-2.myshopify.com`), `Shopify-Shop-Id`, `Shopify-Api-Key`, `Shopify-Api-Version` (`2026-10`) ;
   - `fields_changed` pourra servir en M3 à savoir quel déclencheur a joué (à lire dans les fixtures).
-- [ ] Lire le délai entre l'action dans l'admin et la livraison.
+- [x] Lire le délai entre l'action dans l'admin et la livraison : moins d'une seconde (#1094 : déclenchée à 14:02:18.6, reçue à 14:02:19 UTC).
 - [x] Reporter les résultats de `probe.php` (M1), relevés le 14/11 sur OVH : PHP 8.5.12 en `fpm-fcgi`, `fastcgi_finish_request` **oui** (traitement après réponse possible en M7), GD **oui** (PNG), Imagick oui, `pdo_mysql` oui. Fuseau PHP par défaut `Europe/Paris` : sans effet, l'API force UTC.
-- [ ] Copier une charge utile réelle de chaque cas (payée, non taguée, annulée, remboursée, avec `errors` si l'occasion se présente) dans `tests/fixtures/`, **e-mail remplacé par une adresse fictive**. Elles serviront aux tests de M3.
-- [ ] Supprimer `public/probe.php`.
+- [ ] (en cours : `livraison-paid.json` et `livraison-paid-2.json` générées le 14/11, pas encore poussées) Copier une charge utile réelle de chaque cas (payée, non taguée, annulée, remboursée, avec `errors` si l'occasion se présente) dans `tests/fixtures/`, **e-mail remplacé par une adresse fictive**. Elles serviront aux tests de M3.
+- [x] Supprimer `public/probe.php` : retiré du dépôt le 14/11 (résultats notés plus haut). **À supprimer aussi du serveur par FTP** (`~/backoffice/public/probe.php`), l'envoi n'efface pas les fichiers.
 
 ## Analyse des livraisons
 

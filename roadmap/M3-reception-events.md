@@ -4,6 +4,8 @@
 **Dépend de** : M2 (go, fixtures réelles).
 **Débloque** : M4.
 
+> **État au 14/11** : codé et testé en local (63 tests, dont MySQL et insertions simultanées). Reste : déploiement sur OVH, puis les critères « sur la production » ci-dessous, vérifiés avec les commandes B à E de M2.
+
 ## Objectif
 
 Remplacer la sonde par la vraie réception : vérifier, décider, enregistrer, répondre vite. Gérer le paiement, l'annulation, le remboursement total, la reprise après `errors` et les doublons.
@@ -50,9 +52,9 @@ Toujours répondre `200` après un HMAC valide, même quand rien n'est fait : si
 ## Critères de fin
 
 - [x] Tous les tests passent en local (63 tests, 14/11). De bout en bout via Apache : `create` + `update` simultanés → une ligne, annulation → révoquée, réponse en 50 ms.
-- Sur la production : une commande provisoire taguée et payée crée une ligne `pending` ; non taguée → `ignored` ; annulée ensuite → `revoked_at` rempli.
-- Une même commande livrée deux fois (`create` + `update`) ne crée qu'une ligne.
-- Le temps de réponse reste sous la seconde (relevé dans les journaux d'accès OVH).
+- [ ] Sur la production : une commande provisoire taguée et payée crée une ligne `pending` ; non taguée → `ignored` ; annulée ensuite → `revoked_at` rempli ; remboursée en totalité → `revoked_reason = refunded` ; remboursement partiel → toujours `pending`.
+- [ ] Une même commande livrée deux fois (`create` + `update`) ne crée qu'une ligne (vérifié en local avec deux requêtes simultanées ; à revoir en production).
+- [ ] Le temps de réponse reste sous la seconde (relevé dans les journaux d'accès OVH ; 50 ms en local).
 
 ## Risques
 

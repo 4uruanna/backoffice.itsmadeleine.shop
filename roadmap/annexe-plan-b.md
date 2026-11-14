@@ -1,5 +1,7 @@
 # Annexe — Plan B : QR dans la notification Shopify
 
+> **Non utilisé** : go plan A prononcé le 14/11 (M2), l'e-mail client arrive bien dans la charge utile. Conservé pour mémoire.
+
 **Quand** : seulement si M2 conclut au no-go (e-mail client inaccessible), dimanche 15/11 après-midi.
 **Remplace** : M3, M5 et M6 ; M4 et M7 sont allégés.
 

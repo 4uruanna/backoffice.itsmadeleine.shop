@@ -6,7 +6,7 @@ Hébergement OVH Perso, PHP 8.5, multisite `app.itsmadeleine.shop` → dossier r
 ~/backoffice/            ← contenu de build/backoffice/ + .env
 ├── .env                 ← créé à la main sur le serveur, jamais versionné
 ├── migrations/
-├── public/              ← racine web (index.php, .htaccess, .ovhconfig, probe.php)
+├── public/              ← racine web (index.php, .htaccess, .ovhconfig)
 ├── src/
 ├── var/log/deliveries/  ← créé par l'app (livraisons de la sonde, données personnelles)
 └── vendor/
@@ -39,7 +39,7 @@ Fichiers cachés : activer leur affichage dans le client FTP pour que `public/.h
 1. **`.env`** : copier `.env.example` vers `~/backoffice/.env` et remplir les valeurs de production :
    `APP_ENV=production`, `APP_URL=https://app.itsmadeleine.shop`, `DB_*` (base OVH), `SHOPIFY_CLIENT_SECRET` (app `itsmadeleine.app`), `SMTP_HOST=ssl0.ovh.net`, `SMTP_PORT=465`, `SMTP_ENCRYPTION=smtps`, `SMTP_USER=commandes@itsmadeleine.shop`, `SMTP_PASSWORD`, `ALERT_EMAIL`.
 2. **Base** : dans phpMyAdmin (espace client OVH → Bases de données), exécuter `migrations/001_init.sql`.
-3. **Version de PHP** : `public/.ovhconfig` demande PHP 8.5. OVH lit ce fichier à la racine du multisite (`backoffice/public`) ; si `probe.php` affiche une autre version, copier aussi `.ovhconfig` à la racine de l'hébergement ou régler la version dans l'espace client (Multisite → modifier).
+3. **Version de PHP** : `public/.ovhconfig` demande PHP 8.5. OVH lit ce fichier à la racine du multisite (`backoffice/public`) ; si la version de PHP n'est pas la bonne, copier aussi `.ovhconfig` à la racine de l'hébergement ou régler la version dans l'espace client (Multisite → modifier).
 
 ## 4. Vérifications
 
@@ -48,12 +48,6 @@ curl -s https://app.itsmadeleine.shop/health
 ```
 
 Attendu : `{"status":"ok"}` (sinon `503` : identifiants de base dans `.env`).
-
-```bash
-curl -s https://app.itsmadeleine.shop/probe.php
-```
-
-Noter `PHP_VERSION`, `fastcgi_finish_request` et `gd` dans `roadmap/M2-go-no-go.md`.
 
 Fichiers sensibles inaccessibles (attendu : `403` ou `404`) :
 
@@ -82,6 +76,9 @@ Clés ajoutées depuis le premier déploiement :
 - `DEBUG_DELIVERIES=1` (M3) : copie brute de chaque livraison dans `var/log/deliveries/`. À laisser à `1` jusqu'à la fin des tests de M2 (commandes B à E), puis `0`.
 - `SHOPIFY_STORE_HANDLE` : identifiant de la boutique dans l'URL de l'admin (M4).
 
-## Après M2
+## Fichiers retirés du dépôt
 
-Supprimer `public/probe.php` du dépôt **et** du serveur (l'envoi FTP n'efface pas les fichiers supprimés).
+L'envoi FTP n'efface pas les fichiers supprimés du dépôt. À supprimer à la main sur le serveur :
+
+- `public/probe.php` (retiré le 14/11, après M2) ;
+- `src/Controller/DeliveryProbeController.php` (remplacé en M3).
