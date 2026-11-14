@@ -20,7 +20,7 @@ Tout ce qui ne demande pas de code et qui prend du temps calendaire : forfait, a
 - [x] Écrire `shopify/shopify.app.toml` : `client_id`, `application_url = "https://app.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
 - [x] `pnpm app:deploy --config shopify.app.toml` sur la nouvelle app (l'abonnement validé sur l'ancienne, version `itsmadeleine-love-2`, n'a pas été repris par le link). Vérifier ensuite dans le Dev Dashboard que la version active contient l'abonnement `commande-qr-retrait`.
 - [x] Installer l'app sur la boutique de production (si ce n'est pas déjà fait), puis vérifier qu'elle apparaît dans Paramètres → Applications et canaux de vente.
-- [ ] Noter le **secret client** de l'app `itsmadeleine.app` (servira pour le HMAC, dans `.env`) : Dev Dashboard → app → Paramètres (identifiants), ou `pnpm shopify app env show` depuis `shopify/` (`SHOPIFY_API_SECRET`).
+- [x] Noter le **secret client** de l'app `itsmadeleine.app` (servira pour le HMAC, dans `.env`) : Dev Dashboard → app → Paramètres (identifiants), ou `pnpm shopify app env show` depuis `shopify/` (`SHOPIFY_API_SECRET`).
 
 Abonnement (remplace celui du §5 du plan v2) :
 
@@ -69,7 +69,7 @@ query commande_qr($orderId: ID!) {
 - [x] Choisir la version de PHP disponible la plus récente et la noter : **PHP 8.5**. : Docker (M1) et `.ovhconfig` utiliseront la même.
 - [x] Vérifier que l'extension **GD** est présente : oui (vu par `probe.php`).
 - [x] Créer la base MySQL et noter hôte, nom, utilisateur et mot de passe.
-- [ ] Préparer l'accès FTP/SFTP (identifiants, client FTP).
+- [x] Préparer l'accès FTP/SFTP (identifiants, client FTP).
 
 ## Vérifications depuis ton poste
 
