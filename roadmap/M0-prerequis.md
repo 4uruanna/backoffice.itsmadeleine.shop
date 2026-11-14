@@ -65,7 +65,7 @@ query commande_qr($orderId: ID!) {
 
 ### Hébergement OVH Perso
 
-- [ ] Créer le sous-domaine `app.itsmadeleine.shop` (multisite), dossier racine `backoffice/public`, SSL activé.
+- [x] Créer le sous-domaine `app.itsmadeleine.shop` (multisite), dossier racine `backoffice/public`, SSL activé (domaine changé le 14/11, `backoffice.` abandonné).
 - [x] Choisir la version de PHP disponible la plus récente et la noter : **PHP 8.5**. : Docker (M1) et `.ovhconfig` utiliseront la même.
 - [ ] Vérifier sur `webhosting-infos.hosting.ovh.net` que l'extension **GD** est présente.
 - [ ] Créer la base MySQL et noter hôte, nom, utilisateur et mot de passe.
@@ -116,14 +116,14 @@ cd shopify && pnpm app:link && pnpm app:deploy
 | Forfait Shopify | | |
 | Version Shopify CLI | | |
 | `client_id` de l'app | `a977545e9444eb4c8d30c169b1ed4c6d` (`itsmadeleine.app`, organisation du client) | 14/11 |
-| Déclencheurs acceptés au deploy | `order.displayFinancialStatus` et `order.cancellation`, un seul abonnement avec `$orderId` (validé sur l'ancienne app, version `itsmadeleine-love-2`) ; redéployé sur `itsmadeleine.app` | 14/11 |
+| Déclencheurs acceptés au deploy | `order.displayFinancialStatus` et `order.cancellation`, un seul abonnement avec `$orderId` (validé sur l'ancienne app, version `itsmadeleine-love-2`) ; redéployé sur `itsmadeleine.app` ; URI de livraison passée à `https://app.itsmadeleine.shop/webhooks/shopify/order-paid` (version active vérifiée dans le Dev Dashboard) | 14/11 |
 | Message de refus éventuel (exact) | 1er deploy : `order.cancelledAt` inconnu en 2026-10 ; scope `read_orders` non demandé (fichier réécrit par `config link` ?) | 14/11 |
 | App installée sur la boutique | Oui (`itsmadeleine.app`). Historique : bloqué d'abord, l'app est dans l'organisation du développeur, la boutique dans celle du client (« Ce lien d'installation ne peut pas être utilisé »). Solution retenue : le client a ajouté le développeur à son organisation, app recréée (`itsmadeleine.app`) | 14/11 |
 | Accès données client protégées (e-mail) | | |
 | Boîte `commandes@` créée | Oui ; SMTP `ssl0.ovh.net:465` SSL/TLS, identifiant = adresse complète | 14/11 |
 | SPF / DKIM / DMARC publiés | | |
 | Test Gmail : `spf=` / `dkim=` | | |
-| Sous-domaine + SSL | | |
+| Sous-domaine + SSL | `app.itsmadeleine.shop` créé ; HTTPS à confirmer par `/health` | 14/11 |
 | Version de PHP OVH | 8.5 | 14/11 |
 | Extension GD | | |
 | Base MySQL (hôte, nom) | | |

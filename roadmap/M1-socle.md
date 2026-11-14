@@ -39,7 +39,7 @@ docker-compose.yml, Dockerfile, composer.json, .env.example, .ovhconfig
 - [x] **Sonde** : `POST /webhooks/shopify/order-paid` → HMAC, puis écriture du corps brut (à l'octet près) et des en-têtes `Shopify-*` / `X-Shopify-*` dans `var/log/deliveries/<date>-<Shopify-Webhook-Id>.json`, puis `200`. Secret absent → `500` (Shopify réessaiera). Retirée en M3.
 - [x] Page de test `public/probe.php` (supprimée après M2) : affiche `function_exists('fastcgi_finish_request')`, `extension_loaded('gd')` et `PHP_VERSION`.
 - [x] PHPUnit : test du HMAC (signature valide, invalide, en-tête absent), de `/health` (200, 503) et de la sonde (signée, non signée, mauvaise signature, secret absent). 11 tests, verts sous PHP 8.5.12.
-- [ ] Premier déploiement : `scripts/build-release.sh` prépare `build/backoffice/` (code du commit + `vendor/` sans dev), à envoyer par FTP dans `~/backoffice/` ; `.env` créé sur le serveur. Pas à pas et vérifications : [`docs/deploiement.md`](../docs/deploiement.md).
+- [x] Premier déploiement (fichiers et `.env` envoyés le 14/11, vérifications ci-dessous à faire) : `scripts/build-release.sh` prépare `build/backoffice/` (code du commit + `vendor/` sans dev), à envoyer par FTP dans `~/backoffice/` ; `.env` créé sur le serveur. Pas à pas et vérifications : [`docs/deploiement.md`](../docs/deploiement.md).
 
 ## Schéma
 
