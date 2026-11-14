@@ -64,7 +64,7 @@ Plan v2 (§2), plus les décisions du 14/11 :
 
 Ces changements découlent des décisions ci-dessus ; ils sont détaillés dans les jalons concernés.
 
-1. **Abonnement Events** : déclencheurs `order.displayFinancialStatus` **et** `order.cancelledAt`, **sans `query_filter`**. L'API décide selon l'état renvoyé (payée, annulée, remboursée). Requête enrichie de `statusPageUrl` et `cancelledAt` (M0, M3).
+1. **Abonnement Events** : déclencheurs `order.displayFinancialStatus` **et** `order.cancellation`, **sans `query_filter`**. L'API décide selon l'état renvoyé (payée, annulée, remboursée). Requête enrichie de `statusPageUrl` et `cancelledAt` (M0, M3).
 2. **Table `pickup_orders`** : statut `error` ajouté ; nouvelles colonnes `error_code`, `status_page_url`, `revoked_at`, `revoked_reason` (M1).
 3. **Table `scans`** : colonne `result` (`redirected` ou `revoked`) (M1, M4).
 4. **Éligibilité** : une commande `PARTIALLY_REFUNDED` non annulée est traitée comme payée, au cas où la première livraison reçue arrive après un remboursement partiel (M3).
@@ -74,7 +74,7 @@ Ces changements découlent des décisions ci-dessus ; ils sont détaillés dans 
 ## Points encore ouverts
 
 - **Forfait Shopify inconnu** : à lire dans l'admin (Paramètres → Forfait) dès M0. Sur le forfait Basic, le risque de no-go en M2 est élevé.
-- Le déclencheur `order.cancelledAt` est supposé exister : il faut le vérifier au `shopify app deploy` (M0) et à la livraison réelle (M2). Repli décrit dans M3.
+- Déclencheurs : `order.cancelledAt` n'existe pas (refusé au deploy du 14/11), remplacé par `order.cancellation`. Les livraisons réelles sur annulation et remboursement restent à vérifier en M2. Repli décrit dans M3.
 - Délais de réponse et nouveaux essais d'Events : on suppose les mêmes que pour les webhooks classiques (5 s, 8 essais sur 4 h).
 
 ## Hors périmètre v1

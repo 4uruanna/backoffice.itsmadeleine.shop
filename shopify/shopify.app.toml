@@ -23,9 +23,9 @@ api_version = "2026-10"
 handle = "commande-qr-retrait"
 topic = "Order"
 actions = ["create", "update"]
-# Noms à confirmer au `shopify app deploy` (voir « Résultats » dans M0).
-# Repli si refusés : triggers = ["order.*"] (plus de livraisons, l'API trie).
-triggers = ["order.displayFinancialStatus", "order.cancelledAt"]
+# Noms validés par Shopify au deploy du 14/11 (liste dans M0, « Résultats »).
+# displayFinancialStatus couvre PAID, REFUNDED et PARTIALLY_REFUNDED.
+triggers = ["order.displayFinancialStatus", "order.cancellation"]
 uri = "https://backoffice.itsmadeleine.shop/webhooks/shopify/order-paid"
 # Pas de query_filter : l'API décide selon l'état renvoyé (M3).
 query = """

@@ -30,7 +30,7 @@ api_version = "2026-10"
 handle = "commande-qr-retrait"
 topic = "Order"
 actions = ["create", "update"]
-triggers = ["order.displayFinancialStatus", "order.cancelledAt"]
+triggers = ["order.displayFinancialStatus", "order.cancellation"]
 uri = "https://backoffice.itsmadeleine.shop/webhooks/shopify/order-paid"
 query = """
 query commande_qr($orderId: ID!) {
@@ -50,8 +50,8 @@ query commande_qr($orderId: ID!) {
 ```
 
 - Pas de `query_filter` : l'API reçoit les passages à « payée », les annulations et les remboursements, et décide elle-même (M3).
-- **Noms des déclencheurs non confirmés.** La doc Shopify (sujet Order des Events) montre des chemins comme `order.cancellation` et précise que les champs calculés ou dérivés ne peuvent pas servir de déclencheurs ; `displayFinancialStatus` en est peut-être un. Avant le deploy, ouvrir [la référence Order](https://shopify.dev/docs/api/events/latest/order) et remplacer les deux noms par ceux de la liste (candidats : `order.cancellation`, un déclencheur sur `totalRefundedSet` pour les remboursements, et celui du statut financier). Dernier recours : `triggers = ["order.*"]`, qui livre à chaque modification de commande ; l'API trie de toute façon (M3), seul le volume augmente.
-- Si `shopify app deploy` refuse `order.cancelledAt` comme déclencheur ou la complexité de la requête (limite de 100 points), noter le message exact : le repli est décrit dans M3.
+- **Déclencheurs** (corrigé le 14/11 après le premier deploy) : `order.cancelledAt` n'existe pas, l'annulation se déclenche par `order.cancellation`. `order.displayFinancialStatus` est accepté et couvre le passage à payée ainsi que les remboursements (`REFUNDED`, `PARTIALLY_REFUNDED`) : pas besoin de `order.totalRefundedSet.*`. Le champ `cancelledAt` reste lu dans la requête. Dernier recours si une livraison manque en M2 : `triggers = ["order.*"]` (plus de volume, l'API trie).
+- Si `shopify app deploy` refuse la complexité de la requête (limite de 100 points) ou la variable `$orderId` pour un déclencheur, noter le message exact. Pour la variable, Shopify demande de scinder en deux abonnements `Order` (un par groupe de variables disponibles).
 
 ### Mail (OVH MX Plan)
 
@@ -114,8 +114,8 @@ cd shopify && pnpm app:link && pnpm app:deploy
 | Forfait Shopify | | |
 | Version Shopify CLI | | |
 | `client_id` de l'app | (dans `shopify/shopify.app.toml`) | |
-| Déclencheurs acceptés au deploy | | |
-| Message de refus éventuel (exact) | | |
+| Déclencheurs acceptés au deploy | `order.displayFinancialStatus` (validé) ; `order.cancellation` (à confirmer au 2e deploy) | 14/11 |
+| Message de refus éventuel (exact) | 1er deploy : `order.cancelledAt` inconnu en 2026-10 ; scope `read_orders` non demandé (fichier réécrit par `config link` ?) | 14/11 |
 | App installée sur la boutique | | |
 | Accès données client protégées (e-mail) | | |
 | Boîte `commandes@` créée | Oui ; SMTP `ssl0.ovh.net:465` SSL/TLS, identifiant = adresse complète | 14/11 |
