@@ -13,14 +13,14 @@ Tout ce qui ne demande pas de code et qui prend du temps calendaire : forfait, a
 ### Shopify
 
 - [ ] Lire le forfait de la boutique (admin → Paramètres → Forfait) et le noter dans `ROADMAP.md`. Sur Basic, préparer dès maintenant l'[annexe plan B](annexe-plan-b.md).
-- [x] Créer l'app dans le Dev Dashboard **de l'organisation du client** (le développeur y a été ajouté comme membre), non intégrée à l'admin (`embedded = false`) : `itsmadeleine.app`. La première app (`itsmadeleine.love`, organisation du développeur) ne pouvait pas s'installer : à supprimer du Dev Dashboard.
+- [x] Créer l'app dans le Dev Dashboard **de l'organisation du client** (le développeur y a été ajouté comme membre), non intégrée à l'admin (`embedded = false`) : `itsmadeleine.app`. La première app (`itsmadeleine.love`, organisation du développeur) ne pouvait pas s'installer : supprimée.
 - [ ] Déclarer l'accès aux données client protégées pour le champ **e-mail** (niveau 2), si le Dev Dashboard le demande pour une app personnalisée.
 - [x] Shopify CLI ajoutée au dépôt : `@shopify/cli` 5.0.1 en dépendance de dev dans `shopify/package.json`, gérée avec **pnpm 12.18.0** (champ `packageManager`, via Corepack ; Node ≥ 22.12). Installer avec `cd shopify && pnpm install --frozen-lockfile`, puis l'appeler par `pnpm exec shopify` (les Events demandent au moins la 3.92). Le script d'installation d'`esbuild` est autorisé dans `pnpm-workspace.yaml`. Ne pas taper `pnpm deploy` (commande intégrée de pnpm) : utiliser `pnpm app:deploy`.
 - [x] Relier le dossier `shopify/` à l'app (`shopify app config link`). Le link crée un fichier `shopify.app.<nom>.toml` **sans `[events]`** : on n'en garde que le `client_id`, recopié dans `shopify.app.toml`, seul fichier versionné.
 - [x] Écrire `shopify/shopify.app.toml` : `client_id`, `application_url = "https://backoffice.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
-- [ ] `pnpm app:deploy --config shopify.app.toml` sur la nouvelle app (l'abonnement validé sur l'ancienne, version `itsmadeleine-love-2`, n'a pas été repris par le link). Vérifier ensuite dans le Dev Dashboard que la version active contient l'abonnement `commande-qr-retrait`.
-- [ ] Installer l'app sur la boutique de production (si ce n'est pas déjà fait), puis vérifier qu'elle apparaît dans Paramètres → Applications et canaux de vente.
-- [ ] Noter le **secret client** de l'app (servira pour le HMAC, dans `.env`).
+- [x] `pnpm app:deploy --config shopify.app.toml` sur la nouvelle app (l'abonnement validé sur l'ancienne, version `itsmadeleine-love-2`, n'a pas été repris par le link). Vérifier ensuite dans le Dev Dashboard que la version active contient l'abonnement `commande-qr-retrait`.
+- [x] Installer l'app sur la boutique de production (si ce n'est pas déjà fait), puis vérifier qu'elle apparaît dans Paramètres → Applications et canaux de vente.
+- [ ] Noter le **secret client** de l'app `itsmadeleine.app` (servira pour le HMAC, dans `.env`) : Dev Dashboard → app → Paramètres (identifiants), ou `pnpm shopify app env show` depuis `shopify/` (`SHOPIFY_API_SECRET`).
 
 Abonnement (remplace celui du §5 du plan v2) :
 
@@ -116,9 +116,9 @@ cd shopify && pnpm app:link && pnpm app:deploy
 | Forfait Shopify | | |
 | Version Shopify CLI | | |
 | `client_id` de l'app | `a977545e9444eb4c8d30c169b1ed4c6d` (`itsmadeleine.app`, organisation du client) | 14/11 |
-| Déclencheurs acceptés au deploy | `order.displayFinancialStatus` et `order.cancellation`, un seul abonnement avec `$orderId` (validé sur l'ancienne app, version `itsmadeleine-love-2`) ; à redéployer sur `itsmadeleine.app` | 14/11 |
+| Déclencheurs acceptés au deploy | `order.displayFinancialStatus` et `order.cancellation`, un seul abonnement avec `$orderId` (validé sur l'ancienne app, version `itsmadeleine-love-2`) ; redéployé sur `itsmadeleine.app` | 14/11 |
 | Message de refus éventuel (exact) | 1er deploy : `order.cancelledAt` inconnu en 2026-10 ; scope `read_orders` non demandé (fichier réécrit par `config link` ?) | 14/11 |
-| App installée sur la boutique | Bloqué : l'app est dans l'organisation du développeur, la boutique dans celle du client (« Ce lien d'installation ne peut pas être utilisé »). Solution retenue : le client a ajouté le développeur à son organisation, app recréée (`itsmadeleine.app`) | 14/11 |
+| App installée sur la boutique | Oui (`itsmadeleine.app`). Historique : bloqué d'abord, l'app est dans l'organisation du développeur, la boutique dans celle du client (« Ce lien d'installation ne peut pas être utilisé »). Solution retenue : le client a ajouté le développeur à son organisation, app recréée (`itsmadeleine.app`) | 14/11 |
 | Accès données client protégées (e-mail) | | |
 | Boîte `commandes@` créée | Oui ; SMTP `ssl0.ovh.net:465` SSL/TLS, identifiant = adresse complète | 14/11 |
 | SPF / DKIM / DMARC publiés | | |
