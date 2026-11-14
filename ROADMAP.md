@@ -10,7 +10,7 @@
 
 ## État au samedi 14/11 au soir
 
-**Environ un jour d'avance** : M0, M1, la décision de M2 et M3 sont faits ; M3 est validé en production.
+**Environ un jour d'avance** : M0, M1, la décision de M2 et M3 sont faits ; M3 est validé en production. Les reliquats de M0 à M3 sont regroupés au début de [M4](roadmap/M4-qr-et-scan.md#reprise-au-démarrage--reliquats-de-m0-à-m3), pour être repris au démarrage.
 
 | Jalon | État | Reste à faire |
 |---|---|---|
@@ -18,7 +18,8 @@
 | M1 | ✅ Terminé | — |
 | M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), fixtures à pousser, commandes de test à annuler |
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
-| M4 à M8 | À faire | — |
+| M4 | À faire | Commencer par la section « Reprise au démarrage » (mail de test Gmail, fixtures, commande B, nettoyage) |
+| M5 à M8 | À faire | — |
 
 ## Planning
 
