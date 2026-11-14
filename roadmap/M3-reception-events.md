@@ -54,7 +54,7 @@ Toujours répondre `200` après un HMAC valide, même quand rien n'est fait : si
 ## Critères de fin
 
 - [x] Tous les tests passent en local (63 tests, 14/11). De bout en bout via Apache : `create` + `update` simultanés → une ligne, annulation → révoquée, réponse en 50 ms.
-- [ ] Sur la production : une commande provisoire taguée et payée crée une ligne `pending` ; non taguée → `ignored` ; annulée ensuite → `revoked_at` rempli ; remboursée en totalité → `revoked_reason = refunded` ; remboursement partiel → toujours `pending`.
+- [ ] (14/11, production : `pending` ✅ #1096 et #1098, `ignored` ✅ #1099, `error`/`no_email` ✅ pour les commandes sans e-mail ; révocations à lire dans `revoked_at`) Sur la production : une commande provisoire taguée et payée crée une ligne `pending` ; non taguée → `ignored` ; annulée ensuite → `revoked_at` rempli ; remboursée en totalité → `revoked_reason = refunded` ; remboursement partiel → toujours `pending`.
 - [ ] Une même commande livrée deux fois (`create` + `update`) ne crée qu'une ligne (vérifié en local avec deux requêtes simultanées ; à revoir en production).
 - [ ] Le temps de réponse reste sous la seconde (relevé dans les journaux d'accès OVH ; 50 ms en local).
 
