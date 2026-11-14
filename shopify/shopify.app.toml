@@ -50,6 +50,5 @@ query commande_qr($orderId: ID!) {
 api_version = "2027-01"
 
 [build]
-include_config_on_deploy = true
 # Ne jamais laisser `shopify app dev` remplacer les URL de production.
 automatically_update_urls_on_dev = false
