@@ -25,7 +25,7 @@
 |---|---|---|---|
 | M0 | [Prérequis Shopify, OVH et mail](roadmap/M0-prerequis.md) | — | Oui |
 | M1 | [Socle de l'API et sonde de livraison](roadmap/M1-socle.md) ✅ 14/11 | M0 | Oui |
-| M2 | [Validation sur la boutique (go/no-go)](roadmap/M2-go-no-go.md) | M0, M1 | Oui, décide plan A ou plan B |
+| M2 | [Validation sur la boutique (go/no-go)](roadmap/M2-go-no-go.md) — **go plan A** le 14/11 | M0, M1 | Oui, décide plan A ou plan B |
 | M3 | [Réception Events](roadmap/M3-reception-events.md) | M2 | Oui |
 | M4 | [QR code et route de scan](roadmap/M4-qr-et-scan.md) | M3 | Oui |
 | M5 | [Mail au client](roadmap/M5-mail.md) | M4 | Oui |
@@ -73,7 +73,7 @@ Ces changements découlent des décisions ci-dessus ; ils sont détaillés dans 
 
 ## Points encore ouverts
 
-- **Forfait Shopify : Basic** (relevé le 14/11). Risque de no-go élevé en M2 : sources contradictoires sur l'accès d'une app personnalisée à l'e-mail client sur ce forfait. Commande A testée dès le 14/11 au soir pour trancher plus tôt ; plan B préparé en parallèle.
+- ~~Forfait Shopify : Basic, risque de no-go~~ → **levé le 14/11** : l'e-mail client arrive bien dans la charge utile (commande A, M2). **Go plan A**, le plan B n'est plus nécessaire.
 - Déclencheurs : `order.cancelledAt` n'existe pas (refusé au deploy du 14/11), remplacé par `order.cancellation`. Les livraisons réelles sur annulation et remboursement restent à vérifier en M2. Repli décrit dans M3.
 - Délais de réponse et nouveaux essais d'Events : on suppose les mêmes que pour les webhooks classiques (5 s, 8 essais sur 4 h).
 

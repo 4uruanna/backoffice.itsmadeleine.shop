@@ -58,7 +58,7 @@ query commande_qr($orderId: ID!) {
 ### Mail (OVH MX Plan)
 
 - [x] Créer la boîte `commandes@itsmadeleine.shop` dans l'espace client et noter son mot de passe (`.env` uniquement). SMTP : `ssl0.ovh.net`, port 465, SSL/TLS implicite.
-- [ ] Vérifier l'enregistrement SPF : un seul TXT `v=spf1 include:mx.ovh.com ~all` (fusionner s'il en existe déjà un).
+- [x] Vérifier l'enregistrement SPF : un seul TXT `v=spf1 include:mx.ovh.com ~all` (fusionner s'il en existe déjà un).
 - [x] Activer le DKIM dans l'espace client MX Plan (14/11, propagation en cours).
 - [x] Ajouter un DMARC en surveillance : `_dmarc` TXT `v=DMARC1; p=none; rua=mailto:<adresse de rapport>` (14/11). Adresse de rapport du domaine conseillée (redirection `dmarc@` vers une boîte perso).
 - [ ] Envoyer un mail de test depuis le webmail vers une adresse Gmail et lire l'en-tête : `spf=pass`, `dkim=pass` (à refaire le soir si le DNS n'a pas fini de se propager).
@@ -121,7 +121,7 @@ cd shopify && pnpm app:link && pnpm app:deploy
 | App installée sur la boutique | Oui (`itsmadeleine.app`). Historique : bloqué d'abord, l'app est dans l'organisation du développeur, la boutique dans celle du client (« Ce lien d'installation ne peut pas être utilisé »). Solution retenue : le client a ajouté le développeur à son organisation, app recréée (`itsmadeleine.app`) | 14/11 |
 | Accès données client protégées (e-mail) | | |
 | Boîte `commandes@` créée | Oui ; SMTP `ssl0.ovh.net:465` SSL/TLS, identifiant = adresse complète | 14/11 |
-| SPF / DKIM / DMARC publiés | DKIM activé, DMARC ajouté (14/11) ; SPF à vérifier (un seul TXT) | 14/11 |
+| SPF / DKIM / DMARC publiés | DKIM activé, DMARC ajouté, SPF unique vérifié (14/11) | 14/11 |
 | Test Gmail : `spf=` / `dkim=` | | |
 | Sous-domaine + SSL | `app.itsmadeleine.shop` créé, HTTPS OK (`/health` → `ok`) | 14/11 |
 | Version de PHP OVH | 8.5 | 14/11 |
