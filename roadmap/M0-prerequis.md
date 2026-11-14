@@ -55,7 +55,7 @@ query commande_qr($orderId: ID!) {
 
 ### Mail (OVH MX Plan)
 
-- [ ] Créer la boîte `commandes@itsmadeleine.shop` dans l'espace client et noter son mot de passe (`.env` uniquement).
+- [x] Créer la boîte `commandes@itsmadeleine.shop` dans l'espace client et noter son mot de passe (`.env` uniquement). SMTP : `ssl0.ovh.net`, port 465, SSL/TLS implicite.
 - [ ] Vérifier l'enregistrement SPF : un seul TXT `v=spf1 include:mx.ovh.com ~all` (fusionner s'il en existe déjà un).
 - [ ] Activer le DKIM dans l'espace client MX Plan.
 - [ ] Ajouter un DMARC en surveillance : `_dmarc` TXT `v=DMARC1; p=none; rua=mailto:<adresse de rapport>`.
@@ -118,7 +118,7 @@ cd shopify && npm run config:link && npm run deploy
 | Message de refus éventuel (exact) | | |
 | App installée sur la boutique | | |
 | Accès données client protégées (e-mail) | | |
-| Boîte `commandes@` créée | | |
+| Boîte `commandes@` créée | Oui ; SMTP `ssl0.ovh.net:465` SSL/TLS, identifiant = adresse complète | 14/11 |
 | SPF / DKIM / DMARC publiés | | |
 | Test Gmail : `spf=` / `dkim=` | | |
 | Sous-domaine + SSL | | |

@@ -28,8 +28,9 @@ docker-compose.yml, Dockerfile, composer.json, .env.example, .ovhconfig
 - [ ] `composer.json` : `slim/slim` 4, `slim/psr7`, `vlucas/phpdotenv`, `phpmailer/phpmailer`, `chillerlan/php-qrcode` ; en dev : `phpunit/phpunit`. Contrainte `config.platform.php` = version OVH.
 - [ ] `Dockerfile` (PHP-FPM ou Apache à la version OVH, extensions `pdo_mysql` et `gd`) + `docker-compose.yml` : `php`, `mysql:8`, `mailpit`.
 - [ ] `.env.example` avec toutes les clés, sans valeur secrète :
-  `APP_URL`, `DB_*`, `SHOPIFY_CLIENT_SECRET`, `SHOPIFY_STORE_HANDLE`, `PICKUP_TAG=retrait-qr`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`, `MAIL_FROM_NAME`, `ALERT_EMAIL`, `MAIL_MAX_PER_HOUR=120`, `MAX_ATTEMPTS=3`, `RETENTION_MONTHS=12`, `MAIL_LOG_RETENTION_DAYS=30`.
-- [ ] `.gitignore` : `.env`, `vendor/`, `var/`.
+  `APP_URL`, `DB_*`, `SHOPIFY_CLIENT_SECRET`, `SHOPIFY_STORE_HANDLE`, `PICKUP_TAG=retrait-qr`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`, `MAIL_FROM_NAME`, `ALERT_EMAIL`, `MAIL_MAX_PER_HOUR=120`, `MAX_ATTEMPTS=3`, `RETENTION_MONTHS=12`, `MAIL_LOG_RETENTION_DAYS=30`.
+  Valeurs SMTP connues (M0) : `SMTP_HOST=ssl0.ovh.net`, `SMTP_PORT=465`, `SMTP_USER=commandes@itsmadeleine.shop`, `MAIL_FROM=commandes@itsmadeleine.shop`. Le port 465 est en TLS implicite : côté PHPMailer, `SMTPSecure = PHPMailer::ENCRYPTION_SMTPS` (et non `STARTTLS`). Ajouter `SMTP_ENCRYPTION` (`smtps` en production, vide en local pour Mailpit, port 1025 sans chiffrement).
+- [x] `.gitignore` : `.env`, `vendor/`, `var/` (fait en M0).
 - [ ] Connexion PDO (exceptions activées, `utf8mb4`, `SET time_zone = '+00:00'`).
 - [ ] `migrations/001_init.sql` (schéma ci-dessous), lancé en local puis via phpMyAdmin.
 - [ ] `public/.htaccess` : tout vers `index.php` ; `.ovhconfig` : version PHP, `environment=production`.
