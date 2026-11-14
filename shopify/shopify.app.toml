@@ -1,11 +1,13 @@
-# Configuration de l'app Shopify « Retrait QR » (jalon M0).
+# Configuration de l'app Shopify (jalon M0). Seul fichier de config de l'app :
+# déployer avec `pnpm app:deploy --config shopify.app.toml`.
 # Référence : roadmap/M0-prerequis.md
 #
-# `shopify app config link` peut réécrire ce fichier : après le link,
-# comparer avec `git diff` et remettre les sections [access_scopes] et [events].
+# `shopify app config link` crée un nouveau fichier sans [events] : ne pas le
+# déployer, recopier son client_id ici puis le supprimer.
 
-client_id = "A_REMPLIR_APRES_CONFIG_LINK"
-name = "Retrait QR"
+# App de l'organisation du client (créée le 14/11).
+client_id = "a977545e9444eb4c8d30c169b1ed4c6d"
+name = "itsmadeleine.app"
 application_url = "https://backoffice.itsmadeleine.shop"
 embedded = false
 
@@ -43,3 +45,11 @@ query commande_qr($orderId: ID!) {
   }
 }
 """
+
+[webhooks]
+api_version = "2027-01"
+
+[build]
+include_config_on_deploy = true
+# Ne jamais laisser `shopify app dev` remplacer les URL de production.
+automatically_update_urls_on_dev = false
