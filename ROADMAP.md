@@ -12,7 +12,7 @@
 
 | Jour | Jalons | Résultat attendu le soir |
 |---|---|---|
-| Sam. 14/11 | [M0](roadmap/M0-prerequis.md), [M1](roadmap/M1-socle.md) | App Shopify installée, abonnement déployé, DNS mail en propagation, socle en ligne sur `backoffice.itsmadeleine.shop` avec une sonde qui journalise les livraisons |
+| Sam. 14/11 | [M0](roadmap/M0-prerequis.md), [M1](roadmap/M1-socle.md) | App Shopify installée, abonnement déployé, DNS mail en propagation, socle en ligne sur `app.itsmadeleine.shop` avec une sonde qui journalise les livraisons |
 | Dim. 15/11 | [M2](roadmap/M2-go-no-go.md) (matin), [M3](roadmap/M3-reception-events.md) | Go/no-go prononcé ; réception Events complète (HMAC, décision, dédoublonnage, révocation) |
 | Lun. 16/11 | [M4](roadmap/M4-qr-et-scan.md), [M5](roadmap/M5-mail.md) | QR généré, scan qui redirige ou avertit, mail envoyé de bout en bout |
 | Mar. 17/11 | [M6](roadmap/M6-bucket.md), [M7](roadmap/M7-fiabilite-cron.md) | Plafond de 120 mails par heure, traitement après réponse, cron de rattrapage, alertes, purge |
@@ -45,7 +45,7 @@ Plan v2 (§2), plus les décisions du 14/11 :
 |---|---|
 | Périmètre au 19/11 | Tout le plan v2, sans MVP intermédiaire |
 | Dépôt | Ce dépôt contient l'API Slim (racine) et la config de l'app Shopify (`shopify/shopify.app.toml`) |
-| URL de l'API | `https://backoffice.itsmadeleine.shop` |
+| URL de l'API | `https://app.itsmadeleine.shop` (au lieu de `backoffice.` prévu au départ, changé le 14/11) ; dossier sur l'hébergement inchangé : `backoffice/public` |
 | DNS et mail | Zone DNS et mails du domaine chez OVH ; envoi depuis `commandes@itsmadeleine.shop` (MX Plan) |
 | Développement local | Docker Compose (PHP 8.5 comme OVH, MySQL 8.4, Mailpit) + PHPUnit sur les parties critiques |
 | Déploiement | FTP/SFTP manuel, `vendor/` compris ; CI reportée en M9 |

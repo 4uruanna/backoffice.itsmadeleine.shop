@@ -17,7 +17,7 @@ Tout ce qui ne demande pas de code et qui prend du temps calendaire : forfait, a
 - [ ] Déclarer l'accès aux données client protégées pour le champ **e-mail** (niveau 2), si le Dev Dashboard le demande pour une app personnalisée.
 - [x] Shopify CLI ajoutée au dépôt : `@shopify/cli` 5.0.1 en dépendance de dev dans `shopify/package.json`, gérée avec **pnpm 12.18.0** (champ `packageManager`, via Corepack ; Node ≥ 22.12). Installer avec `cd shopify && pnpm install --frozen-lockfile`, puis l'appeler par `pnpm exec shopify` (les Events demandent au moins la 3.92). Le script d'installation d'`esbuild` est autorisé dans `pnpm-workspace.yaml`. Ne pas taper `pnpm deploy` (commande intégrée de pnpm) : utiliser `pnpm app:deploy`.
 - [x] Relier le dossier `shopify/` à l'app (`shopify app config link`). Le link crée un fichier `shopify.app.<nom>.toml` **sans `[events]`** : on n'en garde que le `client_id`, recopié dans `shopify.app.toml`, seul fichier versionné.
-- [x] Écrire `shopify/shopify.app.toml` : `client_id`, `application_url = "https://backoffice.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
+- [x] Écrire `shopify/shopify.app.toml` : `client_id`, `application_url = "https://app.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
 - [x] `pnpm app:deploy --config shopify.app.toml` sur la nouvelle app (l'abonnement validé sur l'ancienne, version `itsmadeleine-love-2`, n'a pas été repris par le link). Vérifier ensuite dans le Dev Dashboard que la version active contient l'abonnement `commande-qr-retrait`.
 - [x] Installer l'app sur la boutique de production (si ce n'est pas déjà fait), puis vérifier qu'elle apparaît dans Paramètres → Applications et canaux de vente.
 - [ ] Noter le **secret client** de l'app `itsmadeleine.app` (servira pour le HMAC, dans `.env`) : Dev Dashboard → app → Paramètres (identifiants), ou `pnpm shopify app env show` depuis `shopify/` (`SHOPIFY_API_SECRET`).
@@ -33,7 +33,7 @@ handle = "commande-qr-retrait"
 topic = "Order"
 actions = ["create", "update"]
 triggers = ["order.displayFinancialStatus", "order.cancellation"]
-uri = "https://backoffice.itsmadeleine.shop/webhooks/shopify/order-paid"
+uri = "https://app.itsmadeleine.shop/webhooks/shopify/order-paid"
 query = """
 query commande_qr($orderId: ID!) {
   order(id: $orderId) {
@@ -65,7 +65,7 @@ query commande_qr($orderId: ID!) {
 
 ### Hébergement OVH Perso
 
-- [ ] Créer le sous-domaine `backoffice.itsmadeleine.shop` (multisite), dossier racine `backoffice/public`, SSL activé.
+- [ ] Créer le sous-domaine `app.itsmadeleine.shop` (multisite), dossier racine `backoffice/public`, SSL activé.
 - [x] Choisir la version de PHP disponible la plus récente et la noter : **PHP 8.5**. : Docker (M1) et `.ovhconfig` utiliseront la même.
 - [ ] Vérifier sur `webhosting-infos.hosting.ovh.net` que l'extension **GD** est présente.
 - [ ] Créer la base MySQL et noter hôte, nom, utilisateur et mot de passe.
@@ -94,7 +94,7 @@ dig +short CNAME ovhmo1._domainkey.itsmadeleine.shop
 Sous-domaine et HTTPS :
 
 ```bash
-curl -sI https://backoffice.itsmadeleine.shop/
+curl -sI https://app.itsmadeleine.shop/
 ```
 
 Abonnement et version de la CLI :
@@ -133,7 +133,7 @@ cd shopify && pnpm app:link && pnpm app:deploy
 
 - Forfait connu et noté.
 - App installée sur la boutique ; `shopify app deploy` a accepté l'abonnement (ou le refus est documenté).
-- `https://backoffice.itsmadeleine.shop` répond en HTTPS (même avec une page vide).
+- `https://app.itsmadeleine.shop` répond en HTTPS (même avec une page vide).
 - Boîte mail créée, DKIM activé, SPF et DMARC publiés.
 - Version de PHP, présence de GD et accès base notés.
 

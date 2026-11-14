@@ -13,7 +13,7 @@ Générer un jeton et un QR par commande. Au scan, journaliser puis rediriger le
 ### Jeton et QR
 
 - [ ] À la prise en charge d'une commande (`pending` → `processing`, M7) : si `token` est nul, `bin2hex(random_bytes(16))`, enregistré **avant** l'envoi, pour qu'un nouvel essai réutilise le même QR.
-- [ ] Service `QrGenerator` : PNG de `https://backoffice.itsmadeleine.shop/r/<jeton>`, correction d'erreur M, marge suffisante, environ 300 px, généré en mémoire (aucun fichier sur disque).
+- [ ] Service `QrGenerator` : PNG de `https://app.itsmadeleine.shop/r/<jeton>`, correction d'erreur M, marge suffisante, environ 300 px, généré en mémoire (aucun fichier sur disque).
 - [ ] Test : le PNG produit se relit avec un décodeur (bibliothèque de test ou vérification manuelle par téléphone).
 
 ### Route `GET /r/{token}`

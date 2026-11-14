@@ -8,7 +8,7 @@
 # App de l'organisation du client (créée le 14/11).
 client_id = "a977545e9444eb4c8d30c169b1ed4c6d"
 name = "itsmadeleine.app"
-application_url = "https://backoffice.itsmadeleine.shop"
+application_url = "https://app.itsmadeleine.shop"
 embedded = false
 
 [access_scopes]
@@ -16,7 +16,7 @@ embedded = false
 scopes = "read_orders,read_products"
 
 [auth]
-redirect_urls = ["https://backoffice.itsmadeleine.shop/auth/callback"]
+redirect_urls = ["https://app.itsmadeleine.shop/auth/callback"]
 
 [events]
 api_version = "2026-10"
@@ -28,7 +28,7 @@ actions = ["create", "update"]
 # Noms validés par Shopify au deploy du 14/11 (liste dans M0, « Résultats »).
 # displayFinancialStatus couvre PAID, REFUNDED et PARTIALLY_REFUNDED.
 triggers = ["order.displayFinancialStatus", "order.cancellation"]
-uri = "https://backoffice.itsmadeleine.shop/webhooks/shopify/order-paid"
+uri = "https://app.itsmadeleine.shop/webhooks/shopify/order-paid"
 # Pas de query_filter : l'API décide selon l'état renvoyé (M3).
 query = """
 query commande_qr($orderId: ID!) {

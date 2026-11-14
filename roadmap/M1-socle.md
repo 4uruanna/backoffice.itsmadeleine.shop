@@ -90,7 +90,7 @@ Par rapport au plan v2 : statut `error`, colonnes `status_page_url`, `error_code
 ## Critères de fin
 
 - [x] `docker compose up` puis `curl localhost:8080/health` → `200` (vérifié le 14/11).
-- `https://backoffice.itsmadeleine.shop/health` → `200` sur OVH.
+- `https://app.itsmadeleine.shop/health` → `200` sur OVH.
 - [x] En local : un `POST` signé à la main (secret de test) est accepté et journalisé ; non signé → `401`. À refaire sur OVH avec le vrai secret.
 - `probe.php` a donné ses résultats ; ils sont notés dans M2.
 - `.env` absent du dépôt, présent sur le serveur, hors racine web.
@@ -98,4 +98,4 @@ Par rapport au plan v2 : statut `error`, colonnes `status_page_url`, `error_code
 ## Risques
 
 - Écart de version PHP entre Docker et OVH → toujours lancer `composer install` dans le conteneur, avec `config.platform.php`.
-- Racine web mal réglée → `.env` lisible publiquement. Vérifier que `https://backoffice.itsmadeleine.shop/../.env` et `/.env` renvoient bien `404`.
+- Racine web mal réglée → `.env` lisible publiquement. Vérifier que `https://app.itsmadeleine.shop/../.env` et `/.env` renvoient bien `404`.

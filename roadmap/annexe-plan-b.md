@@ -11,7 +11,7 @@ Shopify envoie lui-même le QR, dans sa notification de confirmation de commande
 
 - [ ] Vérifier dans l'éditeur de notifications les objets et filtres disponibles : `line_items`, `line.product.tags`, `order.id`, filtre `hmac_sha256`. **À tester avant tout le reste** (aperçu de la notification avec une commande provisoire).
 - [ ] Bloc Liquid, affiché seulement si un produit porte `retrait-qr` :
-  `<img src="https://backoffice.itsmadeleine.shop/qr/{{ order.id }}-{{ order.id | hmac_sha256: 'SECRET' }}.png" alt="QR code de retrait">`.
+  `<img src="https://app.itsmadeleine.shop/qr/{{ order.id }}-{{ order.id | hmac_sha256: 'SECRET' }}.png" alt="QR code de retrait">`.
   Le secret est visible des comptes staff qui ont accès aux notifications : en utiliser un dédié, différent du secret client de l'app.
 - [ ] Route `GET /qr/{id}-{sig}.png` : vérifie la signature, génère le PNG pointant vers `/r/{id}-{sig}`, en-têtes de cache longs.
 - [ ] Route `GET /r/{id}-{sig}` : vérifie la signature, journalise le scan, redirige ou affiche la page d'avertissement (M4). Les tables passent de `token` à `shopify_order_id`.

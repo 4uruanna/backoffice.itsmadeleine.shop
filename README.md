@@ -1,6 +1,6 @@
 # backoffice.itsmadeleine.shop
 
-API du QR code de retrait en boutique : réception des Events Shopify, envoi du mail avec QR code, route de scan. Slim 4, PHP 8.5, MySQL.
+API du QR code de retrait en boutique, en ligne sur `https://app.itsmadeleine.shop` : réception des Events Shopify, envoi du mail avec QR code, route de scan. Slim 4, PHP 8.5, MySQL.
 
 - Feuille de route : [`ROADMAP.md`](ROADMAP.md)
 - Déploiement OVH : [`docs/deploiement.md`](docs/deploiement.md)
