@@ -10,14 +10,14 @@
 
 ## État au samedi 14/11 au soir
 
-**Environ un jour d'avance** : M0, M1 et la décision de M2 sont faits, M3 est codé et testé en local.
+**Environ un jour d'avance** : M0, M1, la décision de M2 et M3 sont faits ; M3 est validé en production.
 
 | Jalon | État | Reste à faire |
 |---|---|---|
 | M0 | Presque terminé | Mail de test vers Gmail (`spf=pass`, `dkim=pass`) une fois le DKIM propagé |
 | M1 | ✅ Terminé | — |
 | M2 | ✅ Go plan A (14/11) | Annulation, remboursements et produit non tagué validés. Restent : expliquer l'e-mail absent sur 6 commandes, paiement différé (B), fixtures à pousser, commandes de test à annuler |
-| M3 | Codé, 63 tests verts en local | Déployer sur OVH (avec `DEBUG_DELIVERIES=1`), puis recette sur la production avec les commandes B à E |
+| M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
 | M4 à M8 | À faire | — |
 
 ## Planning
@@ -27,7 +27,7 @@ Planning initial, avec ce qui a été réalisé. Le jour d'avance pris le 14/11 
 | Jour | Jalons | Résultat attendu le soir | Réalisé |
 |---|---|---|---|
 | Sam. 14/11 | [M0](roadmap/M0-prerequis.md), [M1](roadmap/M1-socle.md) | App Shopify installée, abonnement déployé, DNS mail en propagation, socle en ligne sur `app.itsmadeleine.shop` avec une sonde qui journalise les livraisons | ✅ Tout, plus le go de M2 et le code de M3 |
-| Dim. 15/11 | [M2](roadmap/M2-go-no-go.md) (matin), [M3](roadmap/M3-reception-events.md) | Go/no-go prononcé ; réception Events complète (HMAC, décision, dédoublonnage, révocation) | Go déjà prononcé ; reste le déploiement et la recette de M3, puis début de M4 |
+| Dim. 15/11 | [M2](roadmap/M2-go-no-go.md) (matin), [M3](roadmap/M3-reception-events.md) | Go/no-go prononcé ; réception Events complète (HMAC, décision, dédoublonnage, révocation) | Fait dès le 14/11 ; le 15/11 peut être consacré à M4 |
 | Lun. 16/11 | [M4](roadmap/M4-qr-et-scan.md), [M5](roadmap/M5-mail.md) | QR généré, scan qui redirige ou avertit, mail envoyé de bout en bout | |
 | Mar. 17/11 | [M6](roadmap/M6-bucket.md), [M7](roadmap/M7-fiabilite-cron.md) | Plafond de 120 mails par heure, traitement après réponse, cron de rattrapage, alertes, purge | |
 | Mer. 18/11 | [M8](roadmap/M8-recette-mise-en-service.md) | Recette sur la boutique de production, mise en service | |
@@ -40,7 +40,7 @@ Planning initial, avec ce qui a été réalisé. Le jour d'avance pris le 14/11 
 | M0 | [Prérequis Shopify, OVH et mail](roadmap/M0-prerequis.md) — reste le test Gmail | — | Oui |
 | M1 | [Socle de l'API et sonde de livraison](roadmap/M1-socle.md) ✅ 14/11 | M0 | Oui |
 | M2 | [Validation sur la boutique (go/no-go)](roadmap/M2-go-no-go.md) ✅ **go plan A** le 14/11 — reste les commandes B à E | M0, M1 | Oui, décide plan A ou plan B |
-| M3 | [Réception Events](roadmap/M3-reception-events.md) — codé et testé en local, à déployer | M2 | Oui |
+| M3 | [Réception Events](roadmap/M3-reception-events.md) ✅ 14/11 | M2 | Oui |
 | M4 | [QR code et route de scan](roadmap/M4-qr-et-scan.md) | M3 | Oui |
 | M5 | [Mail au client](roadmap/M5-mail.md) | M4 | Oui |
 | M6 | [Limite d'envoi (bucket)](roadmap/M6-bucket.md) | M5 | Oui |

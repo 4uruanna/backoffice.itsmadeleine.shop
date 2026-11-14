@@ -4,7 +4,7 @@
 **Dépend de** : M2 (go, fixtures réelles).
 **Débloque** : M4.
 
-> **État au 14/11** : codé et testé en local (63 tests, dont MySQL et insertions simultanées). Reste : déploiement sur OVH, puis les critères « sur la production » ci-dessous, vérifiés avec les commandes B à E de M2.
+> **État au 14/11** : ✅ déployé et validé en production (commandes #1095 à #1102). Seul reste le relevé du temps de réponse dans les journaux OVH (50 ms en local), non bloquant.
 
 ## Objectif
 
@@ -54,8 +54,8 @@ Toujours répondre `200` après un HMAC valide, même quand rien n'est fait : si
 ## Critères de fin
 
 - [x] Tous les tests passent en local (63 tests, 14/11). De bout en bout via Apache : `create` + `update` simultanés → une ligne, annulation → révoquée, réponse en 50 ms.
-- [ ] (14/11, production : `pending` ✅ #1096 et #1098, `ignored` ✅ #1099, `error`/`no_email` ✅ pour les commandes sans e-mail ; révocations à lire dans `revoked_at`) Sur la production : une commande provisoire taguée et payée crée une ligne `pending` ; non taguée → `ignored` ; annulée ensuite → `revoked_at` rempli ; remboursée en totalité → `revoked_reason = refunded` ; remboursement partiel → toujours `pending`.
-- [ ] Une même commande livrée deux fois (`create` + `update`) ne crée qu'une ligne (vérifié en local avec deux requêtes simultanées ; à revoir en production).
+- [x] (14/11, production : `pending` #1096 et #1098 ; `ignored` #1099 ; `error`/`no_email` #1095, #1097, #1100, #1101, #1102 ; `cancelled` + date sur #1096, #1097, #1098, #1100 ; `refunded` + date sur #1101 ; pas de révocation sur #1095, #1099, #1102 (remboursement partiel)) Sur la production : une commande provisoire taguée et payée crée une ligne `pending` ; non taguée → `ignored` ; annulée ensuite → `revoked_at` rempli ; remboursée en totalité → `revoked_reason = refunded` ; remboursement partiel → toujours `pending`.
+- [x] Une même commande livrée deux fois (`create` + `update`) ne crée qu'une ligne (vérifié en local avec deux requêtes simultanées, et en production : une ligne par commande, #1095 à #1102).
 - [ ] Le temps de réponse reste sous la seconde (relevé dans les journaux d'accès OVH ; 50 ms en local).
 
 ## Risques
