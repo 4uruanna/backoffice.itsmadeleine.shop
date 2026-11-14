@@ -8,7 +8,7 @@ API du QR code de retrait en boutique : réception des Events Shopify, envoi du 
 
 ## Développement local
 
-Prérequis : Docker.
+Prérequis : Docker avec le plugin Compose v2 (`docker compose version` doit répondre). Sans lui, `docker compose …` échoue avec `unknown flag`. Sur Linux : paquet `docker-compose-plugin` ; sur Mac et Windows : Docker Desktop l'inclut.
 
 ```bash
 cp .env.example .env

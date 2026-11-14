@@ -20,7 +20,13 @@ Commiter d'abord : le script prend le code du commit courant.
 scripts/build-release.sh
 ```
 
-Le dossier `build/backoffice/` contient le code et `vendor/` sans les dépendances de dev, installées dans l'image Docker (PHP 8.5).
+Le dossier `build/backoffice/` contient le code et `vendor/` sans les dépendances de dev, installées dans l'image Docker du projet (PHP 8.5). Docker seul suffit, Docker Compose n'est pas nécessaire.
+
+Sans Docker, avec Composer installé sur le poste :
+
+```bash
+USE_HOST_COMPOSER=1 scripts/build-release.sh
+```
 
 ## 2. Envoyer les fichiers
 
