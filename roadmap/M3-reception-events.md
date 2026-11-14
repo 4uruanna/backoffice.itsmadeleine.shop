@@ -46,6 +46,8 @@ Toujours répondre `200` après un HMAC valide, même quand rien n'est fait : si
 
 ## Repli si les annulations ou remboursements ne sont pas livrés (constat de M2)
 
+> Non nécessaire : annulations et remboursements livrés le 14/11 (M2).
+
 - Ajouter dans `shopify.app.toml` un second abonnement Events sur `Order` avec les déclencheurs acceptés par `shopify app deploy` (par exemple `order.displayFinancialStatus` seul, qui couvre `REFUNDED`), vers la même route.
 - Sinon, webhooks classiques `orders/cancelled` et `refunds/create` vers une route dédiée, avec l'en-tête `X-Shopify-Hmac-Sha256`. Seul l'identifiant de commande est utilisé.
 

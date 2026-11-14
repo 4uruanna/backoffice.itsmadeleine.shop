@@ -10,7 +10,9 @@
  * - Résume chaque livraison : en-têtes, enveloppe, commande, e-mail présent ou non,
  *   statut financier, annulation, tags, erreurs.
  * - Avec --fixtures : écrit une copie anonymisée de chaque livraison (e-mail et
- *   statusPageUrl remplacés, signature recalculée avec le secret des tests).
+ *   statusPageUrl remplacés, signature recalculée avec le secret des tests), nommée
+ *   livraison-<cas>.<numéro de commande>-<action>.json (cas : paid, paid-sans-email,
+ *   paid-non-taguee, annulee, refunded, partially-refunded, errors…).
  *
  * Aucune dépendance : PHP 8.3+ suffit (brew install php).
  */
@@ -104,9 +106,14 @@ foreach ($files as $file) {
     }
 
     if ($fixturesDir !== null && $order !== null) {
-        $label = fixture_label($order, $errors !== null);
-        $labelsUsed[$label] = ($labelsUsed[$label] ?? 0) + 1;
-        $name = $labelsUsed[$label] > 1 ? "$label-{$labelsUsed[$label]}" : $label;
+        // livraison-<cas>.<numéro de commande>-<action>.json, ex. livraison-paid.1094-create.json
+        $number = preg_replace('/\D/', '', (string) ($order['name'] ?? '')) ?: (string) ($order['legacyResourceId'] ?? '0');
+        $action = preg_replace('/[^a-z]/', '', strtolower((string) ($body['action'] ?? 'x'))) ?: 'x';
+        $name = fixture_label($order, $errors !== null) . ".$number-$action";
+        $labelsUsed[$name] = ($labelsUsed[$name] ?? 0) + 1;
+        if ($labelsUsed[$name] > 1) {
+            $name .= '-' . $labelsUsed[$name];
+        }
         $path = write_fixture($fixturesDir, $name, $raw, $headers, $order);
         printf("   fixture        : %s\n", $path);
     }
@@ -223,8 +230,12 @@ function fixture_label(array $order, bool $hasErrors): string
     if (!empty($order['cancelledAt'])) {
         return 'annulee';
     }
-    $status = strtolower((string) ($order['displayFinancialStatus'] ?? 'inconnu'));
-    return str_replace('_', '-', $status) . (is_tagged($order) ? '' : '-non-taguee');
+    $status = str_replace('_', '-', strtolower((string) ($order['displayFinancialStatus'] ?? 'inconnu')));
+    if (!is_tagged($order)) {
+        return $status . '-non-taguee';
+    }
+
+    return $status . (empty($order['email']) ? '-sans-email' : '');
 }
 
 /** @param array<string, string> $headers */

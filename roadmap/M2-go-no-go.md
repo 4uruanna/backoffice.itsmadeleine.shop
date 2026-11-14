@@ -2,7 +2,7 @@
 
 > **Décision : GO plan A** (samedi 14/11, 15 h, avancée d'un jour). Forfait Basic, et pourtant l'e-mail client arrive bien dans la charge utile, sans `errors`.
 > Preuves : `20261114-140219-7135bed4-….json` (`create`) et `20261114-140219-b1a5a273-….json` (`update`), commande #1094, signatures valides.
-> Reste à confirmer (non bloquant pour le go) : livraisons sur paiement différé, produit non tagué, annulation et remboursements (commandes B à E).
+> Commandes de test du 14/11 (#1095 à #1102) : annulation, remboursement total, remboursement partiel et produit non tagué **sont bien livrés** (voir ci-dessous). Restent : le paiement différé (B) et l'e-mail absent sur certaines commandes, à expliquer.
 
 **Quand** : dimanche 15/11 au matin. **Décision au plus tard à midi.**
 **Dépend de** : M0 (app installée, abonnement déployé), M1 (sonde en ligne).
@@ -26,18 +26,20 @@ Lever les points bloquants du §4 du plan v2 avec de vraies livraisons, sur la b
 - [x] **Commande A** (#1094, 14/11) : produit tagué, payée à la création → **deux** livraisons reçues à la même seconde, `create` **et** `update` (même `Shopify-Triggered-At`), toutes deux `PAID` avec e-mail et `statusPageUrl`, sans `errors`. Le dédoublonnage de M3 (`INSERT IGNORE`) doit tenir face à deux requêtes simultanées.
 > Les commandes B à E servent aussi de recette de M3 en production : déployer M3 d'abord (avec `DEBUG_DELIVERIES=1`), puis vérifier après chaque commande la table `pickup_orders` (attendus dans M3).
 
-- [ ] **Commande B** : produit tagué, paiement en attente puis payée → livraison à la création (`PENDING`) **et** au passage à `PAID` ?
-- [ ] **Commande C** : produit non tagué, payée → `tags` lisibles et sans le tag ?
-- [ ] **Annulation** de la commande A → livraison avec `cancelledAt` rempli ?
-- [ ] **Remboursement total** d'une commande payée (créer D) → livraison avec `REFUNDED` ?
-- [ ] **Remboursement partiel** (commande E, deux articles) → livraison avec `PARTIALLY_REFUNDED` ?
+- [ ] **Commande B** : produit tagué, paiement en attente puis payée → livraison à la création (`PENDING`) **et** au passage à `PAID` ? Pas encore faite (toutes les commandes du 14/11 étaient payées à la création).
+- [x] **Commande C** (#1099) : produit sans aucun tag, payée → `create` + `update`, liste de tags vide, lisible.
+- [x] **Annulation** (#1094, #1096, #1097, #1098, #1100) → une livraison `update` avec `cancelledAt` rempli, `displayFinancialStatus` resté `PAID`. Le déclencheur `order.cancellation` fonctionne.
+- [x] **Remboursement total** (#1101) → une livraison `update` avec `REFUNDED`, `cancelledAt` nul.
+- [x] **Remboursement partiel** (#1102, deux articles tagués) → une livraison `update` avec `PARTIALLY_REFUNDED`.
+- [ ] **E-mail absent** (`null`, sans `errors`) sur #1095, #1097, #1099, #1100, #1101 et #1102, présent sur #1094, #1096 et #1098 : vérifier si ces commandes avaient un client avec une adresse e-mail. Si oui, l'accès à l'e-mail n'est pas fiable et la décision de go est à revoir ; si non, c'est le cas `no_email` prévu (ligne `error`, alerte).
+- Constats : chaque commande payée à la création donne **deux** livraisons simultanées (`create` + `update`, même `Shopify-Triggered-At`) ; annulations et remboursements n'en donnent qu'une (`update`). Délai toujours sous la seconde.
 - [x] Vérifier sur chaque livraison : HMAC valide, en-têtes `Shopify-Webhook-Id` présents, forme exacte de la charge utile (champs d'enveloppe, emplacement de `data`), `statusPageUrl` rempli. Relevé du 14/11 :
   - enveloppe : `topic`, `action`, `handle`, `data`, `fields_changed`, `query_variables` ; la commande est dans `data.order` ;
   - en-têtes (sans préfixe `X-`) : `Shopify-Topic` (`Order`), `Shopify-Action` (`create`/`update`), `Shopify-Handle`, `Shopify-Webhook-Id` (UUID), `Shopify-Triggered-At`, `Shopify-Shop-Domain` (`itsmadeleine-love-2.myshopify.com`), `Shopify-Shop-Id`, `Shopify-Api-Key`, `Shopify-Api-Version` (`2026-10`) ;
   - `fields_changed` pourra servir en M3 à savoir quel déclencheur a joué (à lire dans les fixtures).
 - [x] Lire le délai entre l'action dans l'admin et la livraison : moins d'une seconde (#1094 : déclenchée à 14:02:18.6, reçue à 14:02:19 UTC).
 - [x] Reporter les résultats de `probe.php` (M1), relevés le 14/11 sur OVH : PHP 8.5.12 en `fpm-fcgi`, `fastcgi_finish_request` **oui** (traitement après réponse possible en M7), GD **oui** (PNG), Imagick oui, `pdo_mysql` oui. Fuseau PHP par défaut `Europe/Paris` : sans effet, l'API force UTC.
-- [ ] (en cours : `livraison-paid.json` et `livraison-paid-2.json` générées le 14/11, pas encore poussées) Copier une charge utile réelle de chaque cas (payée, non taguée, annulée, remboursée, avec `errors` si l'occasion se présente) dans `tests/fixtures/`, **e-mail remplacé par une adresse fictive**. Elles serviront aux tests de M3.
+- [ ] (livraisons du 14/11 récupérées ; fixtures à régénérer avec le nouveau nommage `livraison-<cas>.<numéro>-<action>.json`, puis à pousser) Copier une charge utile réelle de chaque cas (payée, non taguée, annulée, remboursée, avec `errors` si l'occasion se présente) dans `tests/fixtures/`, **e-mail remplacé par une adresse fictive**. Elles serviront aux tests de M3.
 - [x] Supprimer `public/probe.php` : retiré du dépôt le 14/11 (résultats notés plus haut). **À supprimer aussi du serveur par FTP** (`~/backoffice/public/probe.php`), l'envoi n'efface pas les fichiers.
 
 ## Analyse des livraisons
