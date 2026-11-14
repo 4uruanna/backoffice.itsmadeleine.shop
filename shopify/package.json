@@ -1,0 +1,17 @@
+{
+  "name": "retrait-qr-shopify",
+  "private": true,
+  "description": "Configuration de l'app Shopify « Retrait QR » (Shopify CLI)",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "shopify": "shopify",
+    "config:link": "shopify app config link",
+    "deploy": "shopify app deploy",
+    "info": "shopify app info"
+  },
+  "devDependencies": {
+    "@shopify/cli": "^5.0.1"
+  }
+}

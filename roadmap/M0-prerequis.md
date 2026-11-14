@@ -15,7 +15,7 @@ Tout ce qui ne demande pas de code et qui prend du temps calendaire : forfait, a
 - [ ] Lire le forfait de la boutique (admin → Paramètres → Forfait) et le noter dans `ROADMAP.md`. Sur Basic, préparer dès maintenant l'[annexe plan B](annexe-plan-b.md).
 - [ ] Créer l'app dans le Dev Dashboard (organisation de la boutique), non intégrée à l'admin (`embedded = false`).
 - [ ] Déclarer l'accès aux données client protégées pour le champ **e-mail** (niveau 2), si le Dev Dashboard le demande pour une app personnalisée.
-- [ ] Installer Shopify CLI en local (version la plus récente ; les Events demandent au moins 3.92 d'après la doc Shopify, le « ≥ 4.83 » initial est à vérifier) et relier le dossier `shopify/` à l'app (`shopify app config link`).
+- [x] Shopify CLI ajoutée au dépôt : `@shopify/cli` 5.0.1 en dépendance de dev dans `shopify/package.json` (Node ≥ 22.12). Installer avec `cd shopify && npm ci`, puis l'appeler par `npx shopify` (les Events demandent au moins la 3.92). et relier le dossier `shopify/` à l'app (`shopify app config link`).
 - [x] Écrire `shopify/shopify.app.toml` (fait, reste le `client_id` après le link) : `client_id`, `application_url = "https://backoffice.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
 - [ ] `shopify app deploy`, puis installer l'app sur la boutique de production.
 - [ ] Noter le **secret client** de l'app (servira pour le HMAC, dans `.env`).
@@ -98,11 +98,11 @@ curl -sI https://backoffice.itsmadeleine.shop/
 Abonnement et version de la CLI :
 
 ```bash
-shopify version
+cd shopify && npm ci && npx shopify version
 ```
 
 ```bash
-cd shopify && shopify app config link && shopify app deploy
+cd shopify && npm run config:link && npm run deploy
 ```
 
 ## Résultats
