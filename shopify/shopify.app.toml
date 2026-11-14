@@ -1,0 +1,45 @@
+# Configuration de l'app Shopify « Retrait QR » (jalon M0).
+# Référence : roadmap/M0-prerequis.md
+#
+# `shopify app config link` peut réécrire ce fichier : après le link,
+# comparer avec `git diff` et remettre les sections [access_scopes] et [events].
+
+client_id = "A_REMPLIR_APRES_CONFIG_LINK"
+name = "Retrait QR"
+application_url = "https://backoffice.itsmadeleine.shop"
+embedded = false
+
+[access_scopes]
+# read_orders : sujet Order des Events. read_products : tags des produits des lignes.
+scopes = "read_orders,read_products"
+
+[auth]
+redirect_urls = ["https://backoffice.itsmadeleine.shop/auth/callback"]
+
+[events]
+api_version = "2026-10"
+
+[[events.subscription]]
+handle = "commande-qr-retrait"
+topic = "Order"
+actions = ["create", "update"]
+# Noms à confirmer au `shopify app deploy` (voir « Résultats » dans M0).
+# Repli si refusés : triggers = ["order.*"] (plus de livraisons, l'API trie).
+triggers = ["order.displayFinancialStatus", "order.cancelledAt"]
+uri = "https://backoffice.itsmadeleine.shop/webhooks/shopify/order-paid"
+# Pas de query_filter : l'API décide selon l'état renvoyé (M3).
+query = """
+query commande_qr($orderId: ID!) {
+  order(id: $orderId) {
+    legacyResourceId
+    name
+    email
+    statusPageUrl
+    displayFinancialStatus
+    cancelledAt
+    lineItems(first: 25) {
+      nodes { product { tags } }
+    }
+  }
+}
+"""

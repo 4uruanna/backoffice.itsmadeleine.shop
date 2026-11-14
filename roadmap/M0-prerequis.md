@@ -15,8 +15,8 @@ Tout ce qui ne demande pas de code et qui prend du temps calendaire : forfait, a
 - [ ] Lire le forfait de la boutique (admin → Paramètres → Forfait) et le noter dans `ROADMAP.md`. Sur Basic, préparer dès maintenant l'[annexe plan B](annexe-plan-b.md).
 - [ ] Créer l'app dans le Dev Dashboard (organisation de la boutique), non intégrée à l'admin (`embedded = false`).
 - [ ] Déclarer l'accès aux données client protégées pour le champ **e-mail** (niveau 2), si le Dev Dashboard le demande pour une app personnalisée.
-- [ ] Installer Shopify CLI en local (≥ 4.83) et relier le dossier `shopify/` à l'app (`shopify app config link`).
-- [ ] Écrire `shopify/shopify.app.toml` : `client_id`, `application_url = "https://backoffice.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
+- [ ] Installer Shopify CLI en local (version la plus récente ; les Events demandent au moins 3.92 d'après la doc Shopify, le « ≥ 4.83 » initial est à vérifier) et relier le dossier `shopify/` à l'app (`shopify app config link`).
+- [x] Écrire `shopify/shopify.app.toml` (fait, reste le `client_id` après le link) : `client_id`, `application_url = "https://backoffice.itsmadeleine.shop"`, scopes `read_orders,read_products`, et l'abonnement ci-dessous.
 - [ ] `shopify app deploy`, puis installer l'app sur la boutique de production.
 - [ ] Noter le **secret client** de l'app (servira pour le HMAC, dans `.env`).
 
@@ -50,6 +50,7 @@ query commande_qr($orderId: ID!) {
 ```
 
 - Pas de `query_filter` : l'API reçoit les passages à « payée », les annulations et les remboursements, et décide elle-même (M3).
+- **Noms des déclencheurs non confirmés.** La doc Shopify (sujet Order des Events) montre des chemins comme `order.cancellation` et précise que les champs calculés ou dérivés ne peuvent pas servir de déclencheurs ; `displayFinancialStatus` en est peut-être un. Avant le deploy, ouvrir [la référence Order](https://shopify.dev/docs/api/events/latest/order) et remplacer les deux noms par ceux de la liste (candidats : `order.cancellation`, un déclencheur sur `totalRefundedSet` pour les remboursements, et celui du statut financier). Dernier recours : `triggers = ["order.*"]`, qui livre à chaque modification de commande ; l'API trie de toute façon (M3), seul le volume augmente.
 - Si `shopify app deploy` refuse `order.cancelledAt` comme déclencheur ou la complexité de la requête (limite de 100 points), noter le message exact : le repli est décrit dans M3.
 
 ### Mail (OVH MX Plan)
@@ -67,6 +68,64 @@ query commande_qr($orderId: ID!) {
 - [ ] Vérifier sur `webhosting-infos.hosting.ovh.net` que l'extension **GD** est présente.
 - [ ] Créer la base MySQL et noter hôte, nom, utilisateur et mot de passe.
 - [ ] Préparer l'accès FTP/SFTP (identifiants, client FTP).
+
+## Vérifications depuis ton poste
+
+À lancer depuis un terminal local (le conteneur de développement n'a pas accès au domaine).
+
+SPF, DMARC, DKIM :
+
+```bash
+dig +short TXT itsmadeleine.shop
+```
+
+```bash
+dig +short TXT _dmarc.itsmadeleine.shop
+```
+
+```bash
+dig +short CNAME ovhmo1._domainkey.itsmadeleine.shop
+```
+
+(le sélecteur DKIM exact est affiché dans l'espace client MX Plan une fois le DKIM activé)
+
+Sous-domaine et HTTPS :
+
+```bash
+curl -sI https://backoffice.itsmadeleine.shop/
+```
+
+Abonnement et version de la CLI :
+
+```bash
+shopify version
+```
+
+```bash
+cd shopify && shopify app config link && shopify app deploy
+```
+
+## Résultats
+
+À remplir au fil de la journée (pas de secret ici : mots de passe et secret client vont uniquement dans `.env`).
+
+| Élément | Valeur | Date |
+|---|---|---|
+| Forfait Shopify | | |
+| Version Shopify CLI | | |
+| `client_id` de l'app | (dans `shopify/shopify.app.toml`) | |
+| Déclencheurs acceptés au deploy | | |
+| Message de refus éventuel (exact) | | |
+| App installée sur la boutique | | |
+| Accès données client protégées (e-mail) | | |
+| Boîte `commandes@` créée | | |
+| SPF / DKIM / DMARC publiés | | |
+| Test Gmail : `spf=` / `dkim=` | | |
+| Sous-domaine + SSL | | |
+| Version de PHP OVH | | |
+| Extension GD | | |
+| Base MySQL (hôte, nom) | | |
+| Accès FTP/SFTP | | |
 
 ## Critères de fin
 

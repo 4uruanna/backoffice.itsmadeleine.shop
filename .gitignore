@@ -1,0 +1,5 @@
+.env
+/vendor/
+/var/
+/shopify/.shopify/
+/shopify/node_modules/
