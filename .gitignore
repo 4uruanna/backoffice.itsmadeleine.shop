@@ -4,3 +4,4 @@
 /shopify/.shopify/
 /shopify/node_modules/
 /build/
+/.phpunit.result.cache
