@@ -73,7 +73,14 @@ Un POST signé avec le vrai secret doit être accepté (`200`). Le secret est lu
 read -rs SECRET && B='{"test":true}' && SIG=$(printf '%s' "$B" | openssl dgst -sha256 -hmac "$SECRET" -binary | base64) && curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "Shopify-Hmac-Sha256: $SIG" -H 'Shopify-Webhook-Id: test-manuel' --data-binary "$B" https://app.itsmadeleine.shop/webhooks/shopify/order-paid; unset SECRET
 ```
 
-Le fichier `var/log/deliveries/<date>-test-manuel.json` apparaît alors sur le serveur (à supprimer ensuite).
+Avec `DEBUG_DELIVERIES=1`, le fichier `var/log/deliveries/<date>-test-manuel.json` apparaît alors sur le serveur (à supprimer ensuite). Le journal d'erreurs PHP d'OVH contient aussi une ligne `events: …` par livraison (décision prise, sans donnée personnelle).
+
+## Mise à jour du `.env` sur le serveur
+
+Clés ajoutées depuis le premier déploiement :
+
+- `DEBUG_DELIVERIES=1` (M3) : copie brute de chaque livraison dans `var/log/deliveries/`. À laisser à `1` jusqu'à la fin des tests de M2 (commandes B à E), puis `0`.
+- `SHOPIFY_STORE_HANDLE` : identifiant de la boutique dans l'URL de l'admin (M4).
 
 ## Après M2
 

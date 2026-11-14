@@ -7,6 +7,11 @@ services:
       - .:/var/www/html
       # Journaux et livraisons : `docker compose exec php ls var/log/deliveries`.
       - app-var:/var/www/html/var
+    environment:
+      # Tests d'intégration (tests/Integration) : base jetable backoffice_test.
+      TEST_DB_HOST: mysql
+      TEST_DB_USER: root
+      TEST_DB_PASSWORD: root
     depends_on:
       mysql:
         condition: service_healthy

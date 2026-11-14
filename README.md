@@ -40,7 +40,7 @@ docker compose run --rm php composer install
 - Mailpit (mails envoyés en local) : http://localhost:8025
 - MySQL : le schéma de `migrations/` est appliqué à la création du volume. Pour repartir de zéro : `docker compose down -v`.
 
-Tests :
+Tests (unitaires, et MySQL sur une base jetable `backoffice_test`) :
 
 ```bash
 docker compose run --rm php vendor/bin/phpunit

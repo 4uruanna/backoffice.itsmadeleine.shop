@@ -29,18 +29,18 @@ Toujours répondre `200` après un HMAC valide, même quand rien n'est fait : si
 
 ## Tâches
 
-- [ ] Parser la charge utile (forme relevée en M2) dans un objet `OrderSnapshot` : id, nom, e-mail, `statusPageUrl`, statut financier, `cancelledAt`, liste des tags.
-- [ ] Contrôle du tag : `PICKUP_TAG` comparé sans tenir compte de la casse ni des espaces ; `product` nul (produit supprimé, article personnalisé) ignoré.
-- [ ] Service de décision qui applique la table ci-dessus. Code pur, sans base, testé par PHPUnit sur les fixtures de M2.
-- [ ] Dépôt `PickupOrderRepository` :
-  - `insertIfAbsent()` : `INSERT IGNORE` sur `shopify_order_id`, renvoie si la ligne est nouvelle ;
+- [x] Parser la charge utile (forme relevée en M2) dans un objet `OrderSnapshot` : id, nom, e-mail, `statusPageUrl`, statut financier, `cancelledAt`, liste des tags (`src/Domain/`). `OrderEvent` ajoute `errors` et l'identifiant tiré de `query_variables` quand `data.order` est inutilisable.
+- [x] Contrôle du tag : `PICKUP_TAG` comparé sans tenir compte de la casse ni des espaces ; `product` nul (produit supprimé, article personnalisé) ignoré.
+- [x] Service de décision qui applique la table ci-dessus (`src/Service/OrderDecider.php`). Code pur, sans base, testé par PHPUnit sur les fixtures de M2.
+- [x] Dépôt `PickupOrderRepository` (`PdoPickupOrderRepository`) :
+  - `insertIfAbsent()` : `INSERT … ON DUPLICATE KEY UPDATE id = id` sur `shopify_order_id` (plutôt qu'`INSERT IGNORE`, qui avalerait aussi les autres erreurs), renvoie si la ligne est nouvelle ;
   - `revoke()` : `UPDATE … SET revoked_at, revoked_reason WHERE shopify_order_id = ? AND revoked_at IS NULL` ;
   - `resumeFromPayloadError()` : `UPDATE … WHERE shopify_order_id = ? AND status = 'error' AND error_code = 'payload_errors'`.
-- [ ] Conserver `Shopify-Webhook-Id` dans `webhook_id` (diagnostic).
-- [ ] File de tâches en mémoire (`DeferredTasks`) : le contrôleur y ajoute « traiter la commande N » ; exécutée en M7 après la réponse. En attendant, exécution synchrone à la fin de la requête.
-- [ ] Alertes : à ce stade, une ligne dans `var/log/alerts.log` ; l'envoi par mail arrive en M7.
-- [ ] Retirer la sonde (l'écriture brute des livraisons peut rester derrière une option `.env`, `DEBUG_DELIVERIES=0` par défaut, avec purge).
-- [ ] Tests PHPUnit : un test par ligne de la table de décision ; doublon `create` puis `update` ; HMAC invalide → `401` et aucune écriture.
+- [x] Conserver `Shopify-Webhook-Id` dans `webhook_id` (diagnostic).
+- [x] File de tâches en mémoire (`DeferredTasks`) : le contrôleur y ajoute « traiter la commande N » ; exécutée en M7 après la réponse. En attendant, exécution synchrone à la fin de la requête.
+- [x] Alertes : à ce stade, une ligne dans `var/log/alerts.log` ; l'envoi par mail arrive en M7.
+- [x] Retirer la sonde (l'écriture brute des livraisons peut rester derrière une option `.env`, `DEBUG_DELIVERIES=0` par défaut, avec purge). **Sur le serveur, `DEBUG_DELIVERIES=1` tant que les commandes B à E de M2 ne sont pas faites** ; purge en M7.
+- [x] Tests PHPUnit : un test par ligne de la table de décision ; doublon `create` puis `update` ; HMAC invalide → `401` et aucune écriture. En plus : tests MySQL (`tests/Integration`, base jetable `backoffice_test`), dont 8 processus qui insèrent la même commande en même temps ; fixtures réelles de M2 vérifiées si présentes (`RealFixturesTest`).
 
 ## Repli si les annulations ou remboursements ne sont pas livrés (constat de M2)
 
@@ -49,7 +49,7 @@ Toujours répondre `200` après un HMAC valide, même quand rien n'est fait : si
 
 ## Critères de fin
 
-- Tous les tests passent en local.
+- [x] Tous les tests passent en local (63 tests, 14/11). De bout en bout via Apache : `create` + `update` simultanés → une ligne, annulation → révoquée, réponse en 50 ms.
 - Sur la production : une commande provisoire taguée et payée crée une ligne `pending` ; non taguée → `ignored` ; annulée ensuite → `revoked_at` rempli.
 - Une même commande livrée deux fois (`create` + `update`) ne crée qu'une ligne.
 - Le temps de réponse reste sous la seconde (relevé dans les journaux d'accès OVH).
