@@ -31,6 +31,24 @@ Lever les points bloquants du §4 du plan v2 avec de vraies livraisons, sur la b
 - [ ] Copier une charge utile réelle de chaque cas (payée, non taguée, annulée, remboursée, avec `errors` si l'occasion se présente) dans `tests/fixtures/`, **e-mail remplacé par une adresse fictive**. Elles serviront aux tests de M3.
 - [ ] Supprimer `public/probe.php`.
 
+## Analyse des livraisons
+
+Récupérer par FTP le dossier `~/backoffice/var/log/deliveries/` du serveur dans `var/deliveries-ovh/` du dépôt (ignoré par git : données personnelles), puis :
+
+```bash
+php scripts/analyse-livraisons.php var/deliveries-ovh
+```
+
+Le script demande le secret client sans l'afficher (Entrée vide : pas de vérification) et résume chaque livraison : signature, en-têtes, enveloppe, chemin de la commande, e-mail présent ou absent (masqué), statut financier, `cancelledAt`, `statusPageUrl`, tags, `errors`.
+
+Pour écrire les fixtures anonymisées (e-mails et `statusPageUrl` remplacés, signature recalculée avec le secret des tests) :
+
+```bash
+php scripts/analyse-livraisons.php var/deliveries-ovh --fixtures=tests/fixtures
+```
+
+Relire les fixtures avant de les commiter.
+
 ## Grille de décision
 
 | Résultat | Décision |
