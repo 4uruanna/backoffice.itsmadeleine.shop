@@ -6,6 +6,8 @@ namespace App\Tests\Integration;
 
 use App\Domain\OrderSnapshot;
 use App\Repository\PdoPickupOrderRepository;
+use App\Repository\PdoScanRepository;
+use App\Repository\ScanRepository;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -140,5 +142,45 @@ final class PdoPickupOrderRepositoryTest extends TestCase
         self::assertCount(1, $inserts, implode(', ', $results));
         self::assertCount($workers - 1, array_keys($results, 'doublon', true));
         self::assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM pickup_orders')->fetchColumn());
+    }
+
+    public function testJetonAttribueUneSeuleFois(): void
+    {
+        $id = (int) $this->repository->insertIfAbsent(self::ID, $this->order(), 'pending', null, null, null);
+        $first = str_repeat('a', 32);
+
+        self::assertSame($first, $this->repository->assignToken($id, $first));
+        self::assertSame($first, $this->repository->assignToken($id, str_repeat('b', 32)), 'jeton existant conservé');
+        self::assertNull($this->repository->assignToken($id + 1, str_repeat('c', 32)), 'ligne absente');
+
+        self::assertSame($id, (int) $this->repository->findByToken($first)['id']);
+        self::assertNull($this->repository->findByToken(str_repeat('b', 32)));
+    }
+
+    public function testScansJournalisesEtSupprimesAvecLaCommande(): void
+    {
+        $id = (int) $this->repository->insertIfAbsent(self::ID, $this->order(), 'pending', null, null, null);
+        $scans = new PdoScanRepository(fn () => $this->pdo);
+
+        $scans->record($id, ScanRepository::REDIRECTED, '2001:db8::1', str_repeat('u', 300));
+        $scans->record($id, ScanRepository::REVOKED, null, null);
+
+        $rows = $this->pdo->query('SELECT * FROM scans ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+        self::assertSame(['redirected', 'revoked'], array_column($rows, 'result'));
+        self::assertSame('2001:db8::1', $rows[0]['ip']);
+        self::assertSame(255, strlen($rows[0]['user_agent']));
+        self::assertLessThan(5, abs(strtotime($rows[0]['scanned_at'] . ' UTC') - time()), 'scanned_at en UTC');
+
+        // Purge (M7) : les scans suivent la commande (ON DELETE CASCADE).
+        $this->pdo->exec('DELETE FROM pickup_orders');
+        self::assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM scans')->fetchColumn());
+    }
+
+    public function testResultatDeScanInvalideLeveUneErreur(): void
+    {
+        $id = (int) $this->repository->insertIfAbsent(self::ID, $this->order(), 'pending', null, null, null);
+
+        $this->expectException(\PDOException::class);
+        (new PdoScanRepository(fn () => $this->pdo))->record($id, 'inconnu', null, null);
     }
 }

@@ -8,6 +8,7 @@ Hébergement OVH Perso, PHP 8.5, multisite `app.itsmadeleine.shop` → dossier r
 ├── migrations/
 ├── public/              ← racine web (index.php, .htaccess, .ovhconfig)
 ├── src/
+├── templates/           ← pages de scan (M4), mail (M5)
 ├── var/log/deliveries/  ← créé par l'app (livraisons de la sonde, données personnelles)
 └── vendor/
 ```

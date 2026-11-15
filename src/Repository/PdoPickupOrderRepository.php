@@ -97,6 +97,29 @@ final class PdoPickupOrderRepository implements PickupOrderRepository
         return $row === false ? null : $row;
     }
 
+    public function assignToken(int $id, string $token): ?string
+    {
+        $pdo = ($this->connect)();
+        // « token IS NULL » : deux traitements simultanés ne peuvent pas écraser un jeton déjà envoyé.
+        $pdo->prepare('UPDATE pickup_orders SET token = ?, updated_at = UTC_TIMESTAMP() WHERE id = ? AND token IS NULL')
+            ->execute([$token, $id]);
+
+        $statement = $pdo->prepare('SELECT token FROM pickup_orders WHERE id = ?');
+        $statement->execute([$id]);
+        $current = $statement->fetchColumn();
+
+        return $current === false ? null : (string) $current;
+    }
+
+    public function findByToken(string $token): ?array
+    {
+        $statement = ($this->connect)()->prepare('SELECT * FROM pickup_orders WHERE token = ?');
+        $statement->execute([$token]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
     private static function cut(?string $value, int $length): ?string
     {
         return $value === null ? null : mb_substr($value, 0, $length);

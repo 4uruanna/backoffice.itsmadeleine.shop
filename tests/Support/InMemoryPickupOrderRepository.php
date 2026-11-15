@@ -31,6 +31,7 @@ final class InMemoryPickupOrderRepository implements PickupOrderRepository
             'last_error' => $lastError,
             'webhook_id' => $webhookId,
             'attempts' => 0,
+            'token' => null,
             'revoked_at' => null,
             'revoked_reason' => null,
         ];
@@ -73,5 +74,29 @@ final class InMemoryPickupOrderRepository implements PickupOrderRepository
     public function findByShopifyOrderId(int $shopifyOrderId): ?array
     {
         return $this->rows[$shopifyOrderId] ?? null;
+    }
+
+    public function assignToken(int $id, string $token): ?string
+    {
+        foreach ($this->rows as $shopifyOrderId => $row) {
+            if ($row['id'] === $id) {
+                $this->rows[$shopifyOrderId]['token'] ??= $token;
+
+                return $this->rows[$shopifyOrderId]['token'];
+            }
+        }
+
+        return null;
+    }
+
+    public function findByToken(string $token): ?array
+    {
+        foreach ($this->rows as $row) {
+            if ($row['token'] === $token) {
+                return $row;
+            }
+        }
+
+        return null;
     }
 }

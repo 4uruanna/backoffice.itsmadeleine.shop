@@ -7,8 +7,8 @@ namespace App\Repository;
 use App\Domain\OrderSnapshot;
 
 /**
- * Écritures de la réception Events. Toutes idempotentes : une livraison rejouée,
- * ou deux livraisons simultanées (create + update), ne créent qu'une ligne.
+ * Commandes à retrait par QR. Écritures de la réception Events toutes idempotentes :
+ * une livraison rejouée, ou deux livraisons simultanées (create + update), ne créent qu'une ligne.
  */
 interface PickupOrderRepository
 {
@@ -38,4 +38,15 @@ interface PickupOrderRepository
 
     /** @return array<string, mixed>|null */
     public function findByShopifyOrderId(int $shopifyOrderId): ?array;
+
+    /**
+     * Attribue un jeton à la ligne si elle n'en a pas encore (M4). Un nouvel essai
+     * réutilise ainsi le même QR.
+     *
+     * @return string|null jeton de la ligne (nouveau ou existant), null si la ligne n'existe pas
+     */
+    public function assignToken(int $id, string $token): ?string;
+
+    /** @return array<string, mixed>|null */
+    public function findByToken(string $token): ?array;
 }

@@ -6,9 +6,13 @@ namespace App\Tests\Unit;
 
 use App\AppFactory;
 use App\Config;
+use App\Domain\OrderSnapshot;
 use App\Service\DeferredTasks;
+use App\Service\QrGenerator;
+use App\Service\Template;
 use App\Service\ShopifyHmac;
 use App\Tests\Support\InMemoryPickupOrderRepository;
+use App\Tests\Support\InMemoryScanRepository;
 use App\Tests\Support\Payloads;
 use App\Tests\Support\SpyAlertLog;
 use PDO;
@@ -25,6 +29,7 @@ final class AppTest extends TestCase
 
     private string $root;
     private InMemoryPickupOrderRepository $orders;
+    private InMemoryScanRepository $scans;
     private DeferredTasks $tasks;
     private string|false $previousErrorLog;
 
@@ -33,6 +38,7 @@ final class AppTest extends TestCase
         $this->root = sys_get_temp_dir() . '/backoffice-test-' . bin2hex(random_bytes(4));
         mkdir($this->root);
         $this->orders = new InMemoryPickupOrderRepository();
+        $this->scans = new InMemoryScanRepository();
         $this->tasks = new DeferredTasks();
         // Les contrôleurs journalisent chaque livraison : pas dans la sortie des tests.
         $this->previousErrorLog = ini_set('error_log', '/dev/null');
@@ -134,6 +140,129 @@ final class AppTest extends TestCase
         self::assertSame('Order', $record['headers']['Shopify-Topic']);
     }
 
+    public function testTraitementDiffereAttribueUnJetonStable(): void
+    {
+        $this->post($this->app(), json_encode(Payloads::order()), signed: true);
+        $this->tasks->run();
+
+        $token = $this->orders->findByShopifyOrderId(8264632992077)['token'];
+        self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $token);
+
+        // Nouvel essai (cron, M7) : même jeton, donc même QR.
+        $this->orders->assignToken($this->orders->findByShopifyOrderId(8264632992077)['id'], str_repeat('f', 32));
+        self::assertSame($token, $this->orders->findByShopifyOrderId(8264632992077)['token']);
+    }
+
+    public function testScanRedirigeVersLaCommandeDansLAdmin(): void
+    {
+        $token = $this->orderWithToken();
+
+        $response = $this->handle($this->app(), 'GET', '/r/' . $token, headers: ['User-Agent' => 'iPhone Safari']);
+
+        self::assertSame(302, $response->getStatusCode());
+        self::assertSame('https://admin.shopify.com/store/itsmadeleine-love-2/orders/8264632992077', $response->getHeaderLine('Location'));
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame('no-referrer', $response->getHeaderLine('Referrer-Policy'));
+        self::assertStringContainsString('noindex', $response->getHeaderLine('X-Robots-Tag'));
+        self::assertSame([[
+            'pickup_order_id' => 1, 'result' => 'redirected', 'ip' => '203.0.113.7', 'user_agent' => 'iPhone Safari',
+        ]], $this->scans->scans);
+    }
+
+    public function testScanCommandeAnnuleePageDAvertissement(): void
+    {
+        $token = $this->orderWithToken();
+        $this->orders->rows[8264632992077]['revoked_at'] = '2026-11-14 20:05:00';
+        $this->orders->rows[8264632992077]['revoked_reason'] = 'cancelled';
+
+        $response = $this->handle($this->app(), 'GET', '/r/' . $token);
+        $html = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertStringStartsWith('text/html', $response->getHeaderLine('Content-Type'));
+        self::assertStringContainsString('Ne pas remettre la commande', $html);
+        self::assertStringContainsString('Commande #1094 annulée', $html);
+        self::assertStringContainsString('14/11/2026 à 21:05', $html, 'heure de Paris');
+        self::assertStringContainsString('href="https://admin.shopify.com/store/itsmadeleine-love-2/orders/8264632992077"', $html);
+        self::assertStringContainsString('noindex', $html);
+        self::assertStringNotContainsString('@', $html, 'aucune adresse e-mail');
+        self::assertDoesNotMatchRegularExpression('#(src|href)="(?!https://admin\.shopify\.com/)#', $html, 'aucune ressource externe');
+        self::assertSame('revoked', $this->scans->scans[0]['result']);
+    }
+
+    public function testScanCommandeRemboursee(): void
+    {
+        $token = $this->orderWithToken();
+        $this->orders->rows[8264632992077]['revoked_at'] = '2026-07-01 08:00:00';
+        $this->orders->rows[8264632992077]['revoked_reason'] = 'refunded';
+
+        $html = (string) $this->handle($this->app(), 'GET', '/r/' . $token)->getBody();
+
+        self::assertStringContainsString('Commande #1094 remboursée', $html);
+        self::assertStringContainsString('01/07/2026 à 10:00', $html, 'heure d\'été de Paris');
+    }
+
+    public function testNomDeCommandeEchappe(): void
+    {
+        $token = $this->orderWithToken();
+        $this->orders->rows[8264632992077]['order_name'] = '<script>x</script>';
+        $this->orders->rows[8264632992077]['revoked_at'] = '2026-11-14 20:05:00';
+        $this->orders->rows[8264632992077]['revoked_reason'] = 'cancelled';
+
+        $html = (string) $this->handle($this->app(), 'GET', '/r/' . $token)->getBody();
+
+        self::assertStringNotContainsString('<script>', $html);
+        self::assertStringContainsString('&lt;script&gt;', $html);
+    }
+
+    public function testJetonInconnuOuMalFormePageNeutre(): void
+    {
+        $this->orderWithToken();
+        $app = $this->app();
+
+        $unknown = $this->handle($app, 'GET', '/r/' . str_repeat('0', 32));
+        $malformed = $this->handle($app, 'GET', '/r/pas-un-jeton');
+        $uppercase = $this->handle($app, 'GET', '/r/' . str_repeat('A', 32));
+
+        foreach ([$unknown, $malformed, $uppercase] as $response) {
+            self::assertSame(404, $response->getStatusCode());
+            self::assertSame((string) $unknown->getBody(), (string) $response->getBody(), 'même page');
+            self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        }
+        self::assertStringContainsString('QR code non reconnu', (string) $unknown->getBody());
+        self::assertSame([], $this->scans->scans);
+    }
+
+    public function testJournalDeScanEnEchecNEmpechePasLaRedirection(): void
+    {
+        $token = $this->orderWithToken();
+        $this->scans->fail = true;
+
+        $response = $this->handle($this->app(), 'GET', '/r/' . $token);
+
+        self::assertSame(302, $response->getStatusCode());
+    }
+
+    public function testUserAgentTronque(): void
+    {
+        $token = $this->orderWithToken();
+
+        $this->handle($this->app(), 'GET', '/r/' . $token, headers: ['User-Agent' => str_repeat('a', 400)]);
+
+        self::assertSame(255, strlen($this->scans->scans[0]['user_agent']));
+    }
+
+    public function testScanSansIdentifiantDeBoutiqueRepond500(): void
+    {
+        $token = $this->orderWithToken();
+
+        $response = $this->handle($this->app(storeHandle: null), 'GET', '/r/' . $token);
+
+        self::assertSame(500, $response->getStatusCode());
+        self::assertSame([], $this->scans->scans, 'rien de journalisé sans lien à ouvrir');
+    }
+
     public function testSansSecretRepond500PourQueShopifyReessaie(): void
     {
         $response = $this->post($this->app(secret: null), '{}', headers: ['Shopify-Hmac-Sha256' => 'x']);
@@ -141,11 +270,18 @@ final class AppTest extends TestCase
         self::assertSame(500, $response->getStatusCode());
     }
 
-    private function app(?string $secret = self::SECRET, ?\Closure $connect = null, bool $debugDeliveries = false): App
-    {
+    private function app(
+        ?string $secret = self::SECRET,
+        ?\Closure $connect = null,
+        bool $debugDeliveries = false,
+        ?string $storeHandle = 'itsmadeleine-love-2',
+    ): App {
         $values = ['APP_ENV' => 'test', 'DEBUG_DELIVERIES' => $debugDeliveries ? '1' : '0'];
         if ($secret !== null) {
             $values['SHOPIFY_CLIENT_SECRET'] = $secret;
+        }
+        if ($storeHandle !== null) {
+            $values['SHOPIFY_STORE_HANDLE'] = $storeHandle;
         }
 
         return AppFactory::create(
@@ -155,7 +291,18 @@ final class AppTest extends TestCase
             $this->tasks,
             $this->orders,
             new SpyAlertLog(),
+            $this->scans,
+            new Template(dirname(__DIR__, 2) . '/templates'),
         );
+    }
+
+    /** Commande #1094 enregistrée et traitée (jeton attribué). */
+    private function orderWithToken(): string
+    {
+        $id = $this->orders->insertIfAbsent(8264632992077, new OrderSnapshot(8264632992077, '#1094', 'client@example.com', 'https://example.myshopify.com/s', 'PAID', null, ['retrait-qr']), 'pending', null, null, 'wh');
+        \assert($id !== null);
+
+        return (string) $this->orders->assignToken($id, QrGenerator::newToken());
     }
 
     /** @param array<string, string> $headers */
@@ -172,7 +319,7 @@ final class AppTest extends TestCase
     /** @param array<string, string> $headers */
     private function handle(App $app, string $method, string $path, string $body = '', array $headers = []): ResponseInterface
     {
-        $request = (new ServerRequestFactory())->createServerRequest($method, $path)
+        $request = (new ServerRequestFactory())->createServerRequest($method, $path, ['REMOTE_ADDR' => '203.0.113.7'])
             ->withBody((new StreamFactory())->createStream($body));
         foreach ($headers as $name => $value) {
             $request = $request->withHeader($name, $value);

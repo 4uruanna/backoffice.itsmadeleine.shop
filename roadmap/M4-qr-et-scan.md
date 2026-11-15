@@ -1,6 +1,7 @@
 # M4 — QR code et route de scan
 
 **Quand** : lundi 16/11, matin. Avec le jour d'avance pris le 14/11, possible dès le dimanche 15/11.
+**État** : code fait le dimanche 15/11 ; restent le déploiement et le test au téléphone.
 **Dépend de** : M3 (lignes `pending` en base).
 **Débloque** : M5.
 
@@ -33,27 +34,50 @@ Générer un jeton et un QR par commande. Au scan, journaliser puis rediriger le
 - [ ] **Copie brute des livraisons** : `DEBUG_DELIVERIES=1` dans le `.env` du serveur. Le passer à `0` une fois la commande B faite et les fixtures poussées ; supprimer alors le contenu de `~/backoffice/var/log/deliveries/` (données personnelles ; purge automatique prévue en M7).
 - [ ] **Temps de réponse (M3)**, non bloquant : relever dans les journaux d'accès OVH la durée des `POST /webhooks/shopify/order-paid` (attendu : sous la seconde ; 50 ms en local).
 
-Déjà en place pour M4 : `SHOPIFY_STORE_HANDLE=itsmadeleine-love-2` dans le `.env` du serveur ; GD avec PNG disponible sur OVH (pas besoin du repli SVG) ; lignes `pending` créées par M3. Le traitement d'une ligne `pending` est pour l'instant un simple journal : fonction passée à `OrderEventHandler` dans `src/AppFactory.php`, à remplacer par le vrai traitement (M4 à M7).
+Déjà en place pour M4 : `SHOPIFY_STORE_HANDLE=itsmadeleine-love-2` dans le `.env` du serveur ; GD avec PNG disponible sur OVH (pas besoin du repli SVG) ; lignes `pending` créées par M3. Le traitement d'une ligne `pending` (fonction passée à `OrderEventHandler` dans `src/AppFactory.php`) attribue désormais le jeton ; le mail (M5), le bucket (M6) et la prise en charge atomique (M7) viendront s'y ajouter.
 
 ## Tâches
 
+Code livré le 15/11 (80 tests verts, dont MySQL 8.4 ; parcours complet vérifié sous Apache : livraison signée → jeton → QR décodé → scan → 302).
+
 ### Jeton et QR
 
-- [ ] À la prise en charge d'une commande (`pending` → `processing`, M7) : si `token` est nul, `bin2hex(random_bytes(16))`, enregistré **avant** l'envoi, pour qu'un nouvel essai réutilise le même QR.
-- [ ] Service `QrGenerator` : PNG de `https://app.itsmadeleine.shop/r/<jeton>`, correction d'erreur M, marge suffisante, environ 300 px, généré en mémoire (aucun fichier sur disque).
-- [ ] Test : le PNG produit se relit avec un décodeur (bibliothèque de test ou vérification manuelle par téléphone).
+- [x] Jeton `bin2hex(random_bytes(16))` attribué par le traitement différé de la commande (`AppFactory`), **avant** tout envoi, par `UPDATE … WHERE token IS NULL` : un nouvel essai réutilise le même QR (`PickupOrderRepository::assignToken`). En M7, cet appel suivra la prise en charge atomique `pending` → `processing`.
+- [x] Service `QrGenerator` (`src/Service/QrGenerator.php`) : PNG de `<APP_URL>/r/<jeton>`, correction d'erreur M, marge de 4 modules, 328 px (version 4, 41 modules × 8 px), généré en mémoire.
+- [x] Test : le PNG produit est relu par le décodeur de `chillerlan/php-qrcode` (`tests/Unit/QrGeneratorTest.php`). Reste la vérification au téléphone (critères de fin).
+- [x] Script `scripts/qr.php <jeton>` : écrit le PNG d'un jeton, pour tester le scan avant le mail de M5.
 
 ### Route `GET /r/{token}`
 
-- [ ] Format du jeton contrôlé (`^[0-9a-f]{32}$`), sinon `404` neutre.
-- [ ] Jeton inconnu → `404` neutre (même page, même temps de réponse, pas d'indication).
-- [ ] Jeton connu, **non révoqué** → ligne `scans` (`result = 'redirected'`, IP, user-agent tronqué à 255) → `302` vers `https://admin.shopify.com/store/<SHOPIFY_STORE_HANDLE>/orders/<shopify_order_id>`.
-- [ ] Jeton connu, **révoqué** → ligne `scans` (`result = 'revoked'`) → **page d'avertissement** (`200`, `Cache-Control: no-store`, `noindex`) :
-  - fond rouge, titre « Ne pas remettre la commande » ;
-  - « Commande #1234 annulée » ou « remboursée », avec la date ;
-  - **lien vers la commande dans l'admin Shopify** (même URL que la redirection), pour que le staff vérifie l'état ;
-  - pas d'e-mail client ni d'autre donnée personnelle sur la page.
-- [ ] Gabarit `templates/scan/revoked.html.php`, lisible sur téléphone, sans ressource externe.
+- [x] Format du jeton contrôlé (`\A[0-9a-f]{32}\z`, pas de retour à la ligne final accepté), sinon `404` neutre.
+- [x] Jeton inconnu → `404`, même page (`templates/scan/not-found.html.php`), aucun scan journalisé.
+- [x] Jeton connu, **non révoqué** → ligne `scans` (`redirected`, IP, user-agent tronqué à 255) → `302` vers `https://admin.shopify.com/store/<SHOPIFY_STORE_HANDLE>/orders/<shopify_order_id>`.
+- [x] Jeton connu, **révoqué** → ligne `scans` (`revoked`) → page d'avertissement (`200`) : fond rouge, « Ne pas remettre la commande », « Commande #1234 annulée » ou « remboursée » avec la date **à l'heure de Paris**, bouton vers la commande dans l'admin, aucune donnée personnelle.
+- [x] Gabarit `templates/scan/revoked.html.php`, lisible sur téléphone, sans ressource externe (CSP `default-src 'none'`).
+- [x] Toutes les réponses : `Cache-Control: no-store`, `X-Robots-Tag: noindex, nofollow`, `Referrer-Policy: no-referrer` (le jeton n'est pas transmis à `admin.shopify.com`).
+- [x] Échec d'écriture du scan : journalisé, sans bloquer la redirection (le staff doit pouvoir ouvrir la commande).
+- [x] `SHOPIFY_STORE_HANDLE` absent : `500` et rien de journalisé, plutôt qu'un lien faux.
+
+### Déploiement
+
+- [ ] Préparer la release (`scripts/build-release.sh`, qui inclut désormais le nouveau dossier `templates/`) et l'envoyer par FTP. Vérifier sur le serveur la présence de `~/backoffice/templates/scan/`.
+- [ ] Vérifier `https://app.itsmadeleine.shop/r/00000000000000000000000000000000` → page « QR code non reconnu » (404).
+
+### Test au téléphone (critères de fin)
+
+Les lignes créées avant ce déploiement n'ont pas de jeton : il faut une nouvelle commande taguée. La **commande B** (paiement différé, reliquat de M2) fait l'affaire.
+
+1. Après le passage à « payée », lire le jeton dans phpMyAdmin :
+   ```sql
+   SELECT id, order_name, status, token FROM pickup_orders ORDER BY id DESC LIMIT 5;
+   ```
+2. Sur le poste, générer le QR et l'afficher à l'écran :
+   ```bash
+   php scripts/qr.php <jeton>
+   ```
+3. Le scanner avec l'appareil photo d'un téléphone connecté à l'admin, puis d'un téléphone non connecté.
+4. Annuler la commande dans l'admin, scanner à nouveau : page rouge, puis bouton → la commande s'ouvre.
+5. Contrôler `SELECT result, scanned_at, user_agent FROM scans ORDER BY id DESC;`.
 
 ## Critères de fin
 

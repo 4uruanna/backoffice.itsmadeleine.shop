@@ -6,14 +6,19 @@ namespace App;
 
 use App\Controller\HealthController;
 use App\Controller\OrderEventController;
+use App\Controller\ScanController;
 use App\Repository\PdoPickupOrderRepository;
+use App\Repository\PdoScanRepository;
 use App\Repository\PickupOrderRepository;
+use App\Repository\ScanRepository;
 use App\Service\AlertLog;
 use App\Service\DeferredTasks;
 use App\Service\DeliveryLog;
 use App\Service\OrderDecider;
 use App\Service\OrderEventHandler;
+use App\Service\QrGenerator;
 use App\Service\ShopifyHmac;
+use App\Service\Template;
 use PDO;
 use Slim\App;
 use Slim\Factory\AppFactory as SlimAppFactory;
@@ -34,11 +39,15 @@ final class AppFactory
         ?DeferredTasks $tasks = null,
         ?PickupOrderRepository $orders = null,
         ?AlertLog $alerts = null,
+        ?ScanRepository $scans = null,
+        ?Template $templates = null,
     ): App {
         $connect ??= self::lazyConnection($config);
         $tasks ??= new DeferredTasks();
         $orders ??= new PdoPickupOrderRepository($connect);
         $alerts ??= new AlertLog($projectRoot . '/var/log/alerts.log');
+        $scans ??= new PdoScanRepository($connect);
+        $templates ??= new Template($projectRoot . '/templates');
 
         $secret = $config->get('SHOPIFY_CLIENT_SECRET');
         $hmac = $secret === null ? null : new ShopifyHmac($secret);
@@ -52,9 +61,15 @@ final class AppFactory
             $orders,
             $alerts,
             $tasks,
-            // Traitement d'une commande `pending` : QR (M4), mail (M5), bucket (M6), verrou (M7).
-            static function (int $pickupOrderId): void {
-                error_log("events: ligne $pickupOrderId en attente de traitement (M4-M7)");
+            // Traitement d'une commande `pending` : jeton (M4), mail (M5), bucket (M6), verrou (M7).
+            // Le jeton est enregistré avant tout envoi : un nouvel essai réutilise le même QR.
+            static function (int $pickupOrderId) use ($orders): void {
+                $token = $orders->assignToken($pickupOrderId, QrGenerator::newToken());
+                error_log(sprintf(
+                    'events: ligne %d %s, mail à venir (M5-M7)',
+                    $pickupOrderId,
+                    $token === null ? 'introuvable' : 'avec jeton',
+                ));
             },
         );
 
@@ -67,6 +82,12 @@ final class AppFactory
 
         $app->get('/health', new HealthController($connect));
         $app->post('/webhooks/shopify/order-paid', new OrderEventController($hmac, $handler, $deliveryLog));
+        $app->get('/r/{token}', new ScanController(
+            $orders,
+            $scans,
+            $templates,
+            $config->get('SHOPIFY_STORE_HANDLE'),
+        ));
 
         return $app;
     }
