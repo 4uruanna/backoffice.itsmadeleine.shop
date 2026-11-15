@@ -71,10 +71,11 @@ Les lignes créées avant ce déploiement n'ont pas de jeton : il faut une nouve
    ```sql
    SELECT id, order_name, status, token FROM pickup_orders ORDER BY id DESC LIMIT 5;
    ```
-2. Sur le poste, générer le QR et l'afficher à l'écran :
+2. Sur le poste, générer le QR (`qr-<début du jeton>.png` à la racine du dépôt) et l'afficher à l'écran :
    ```bash
-   php scripts/qr.php <jeton>
+   docker compose run --rm php php scripts/qr.php <jeton>
    ```
+   Sans Docker, après `composer install` : `php scripts/qr.php <jeton>` (GD nécessaire).
 3. Le scanner avec l'appareil photo d'un téléphone connecté à l'admin, puis d'un téléphone non connecté.
 4. Annuler la commande dans l'admin, scanner à nouveau : page rouge, puis bouton → la commande s'ouvre.
 5. Contrôler `SELECT result, scanned_at, user_agent FROM scans ORDER BY id DESC;`.

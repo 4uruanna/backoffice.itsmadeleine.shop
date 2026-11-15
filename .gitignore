@@ -5,3 +5,4 @@
 /shopify/node_modules/
 /build/
 /.phpunit.result.cache
+/qr-*.png
