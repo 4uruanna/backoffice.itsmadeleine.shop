@@ -4,7 +4,7 @@
 **Dépend de** : rien.
 **Débloque** : M1 et M2.
 
-> **État au 14/11** : tout est fait sauf le mail de test vers Gmail, à lancer une fois le DKIM propagé.
+> **État au 16/11** : ✅ terminé. Mail de test reçu dans Gmail (onglet Principal) avec SPF, DKIM et DMARC à `PASS`.
 
 ## Objectif
 
@@ -63,7 +63,7 @@ query commande_qr($orderId: ID!) {
 - [x] Vérifier l'enregistrement SPF : un seul TXT `v=spf1 include:mx.ovh.com ~all` (fusionner s'il en existe déjà un).
 - [x] Activer le DKIM dans l'espace client MX Plan (14/11, propagation en cours).
 - [x] Ajouter un DMARC en surveillance : `_dmarc` TXT `v=DMARC1; p=none; rua=mailto:<adresse de rapport>` (14/11). Adresse de rapport du domaine conseillée (redirection `dmarc@` vers une boîte perso).
-- [ ] Envoyer un mail de test depuis le webmail vers une adresse Gmail et lire l'en-tête : `spf=pass`, `dkim=pass` (à refaire le soir si le DNS n'a pas fini de se propager).
+- [x] Envoyer un mail de test vers une adresse Gmail et lire l'en-tête : `spf=pass`, `dkim=pass` (16/11, envoyé par `scripts/test-smtp.php` via `ssl0.ovh.net:465`, le webmail et l'envoi depuis Mail sur macOS n'ayant pas marché).
 
 ### Hébergement OVH Perso
 
@@ -124,7 +124,7 @@ cd shopify && pnpm app:link && pnpm app:deploy
 | Accès données client protégées (e-mail) | | |
 | Boîte `commandes@` créée | Oui ; SMTP `ssl0.ovh.net:465` SSL/TLS, identifiant = adresse complète | 14/11 |
 | SPF / DKIM / DMARC publiés | DKIM activé, DMARC ajouté, SPF unique vérifié (14/11) | 14/11 |
-| Test Gmail : `spf=` / `dkim=` | | |
+| Test Gmail : `spf=` / `dkim=` | Reçu dans l'onglet Principal ; SPF `PASS` (IP 188.165.34.173), DKIM `PASS` (domaine itsmadeleine.shop), DMARC `PASS` | 16/11 |
 | Sous-domaine + SSL | `app.itsmadeleine.shop` créé, HTTPS OK (`/health` → `ok`) | 14/11 |
 | Version de PHP OVH | 8.5 | 14/11 |
 | Extension GD | Oui (PNG pris en charge) ; Imagick aussi présent | 14/11 |
@@ -138,7 +138,7 @@ cd shopify && pnpm app:link && pnpm app:deploy
 - [x] `https://app.itsmadeleine.shop` répond en HTTPS.
 - [x] Boîte mail créée, DKIM activé, SPF et DMARC publiés.
 - [x] Version de PHP, présence de GD et accès base notés.
-- [ ] Mail de test vers Gmail : `spf=pass`, `dkim=pass`.
+- [x] Mail de test vers Gmail : `spf=pass`, `dkim=pass` (16/11).
 
 ## Risques
 

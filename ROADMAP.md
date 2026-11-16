@@ -14,12 +14,13 @@
 
 | Jalon | État | Reste à faire |
 |---|---|---|
-| M0 | Presque terminé | Envoi SMTP OK et mail reçu dans Gmail (16/11) ; relever les en-têtes `spf=pass`, `dkim=pass` |
+| M0 | ✅ Terminé (16/11) | — |
 | M1 | ✅ Terminé | — |
 | M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), fixtures à pousser, commandes de test à annuler |
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
-| M4 | ✅ Validé en production (16/11) | Reliquats de la section « Reprise au démarrage » (mail Gmail avant M5, fixtures, nettoyage) |
-| M5 à M8 | À faire | — |
+| M4 | ✅ Validé en production (16/11) | Reliquats de la section « Reprise au démarrage » (fixtures, commande B, nettoyage), non bloquants |
+| M5 | À faire, débloqué (envoi SMTP et délivrabilité Gmail vérifiés le 16/11) | Texte du mail à valider |
+| M6 à M8 | À faire | — |
 
 ## Planning
 
@@ -38,7 +39,7 @@ Planning initial, avec ce qui a été réalisé. Le jour d'avance pris le 14/11 
 
 | # | Jalon | Dépend de | Bloquant pour le 19/11 |
 |---|---|---|---|
-| M0 | [Prérequis Shopify, OVH et mail](roadmap/M0-prerequis.md) — reste le test Gmail | — | Oui |
+| M0 | [Prérequis Shopify, OVH et mail](roadmap/M0-prerequis.md) ✅ 16/11 | — | Oui |
 | M1 | [Socle de l'API et sonde de livraison](roadmap/M1-socle.md) ✅ 14/11 | M0 | Oui |
 | M2 | [Validation sur la boutique (go/no-go)](roadmap/M2-go-no-go.md) ✅ **go plan A** le 14/11 — reste les commandes B à E | M0, M1 | Oui, décide plan A ou plan B |
 | M3 | [Réception Events](roadmap/M3-reception-events.md) ✅ 14/11 | M2 | Oui |

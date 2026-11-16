@@ -13,7 +13,7 @@ Générer un jeton et un QR par commande. Au scan, journaliser puis rediriger le
 
 À traiter (ou au moins à lancer) avant le code de M4. Aucun n'est bloquant pour M4, mais le premier conditionne M5.
 
-- [ ] **Mail de test vers Gmail (M0)**, à régler avant M5 : envoyer un mail depuis le webmail de `commandes@itsmadeleine.shop` vers une adresse Gmail. Le 14/11, **le mail n'est pas arrivé**. Diagnostic :
+- [x] **Mail de test vers Gmail (M0)** ✅ 16/11, à régler avant M5 : envoyer un mail depuis le webmail de `commandes@itsmadeleine.shop` vers une adresse Gmail. Le 14/11, **le mail n'est pas arrivé**. Diagnostic :
   - Gmail : chercher `from:commandes@itsmadeleine.shop` dans « Tous les messages », spams compris ;
   - webmail OVH : mail présent dans « Éléments envoyés » ? Message de retour (« Undelivered », « Mail Delivery System ») dans la boîte de réception ? Relever le code d'erreur (Gmail refuse les mails non authentifiés : `550 5.7.26` ou `5.7.1`) ;
   - DNS, depuis un terminal : `dig +short TXT itsmadeleine.shop` (le SPF doit contenir `include:mx.ovh.com`), `dig +short MX itsmadeleine.shop`, `dig +short TXT _dmarc.itsmadeleine.shop`, puis `dig +short TXT <sélecteur>._domainkey.itsmadeleine.shop` (sélecteur affiché dans l'espace client MX Plan ; réponse vide = DKIM pas encore propagé) ;
@@ -26,7 +26,7 @@ Générer un jeton et un QR par commande. Au scan, journaliser puis rediriger le
   docker compose run --rm php php scripts/test-smtp.php <adresse gmail> --host=ssl0.ovh.net --port=465 --encryption=smtps --user=commandes@itsmadeleine.shop
   ```
 
-  **Résultat (16/11)** : `ssl0.ovh.net:465` en SMTPS, `AUTH LOGIN` → `235 Authentication successful`, mail accepté (`250 2.0.0 … queued`). L'envoi depuis le serveur OVH fonctionne avec les paramètres de M0 ; l'échec venait de la configuration de Mail (macOS), sans effet sur l'API. Mail **reçu dans Gmail** le 16/11. Reste à relever les en-têtes (« Afficher l'original ») : `SPF: PASS`, `DKIM: PASS`, `DMARC: PASS`.
+  **Résultat (16/11)** : `ssl0.ovh.net:465` en SMTPS, `AUTH LOGIN` → `235 Authentication successful`, mail accepté (`250 2.0.0 … queued`). L'envoi depuis le serveur OVH fonctionne avec les paramètres de M0 ; l'échec venait de la configuration de Mail (macOS), sans effet sur l'API. Mail **reçu dans Gmail** (onglet Principal) le 16/11, avec SPF `PASS` (IP 188.165.34.173), DKIM `PASS` (domaine itsmadeleine.shop) et DMARC `PASS`.
 - [ ] **Fixtures réelles (M2)** : régénérer avec le nouveau nommage puis pousser. Elles sont vérifiées par `tests/Unit/RealFixturesTest.php`.
   ```bash
   git pull && rm -f tests/fixtures/livraison-*.json
