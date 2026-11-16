@@ -27,7 +27,7 @@ Générer un jeton et un QR par commande. Au scan, journaliser puis rediriger le
   ```
 
   **Résultat (16/11)** : `ssl0.ovh.net:465` en SMTPS, `AUTH LOGIN` → `235 Authentication successful`, mail accepté (`250 2.0.0 … queued`). L'envoi depuis le serveur OVH fonctionne avec les paramètres de M0 ; l'échec venait de la configuration de Mail (macOS), sans effet sur l'API. Mail **reçu dans Gmail** (onglet Principal) le 16/11, avec SPF `PASS` (IP 188.165.34.173), DKIM `PASS` (domaine itsmadeleine.shop) et DMARC `PASS`.
-- [ ] **Fixtures réelles (M2)** : régénérer avec le nouveau nommage puis pousser. Elles sont vérifiées par `tests/Unit/RealFixturesTest.php`.
+- [x] **Fixtures réelles (M2)** ✅ 16/11 : 25 livraisons poussées (anonymisées : `client@example.com`, `key=fixture`), renommées au nouveau nommage d'après leur contenu ; toutes donnent la décision attendue (`RealFixturesTest`). Elles sont vérifiées par `tests/Unit/RealFixturesTest.php`.
   ```bash
   git pull && rm -f tests/fixtures/livraison-*.json
   php scripts/analyse-livraisons.php var/deliveries-ovh --fixtures=tests/fixtures

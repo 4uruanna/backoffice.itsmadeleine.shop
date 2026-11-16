@@ -16,9 +16,9 @@
 |---|---|---|
 | M0 | ✅ Terminé (16/11) | — |
 | M1 | ✅ Terminé | — |
-| M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), fixtures à pousser, commandes de test à annuler |
+| M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), commandes de test à annuler |
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
-| M4 | ✅ Validé en production (16/11) | Reliquats de la section « Reprise au démarrage » (fixtures, commande B, nettoyage), non bloquants |
+| M4 | ✅ Validé en production (16/11) | Reliquats de la section « Reprise au démarrage » (commande B, nettoyage), non bloquants |
 | M5 | Mail envoyé depuis le serveur (#1109, 16/11) | Quota OVH de `commandes@` toujours saturé (#1110 refusé 43 s après #1109) : trouver qui d'autre envoie depuis ce compte |
 | M6 | Code fait (16/11), testé en local ; `GET_LOCK` OK sur OVH | Déployer, commande de test |
 | M7, M8 | À faire | — |
