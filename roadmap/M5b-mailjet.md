@@ -13,7 +13,7 @@ Envoyer le mail de retrait par l'API HTTPS de Mailjet, avec l'expéditeur `retra
 
 | Sujet | Décision |
 |---|---|
-| Service | Mailjet, offre gratuite : 6 000 mails par mois, **200 par jour** (au-delà, Mailjet met en file et envoie le lendemain) |
+| Service | Mailjet. Offre gratuite : 6 000 mails par mois, **200 par jour**, 1 000 contacts : insuffisante pour ~3 000 mails par mois → **offre payante d'entrée** à prévoir (voir Risques) |
 | Pourquoi pas Brevo | 300 mails par jour gratuits, mais pas d'image intégrée (CID) : QR en pièce jointe ou en image distante, moins fiable au comptoir |
 | Expéditeur | `retrait@itsmadeleine.shop`, nom `It's Madeleine`. La boîte reste chez OVH (MX inchangés) : les réponses des clients y arrivent |
 | Appel | `POST https://api.mailjet.com/v3.1/send`, authentification Basic avec la clé publique et la clé secrète |
@@ -60,7 +60,7 @@ Envoyer le mail de retrait par l'API HTTPS de Mailjet, avec l'expéditeur `retra
 
 ## Risques
 
-- **Volume** : au-delà de 200 commandes à retirer sur une journée, l'offre gratuite ne suffit pas (offre payante à partir d'environ 15 $ par mois). À trancher selon le volume attendu.
+- **Volume** (précisé le 16/11) : environ **3 000 mails par mois**, donc environ 3 000 contacts (un contact = une adresse destinataire, un client qui commande deux fois compte une fois). L'offre gratuite plafonne à 200 mails par jour, et Mailjet limite les comptes gratuits à **1 000 contacts** depuis le 06/10/2025 (au-delà : envois suspendus ; sa documentation ne dit pas si les destinataires de l'API comptent, sa page API annonce des contacts illimités). **Prévoir l'offre payante d'entrée** (environ 15 $ par mois, 15 000 mails), à confirmer sur la page tarifaire de Mailjet ou auprès de son support : plafond par jour et nombre de contacts. `MAIL_MAX_PER_DAY` sera alors relevé selon l'offre.
 - **Propagation DNS** : quelques minutes à quelques heures chez OVH. Ajouter les enregistrements dès que le domaine est déclaré dans Mailjet.
 - **Nouveau compte Mailjet** : un compte neuf peut être soumis à une vérification avant de pouvoir envoyer ; créer le compte au plus tôt.
 - **Sortie HTTPS depuis l'hébergement** : à confirmer par le premier envoi (cURL vers `api.mailjet.com`).

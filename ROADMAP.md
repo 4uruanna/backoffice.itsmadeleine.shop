@@ -77,8 +77,8 @@ Plan v2 (§2), plus les décisions du 14/11 :
 | Livraison valide après `errors` | Elle reprend la commande (`error` dû à `payload_errors` → `pending`) |
 | Contenu du mail | Texte simple + lien vers la page de statut de la commande (`statusPageUrl`, qui indique le point de retrait) + QR + numéro de commande. Phrase validée le 16/11 : « Présentez ce QR code le jour du concert pour retirer votre commande. » |
 | Garde-fou avant mise en service | `MAIL_ALLOWLIST` (16/11) : tant qu'elle est renseignée, seuls ses destinataires reçoivent le mail ; vidée en M8 |
-| Envoi des mails | **Mailjet par API HTTPS** (16/11), expéditeur `retrait@itsmadeleine.shop` : OVH refuse les envois SMTP depuis l'hébergement. Offre gratuite (200 mails par jour), QR toujours intégré au mail. SMTP conservé pour le local (Mailpit) et en repli |
-| Plafonds d'envoi | `MAIL_MAX_PER_HOUR=60` sur le serveur (16/11), `MAIL_MAX_PER_DAY=200` (offre gratuite Mailjet, M5b) |
+| Envoi des mails | **Mailjet par API HTTPS** (16/11), expéditeur `retrait@itsmadeleine.shop` : OVH refuse les envois SMTP depuis l'hébergement. Offre payante d'entrée à prévoir (~3 000 mails par mois), QR toujours intégré au mail. SMTP conservé pour le local (Mailpit) et en repli |
+| Plafonds d'envoi | `MAIL_MAX_PER_HOUR=60` sur le serveur (16/11), `MAIL_MAX_PER_DAY` selon l'offre Mailjet retenue (M5b) |
 | Alertes internes | Vers `ALERT_EMAIL` (adresse perso, dans `.env`) |
 | Commande annulée ou remboursée en totalité | **QR invalidé** (modifie le §11 du plan v2). Remboursement partiel : QR toujours valide |
 | Scan d'un QR invalidé | Page d'avertissement « ne pas remettre », avec lien vers la commande, scan journalisé |
@@ -102,7 +102,7 @@ Ces changements découlent des décisions ci-dessus ; ils sont détaillés dans 
 ## Points encore ouverts
 
 - **Envoi SMTP depuis l'hébergement OVH bloqué** (16/11) : refus « Mail quota exceeded … 200 messages per hour and per account » pour `commandes@` puis pour une boîte neuve (`retrait@`), alors que le même compte envoie normalement depuis le poste. Contourné par Mailjet ([M5b](roadmap/M5b-mailjet.md)) ; ticket OVH à ouvrir pour garder le repli (voir [M5](roadmap/M5-mail.md)).
-- **Volume par jour** : l'offre gratuite de Mailjet couvre 200 mails par jour. Nombre maximal de commandes à retirer sur une journée à confirmer ; au-delà, offre payante.
+- **Volume** : environ 3 000 mails par mois (16/11), donc environ 3 000 contacts. L'offre gratuite de Mailjet (200 par jour, 1 000 contacts) ne suffit pas : offre payante d'entrée à prévoir (voir [M5b](roadmap/M5b-mailjet.md)).
 
 - ~~E-mail absent sur 6 commandes de test sur 9~~ : expliqué le 14/11, ces commandes n'avaient pas de client rattaché (cas `no_email` prévu). Go confirmé.
 - **Paiement différé** (commande B de M2 : en attente puis payée) : pas encore testé. Non bloquant, la table de décision ignore `PENDING` et traite le passage à `PAID`.
