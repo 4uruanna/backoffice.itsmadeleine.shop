@@ -1,0 +1,16 @@
+{
+    "note": "Livraison réelle anonymisée (M2). Signature recalculée avec le secret des tests : secret-de-test",
+    "headers": {
+        "Shopify-Webhook-Id": "c1ebc703-8927-3cbe-a126-6aab51c4df5e",
+        "Shopify-Hmac-Sha256": "xJwEwlKZITqGSildhRXr/+RBaX8ZlXQuTvu3LO86YUs=",
+        "Shopify-Action": "update",
+        "Shopify-Shop-Domain": "itsmadeleine-love-2.myshopify.com",
+        "Shopify-Api-Key": "a977545e9444eb4c8d30c169b1ed4c6d",
+        "Shopify-Handle": "commande-qr-retrait",
+        "Shopify-Api-Version": "2026-10",
+        "Shopify-Shop-Id": "gid://shopify/Shop/55932158113",
+        "Shopify-Triggered-At": "2026-11-14T18:45:45.798785Z",
+        "Shopify-Topic": "Order"
+    },
+    "raw_body": "{\"topic\":\"Order\",\"action\":\"update\",\"handle\":\"commande-qr-retrait\",\"data\":{\"order\":{\"legacyResourceId\":\"8268411175245\",\"name\":\"#1098\",\"email\":\"client@example.com\",\"statusPageUrl\":\"https://example.myshopify.com/12345/orders/abcdef/authenticate?key=fixture\",\"displayFinancialStatus\":\"PAID\",\"cancelledAt\":\"2026-11-14T18:45:45Z\",\"lineItems\":{\"nodes\":[{\"product\":{\"tags\":[\"early-bird\",\"LightStick#2027\",\"retrait-qr\"]}}]}}},\"fields_changed\":{\"added\":[],\"updated\":[\"order[id: 'gid://shopify/Order/8268411175245'].cancellation\"],\"removed\":[]},\"query_variables\":{\"orderId\":\"gid://shopify/Order/8268411175245\"}}"
+}

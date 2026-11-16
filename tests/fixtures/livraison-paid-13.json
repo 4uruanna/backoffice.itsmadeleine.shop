@@ -1,0 +1,16 @@
+{
+    "note": "Livraison réelle anonymisée (M2). Signature recalculée avec le secret des tests : secret-de-test",
+    "headers": {
+        "Shopify-Api-Key": "a977545e9444eb4c8d30c169b1ed4c6d",
+        "Shopify-Action": "create",
+        "Shopify-Shop-Domain": "itsmadeleine-love-2.myshopify.com",
+        "Shopify-Hmac-Sha256": "Sis/i4UzDHgTeNpownh0Ot5hVDxjBT8pgmrKqdVeDPU=",
+        "Shopify-Shop-Id": "gid://shopify/Shop/55932158113",
+        "Shopify-Handle": "commande-qr-retrait",
+        "Shopify-Webhook-Id": "926a74da-437b-303e-a458-d7069cef184e",
+        "Shopify-Triggered-At": "2026-11-14T20:11:13.598067Z",
+        "Shopify-Topic": "Order",
+        "Shopify-Api-Version": "2026-10"
+    },
+    "raw_body": "{\"topic\":\"Order\",\"action\":\"create\",\"handle\":\"commande-qr-retrait\",\"data\":{\"order\":{\"legacyResourceId\":\"8269460930893\",\"name\":\"#1101\",\"email\":null,\"statusPageUrl\":\"https://example.myshopify.com/12345/orders/abcdef/authenticate?key=fixture\",\"displayFinancialStatus\":\"PAID\",\"cancelledAt\":null,\"lineItems\":{\"nodes\":[{\"product\":{\"tags\":[\"option:lightstick-officiel\",\"retrait-qr\"]}}]}}},\"fields_changed\":{\"added\":[\"order[id: 'gid://shopify/Order/8269460930893']\"],\"updated\":[],\"removed\":[]},\"query_variables\":{\"orderId\":\"gid://shopify/Order/8269460930893\"}}"
+}

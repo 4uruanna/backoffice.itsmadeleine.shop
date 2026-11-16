@@ -1,0 +1,16 @@
+{
+    "note": "Livraison réelle anonymisée (M2). Signature recalculée avec le secret des tests : secret-de-test",
+    "headers": {
+        "Shopify-Api-Key": "a977545e9444eb4c8d30c169b1ed4c6d",
+        "Shopify-Handle": "commande-qr-retrait",
+        "Shopify-Webhook-Id": "bf53c8d8-e359-3868-af13-a8b9481e26de",
+        "Shopify-Shop-Id": "gid://shopify/Shop/55932158113",
+        "Shopify-Action": "create",
+        "Shopify-Triggered-At": "2026-11-14T20:07:18.148241Z",
+        "Shopify-Api-Version": "2026-10",
+        "Shopify-Shop-Domain": "itsmadeleine-love-2.myshopify.com",
+        "Shopify-Topic": "Order",
+        "Shopify-Hmac-Sha256": "PH/BWFVOgngTzRS4Y5nvXYmCVbqpfLRUne0uP18hI6o="
+    },
+    "raw_body": "{\"topic\":\"Order\",\"action\":\"create\",\"handle\":\"commande-qr-retrait\",\"data\":{\"order\":{\"legacyResourceId\":\"8269417120077\",\"name\":\"#1099\",\"email\":null,\"statusPageUrl\":\"https://example.myshopify.com/12345/orders/abcdef/authenticate?key=fixture\",\"displayFinancialStatus\":\"PAID\",\"cancelledAt\":null,\"lineItems\":{\"nodes\":[{\"product\":{\"tags\":[]}}]}}},\"fields_changed\":{\"added\":[\"order[id: 'gid://shopify/Order/8269417120077']\"],\"updated\":[],\"removed\":[]},\"query_variables\":{\"orderId\":\"gid://shopify/Order/8269417120077\"}}"
+}
