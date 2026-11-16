@@ -67,7 +67,7 @@ Plan v2 (§2), plus les décisions du 14/11 :
 | App Shopify | `itsmadeleine.app` (`client_id` `a977545e…`), créée dans le Dev Dashboard **de l'organisation du client** (une app de l'organisation du développeur ne s'installe pas sur sa boutique) ; config dans `shopify/shopify.app.toml`, Shopify CLI 5 avec pnpm dans `shopify/` |
 | Forfait Shopify | Basic : l'e-mail client est bien accessible à l'app (vérifié en M2), pas de changement de forfait |
 | URL de l'API | `https://app.itsmadeleine.shop` (au lieu de `backoffice.` prévu au départ, changé le 14/11) ; dossier sur l'hébergement inchangé : `backoffice/public` |
-| DNS et mail | Zone DNS et boîtes mail du domaine chez OVH (MX Plan). Envoi depuis `retrait@itsmadeleine.shop` par la fonction `mail()` de l'hébergement depuis le 16/11 (au départ : `commandes@` en SMTP OVH, bloqué) |
+| DNS et mail | Zone DNS et boîtes mail du domaine chez OVH (MX Plan). Envoi depuis `commandes@itsmadeleine.shop` par la fonction `mail()` de l'hébergement depuis le 16/11 (SMTP OVH bloqué depuis l'hébergement) |
 | Développement local | Docker Compose (PHP 8.5 comme OVH, MySQL 8.4, Mailpit) + PHPUnit sur les parties critiques |
 | Déploiement | FTP/SFTP manuel, `vendor/` compris, release préparée par `scripts/build-release.sh` (Docker, ou Composer du poste avec `USE_HOST_COMPOSER=1`) ; CI reportée en M9. Pas à pas : [`docs/deploiement.md`](docs/deploiement.md) |
 | Hébergement | OVH Perso, PHP 8.5 (FPM, `fastcgi_finish_request` et GD disponibles), multisite `app.itsmadeleine.shop` → `backoffice/public` |
@@ -77,8 +77,8 @@ Plan v2 (§2), plus les décisions du 14/11 :
 | Livraison valide après `errors` | Elle reprend la commande (`error` dû à `payload_errors` → `pending`) |
 | Contenu du mail | Texte simple + lien vers la page de statut de la commande (`statusPageUrl`, qui indique le point de retrait) + QR + numéro de commande. Phrase validée le 16/11 : « Présentez ce QR code le jour du concert pour retirer votre commande. » |
 | Garde-fou avant mise en service | `MAIL_ALLOWLIST` (16/11) : tant qu'elle est renseignée, seuls ses destinataires reçoivent le mail ; vidée en M8 |
-| Envoi des mails | **Fonction `mail()` de l'hébergement** (16/11), `MAIL_TRANSPORT=phpmail`, expéditeur `retrait@itsmadeleine.shop` aligné sur le domaine de l'hébergement : OVH refuse les envois SMTP depuis l'IP mutualisée. Pas de service transactionnel externe. SMTP conservé pour le local (Mailpit) et en repli |
-| Plafond d'envoi | `MAIL_MAX_PER_HOUR` sous le quota `mail()` de l'offre de l'hébergement (M5b) |
+| Envoi des mails | **Fonction `mail()` de l'hébergement** (16/11), `MAIL_TRANSPORT=phpmail`, expéditeur `commandes@itsmadeleine.shop` aligné sur le domaine principal de l'hébergement : OVH refuse les envois SMTP depuis l'IP mutualisée. Pas de service transactionnel externe. SMTP conservé pour le local (Mailpit) et en repli |
+| Plafond d'envoi | `MAIL_MAX_PER_HOUR=90`, sous le quota `mail()` de l'offre de l'hébergement (M5b) |
 | Alertes internes | Vers `ALERT_EMAIL` (adresse perso, dans `.env`) |
 | Commande annulée ou remboursée en totalité | **QR invalidé** (modifie le §11 du plan v2). Remboursement partiel : QR toujours valide |
 | Scan d'un QR invalidé | Page d'avertissement « ne pas remettre », avec lien vers la commande, scan journalisé |

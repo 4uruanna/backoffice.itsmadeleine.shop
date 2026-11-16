@@ -11,7 +11,7 @@ Le 16/11, OVH refuse les envois SMTP (`ssl0.ovh.net`, puis `smtp.mail.ovh.net`) 
 
 ## Solution retenue
 
-Envoi par la **fonction `mail()` de PHP**, c'est-à-dire par le service « Scripts e-mails » de l'hébergement : quota propre à l'hébergement, non partagé avec d'autres clients.
+Envoi par la **fonction `mail()` de PHP**, expéditeur `commandes@itsmadeleine.shop`, c'est-à-dire par le service « Scripts e-mails » de l'hébergement : quota propre à l'hébergement, non partagé avec d'autres clients.
 
 - Code : `PhpMailTransport` (`src/Mail/`), même mail que le SMTP (HTML, texte, QR intégré), expéditeur d'enveloppe `-f` sur le domaine. Choix par `MAIL_TRANSPORT=phpmail` ; `SmtpTransport` conservé pour le local (Mailpit) et en repli.
 - **Condition d'OVH** : le relais `mail()` refuse un mail dont l'en-tête `From` n'est pas sur le domaine de l'hébergement (`550 5.7.1 Rejected by policy: From header domain does not align with authenticated domain`). L'hébergement de l'API avait pour domaine principal `amnesic.dev` : un expéditeur `@itsmadeleine.shop` y était refusé. **Résolu le 16/11 en alignant le domaine de l'expéditeur sur le domaine principal de l'hébergement qui envoie.**
@@ -20,20 +20,27 @@ Envoi par la **fonction `mail()` de PHP**, c'est-à-dire par le service « Scrip
 
 Pistes écartées le 16/11 : `smtp.mail.ovh.net` (même refus) ; service transactionnel externe (Mailjet, Brevo), devenu inutile.
 
-## Configuration (`.env` du serveur)
+## Configuration (`.env` du serveur, 16/11)
 
 ```
 MAIL_TRANSPORT=phpmail
-MAIL_FROM=retrait@itsmadeleine.shop
-MAIL_FROM_NAME="It's Madeleine"
-MAIL_MAX_PER_HOUR=<sous le quota mail() de l'offre>
+MAIL_FROM=commandes@itsmadeleine.shop
+MAIL_FROM_NAME="It's Madeleine Shop"
+MAIL_ALLOWLIST=<ton adresse Gmail>
+MAIL_MAX_PER_HOUR=90
+MAX_ATTEMPTS=3
+MAIL_LOG_RETENTION_DAYS=30
 ```
 
-Quota `mail()` par heure selon l'offre (forums OVH, à vérifier dans les caractéristiques de l'offre) : Perso environ 100, Pro 200, Performance 2 000. `MAIL_MAX_PER_HOUR` est fixé un peu en dessous (ex. 90 pour Perso). Les variables `SMTP_*` ne servent plus en production.
+- Expéditeur : retour à `commandes@itsmadeleine.shop` (la boîte `retrait@` créée pour les tests n'est plus utilisée).
+- `MAIL_MAX_PER_HOUR=90` : sous le quota `mail()` de l'offre Perso (environ 100 par heure d'après les forums OVH). Si l'hébergement qui envoie est une offre supérieure (Pro : environ 200), la valeur peut être relevée.
+- `MAIL_ALLOWLIST` : garde-fou jusqu'à la mise en service, **à vider en M8**.
+- Les variables `SMTP_*` restent dans le fichier mais ne servent plus en production (repli possible avec `MAIL_TRANSPORT=smtp`).
 
 ## Reste à faire
 
-- [ ] Préciser ici la configuration finale : hébergement qui envoie, son offre, domaine principal, valeur de `MAIL_MAX_PER_HOUR`.
+- [x] Configuration finale relevée le 16/11 (ci-dessus).
+- [ ] Préciser l'hébergement qui envoie et son offre (pour ajuster `MAIL_MAX_PER_HOUR`).
 - [ ] **Délivrabilité du vrai mail de retrait** : deux commandes de test, mails vérifiés dans Gmail **et** Outlook/Hotmail : boîte de réception ou indésirables, QR affiché, `SPF`, `DKIM`, `DMARC` à `PASS`.
 - [ ] Si le vrai mail arrive en indésirables : relire le contenu (objet, texte, lien), marquer « Non spam » sur les tests, et réévaluer (le passage par un service transactionnel reste possible en dernier recours, il n'est pas prévu).
 - [ ] Ticket au support OVH sur le refus SMTP (facultatif, pour garder le repli SMTP).
