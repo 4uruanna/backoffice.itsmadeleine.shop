@@ -76,4 +76,32 @@ interface PickupOrderRepository
      * $lastError renseigné : remplace `last_error` (ex. refus de quota du serveur SMTP).
      */
     public function release(int $id, string $reason, ?string $lastError = null): void;
+
+    /**
+     * File du cron (M7) : `pending` et `failed` non révoquées, les plus anciennes d'abord.
+     *
+     * @return list<int>
+     */
+    public function findRetryable(int $limit): array;
+
+    /** Taille de la file du cron (même critère que findRetryable). */
+    public function countRetryable(): int;
+
+    /**
+     * Débloque les `processing` pris depuis plus de $minutes (crash pendant le traitement) :
+     * comptés comme un essai, `failed` / `stale_lock`, ou `error` / `max_attempts` au dernier essai.
+     *
+     * @return int nombre de lignes débloquées
+     */
+    public function unlockStale(int $minutes, int $maxAttempts): int;
+
+    /**
+     * Lignes `error` pas encore signalées par le mail d'alerte, les plus anciennes d'abord.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findUnalertedErrors(int $limit): array;
+
+    /** @param list<int> $ids lignes signalées par le mail d'alerte */
+    public function markAlerted(array $ids): void;
 }

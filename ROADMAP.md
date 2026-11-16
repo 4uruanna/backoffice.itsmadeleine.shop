@@ -10,7 +10,7 @@
 
 ## État au lundi 16/11 au soir
 
-**Environ un jour d'avance**, conservé malgré le blocage SMTP d'OVH. M0 à M4 sont terminés et validés en production. M5 (mail), M6 (bucket) et M5b (envoi par la fonction `mail()` de l'hébergement) sont en production : le mail de retrait arrive en boîte de réception sur Gmail, en indésirables sur Outlook (authentification complète, `SCL 5`). **Prochaine étape : M7** (cron de rattrapage, alertes groupées, purge), point de reprise en tête de [M7](roadmap/M7-fiabilite-cron.md). Reliquats non bloquants au début de [M4](roadmap/M4-qr-et-scan.md#reprise-au-démarrage--reliquats-de-m0-à-m3).
+**Environ un jour d'avance**, conservé malgré le blocage SMTP d'OVH. M0 à M4 sont terminés et validés en production. M5 (mail), M6 (bucket) et M5b (envoi par la fonction `mail()` de l'hébergement) sont en production : le mail de retrait arrive en boîte de réception sur Gmail, en indésirables sur Outlook (authentification complète, `SCL 5`). **M7** (cron de rattrapage, alertes groupées, purge) : code fait et testé en local le 16/11 au soir ; **prochaine étape : le déployer sur OVH** (migration `002`, `ALERT_EMAIL`, release, tâche planifiée), voir l'état en tête de [M7](roadmap/M7-fiabilite-cron.md). Reliquats non bloquants au début de [M4](roadmap/M4-qr-et-scan.md#reprise-au-démarrage--reliquats-de-m0-à-m3).
 
 | Jalon | État | Reste à faire |
 |---|---|---|
@@ -22,7 +22,8 @@
 | M5 | Mail et gabarits faits (16/11) | OVH bloque l'envoi SMTP depuis l'hébergement → envoi par `mail()` ([M5b](roadmap/M5b-envoi-hebergement.md)) |
 | M5b | ✅ Envoi rétabli par `mail()` de l'hébergement (16/11) ; Gmail : boîte de réception | **Outlook : indésirables** → en-têtes à relever, atténuations (texte, message aux clients, consigne au staff) |
 | M6 | Code fait (16/11), testé en local ; `GET_LOCK` OK sur OVH | Déployer, commande de test |
-| M7, M8 | À faire | — |
+| M7 | Code fait (16/11), testé en local (tests MySQL, passage complet du cron) | Migration `002` dans phpMyAdmin, `ALERT_EMAIL`, déployer, déclarer la tâche planifiée OVH, lire le premier journal |
+| M8 | À faire | — |
 
 ## Planning
 
@@ -33,7 +34,7 @@ Planning initial, avec ce qui a été réalisé. Le jour d'avance pris le 14/11 
 | Sam. 14/11 | [M0](roadmap/M0-prerequis.md), [M1](roadmap/M1-socle.md) | App Shopify installée, abonnement déployé, DNS mail en propagation, socle en ligne sur `app.itsmadeleine.shop` avec une sonde qui journalise les livraisons | ✅ Tout, plus le go de M2 et le code de M3 |
 | Dim. 15/11 | [M2](roadmap/M2-go-no-go.md) (matin), [M3](roadmap/M3-reception-events.md) | Go/no-go prononcé ; réception Events complète (HMAC, décision, dédoublonnage, révocation) | Fait dès le 14/11 ; code de M4 fait le 15/11 (QR, route de scan, page d'avertissement) |
 | Lun. 16/11 | [M4](roadmap/M4-qr-et-scan.md), [M5](roadmap/M5-mail.md) | QR généré, scan qui redirige ou avertit, mail envoyé de bout en bout | M4 validé en production ; M0 terminé ; code de M5 fait (prise en charge atomique et réponse avant envoi avancées de M7) |
-| Mar. 17/11 | [M6](roadmap/M6-bucket.md), [M7](roadmap/M7-fiabilite-cron.md) | Plafond de mails par heure, cron de rattrapage, alertes, purge | Code de M6 fait dès le 16/11 ; envoi rétabli le 16/11 au soir par `mail()` ([M5b](roadmap/M5b-envoi-hebergement.md)) |
+| Mar. 17/11 | [M6](roadmap/M6-bucket.md), [M7](roadmap/M7-fiabilite-cron.md) | Plafond de mails par heure, cron de rattrapage, alertes, purge | Code de M6 fait dès le 16/11 ; envoi rétabli le 16/11 au soir par `mail()` ([M5b](roadmap/M5b-envoi-hebergement.md)) ; code de M7 fait le 16/11 au soir |
 | Mer. 18/11 | [M8](roadmap/M8-recette-mise-en-service.md) | Recette sur la boutique de production, mise en service | |
 | Après le 19/11 | [M9](roadmap/M9-apres-lancement.md) | Consolidation (CI, supervision, améliorations) | |
 
@@ -49,7 +50,7 @@ Planning initial, avec ce qui a été réalisé. Le jour d'avance pris le 14/11 
 | M5 | [Mail au client](roadmap/M5-mail.md) — code fait le 16/11, reste le test en production | M4 | Oui |
 | M5b | [Envoi par la fonction mail() de l'hébergement](roadmap/M5b-envoi-hebergement.md) ✅ 16/11 | M5, M6 | Oui : sans lui, aucun mail ne part du serveur |
 | M6 | [Limite d'envoi (bucket)](roadmap/M6-bucket.md) — code fait le 16/11 | M5 | Oui |
-| M7 | [Fiabilité : traitement après réponse, cron, alertes, purge](roadmap/M7-fiabilite-cron.md) | M6 | Oui |
+| M7 | [Fiabilité : traitement après réponse, cron, alertes, purge](roadmap/M7-fiabilite-cron.md) — code fait le 16/11, reste le déploiement | M6 | Oui |
 | M8 | [Recette et mise en service](roadmap/M8-recette-mise-en-service.md) | M7 | Oui |
 | M9 | [Après lancement](roadmap/M9-apres-lancement.md) | M8 | Non |
 | — | [Annexe : plan B (QR dans la notification Shopify)](roadmap/annexe-plan-b.md) — non utilisé | M2 en no-go | Seulement en cas de no-go |

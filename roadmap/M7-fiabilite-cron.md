@@ -17,6 +17,25 @@
 - **Hébergement OVH** : `.ovhconfig` en `environment=production` (OPcache : un fichier PHP remplacé peut mettre quelques minutes à être pris en compte). Le cron OVH lance `php` en ligne de commande : vérifier sa version (8.5) dans la déclaration de la tâche.
 - **En suspens, hors M7** : enrichir le texte du mail pour Outlook (en indésirables, `SCL 5`, voir M5b) ; il faut savoir si autre chose que le QR est à présenter le jour du concert et s'il faut une ligne de contact.
 
+## Avancement (16/11 au soir)
+
+**Code fait et testé en local**, pas encore déployé. Tests : 156 au vert (dont les requêtes du cron et la purge sur MySQL). Passage complet de `cron/retry.php` sur une base locale, avec un faux `sendmail` :
+
+- `processing` abandonné depuis 20 min → débloqué, rejoué et envoyé dans le même passage (1 essai compté) ;
+- `failed` à 2 essais qui échoue encore → `error` / `max_attempts` ;
+- commande annulée encore `pending` → jamais envoyée ;
+- **une seule** alerte pour les deux nouvelles `error` (`max_attempts`, `no_email`), sans e-mail client ; passage suivant : aucune nouvelle alerte ;
+- purge : commande de 13 mois (et son scan), `mail_log` de 40 jours, fichier de journal de 40 jours ;
+- bucket saturé : un mail part, la commande suivante passe `rate_limited` et le passage s'arrête ; la suite au passage suivant ;
+- verrou tenu par une autre session : « un autre passage est en cours », sortie 0.
+
+**Reste, sur OVH (dans cet ordre)** :
+
+1. phpMyAdmin : exécuter `migrations/002_alerted_at.sql` **avant** de déployer (sinon la colonne `alerted_at` manque et `markFailed` échoue).
+2. `.env` du serveur : renseigner `ALERT_EMAIL`.
+3. `scripts/build-release.sh`, envoi FTP (la release contient maintenant `cron/`), `/health` pour vérifier la version.
+4. Déclarer la tâche planifiée (voir plus bas), puis lire le journal du premier passage : les commandes de test en `pending` / `rate_limited` et `failed` partent vers l'adresse de `MAIL_ALLOWLIST`, et **une** alerte liste les commandes déjà en `error` (essais du 14 au 16/11).
+
 ## Objectif
 
 Répondre à Shopify immédiatement, traiter ensuite, rattraper tout ce qui a échoué ou attendu, prévenir en cas de problème, et purger.
@@ -39,20 +58,20 @@ WHERE id = ? AND status IN ('pending','failed') AND revoked_at IS NULL;
 
 ### Cron `cron/retry.php` (toutes les heures)
 
-- [ ] Garde-fou : refuser l'exécution hors ligne de commande (`PHP_SAPI !== 'cli'`) ; verrou `GET_LOCK('cron_retry', 0)` pour éviter deux passages simultanés.
-- [ ] Débloquer : `processing` dont `locked_at` a plus de 15 min → `failed` (`last_error = 'stale_lock'`).
-- [ ] Reprendre `pending` et `failed` non révoquées, **les plus anciennes d'abord** ; s'arrêter dès que le bucket est vide.
+- [x] (fait le 16/11, `cron/retry.php`) Garde-fou : refuser l'exécution hors ligne de commande (`PHP_SAPI !== 'cli'`) ; verrou `GET_LOCK('cron_retry', 0)` pour éviter deux passages simultanés.
+- [x] (fait, `PickupOrderRepository::unlockStale`) Débloquer : `processing` dont `locked_at` a plus de 15 min → `failed` (`last_error = 'stale_lock'`). Le blocage **compte comme un essai** (un crash après l'envoi ne peut pas produire plus de 3 mails) ; au dernier essai → `error` / `max_attempts`, signalée par l'alerte.
+- [x] (fait, `RetryRunner` + `PickupProcessor::processResult`) Reprendre `pending` et `failed` non révoquées, **les plus anciennes d'abord** (500 par passage au plus) ; s'arrêter dès que le bucket est vide (ou au quota du serveur d'envoi).
 - [x] (fait en M5 : `markFailed`, alerte dans `var/log/alerts.log`) Échec au-delà de `MAX_ATTEMPTS` (3) → `error`, `error_code = 'max_attempts'`, à mettre dans l'alerte.
-- [ ] Une commande révoquée encore `pending` ou `failed` n'est jamais envoyée (reste en l'état, visible dans les requêtes de suivi).
-- [ ] **Alertes groupées** : un seul mail par passage vers `ALERT_EMAIL`, qui liste les nouvelles `error` (`payload_errors`, `no_email`, `max_attempts`) depuis le passage précédent. Le mail d'alerte passe par le bucket (`kind = 'alert'`) ; bucket vide → l'alerte attend le passage suivant.
-- [ ] Les alertes notées en M3 dans `var/log/alerts.log` passent désormais par ce mail (le journal reste en secours).
-- [ ] **Purge** : `pickup_orders` (et leurs `scans`, par cascade) dont `created_at` a plus de `RETENTION_MONTHS` (12) ; `mail_log` de plus de `MAIL_LOG_RETENTION_DAYS` (30) ; fichiers de `var/log/` de plus de 30 jours.
-- [ ] Sortie texte résumée (traitées, envoyées, en attente, en erreur, purgées), lisible dans le journal du cron OVH.
-- [ ] Déclarer la tâche dans l'espace client OVH : `backoffice/cron/retry.php`, toutes les heures, même version de PHP, journal activé.
+- [x] (fait : exclue de la file et de `claim`) Une commande révoquée encore `pending` ou `failed` n'est jamais envoyée (reste en l'état, visible dans les requêtes de suivi).
+- [x] (fait, `AlertMailer`, colonne `alerted_at` : `migrations/002_alerted_at.sql`) **Alertes groupées** : un seul mail par passage vers `ALERT_EMAIL`, qui liste les nouvelles `error` (`payload_errors`, `no_email`, `max_attempts`) pas encore signalées. Texte seul : numéro de commande, code, nombre d'essais, dernière erreur, lien vers l'admin ; **pas l'e-mail du client**. Le mail d'alerte passe par le bucket (`kind = 'alert'`) ; bucket vide, quota ou échec d'envoi → l'alerte attend le passage suivant. `ALERT_EMAIL` vide → rien n'est envoyé ni marqué. Une ligne qui repasse en `error` (après reprise) est de nouveau signalée.
+- [x] Les alertes notées en M3 dans `var/log/alerts.log` passent désormais par ce mail (le journal reste en secours ; une erreur du cron y est aussi écrite, code `cron_failed`).
+- [x] (fait, `Purger`) **Purge** : `pickup_orders` (et leurs `scans`, par cascade) dont `created_at` a plus de `RETENTION_MONTHS` (12) ; `mail_log` de plus de `MAIL_LOG_RETENTION_DAYS` (30) ; fichiers de `var/log/` de plus de 30 jours (sauf `.htaccess`). Une durée à `0` désactive la purge concernée.
+- [x] Sortie texte résumée (une ligne par commande traitée, puis traitées, envoyées, en attente, en erreur, file restante, alertes, purge), lisible dans le journal du cron OVH, sans donnée personnelle.
+- [ ] Déclarer la tâche dans l'espace client OVH : `backoffice/cron/retry.php`, toutes les heures, même version de PHP, journal activé. Pas à pas : [`docs/deploiement.md`](../docs/deploiement.md#cron-de-rattrapage-m7). **Avant** : exécuter `migrations/002_alerted_at.sql` dans phpMyAdmin, renseigner `ALERT_EMAIL` dans le `.env` du serveur, déployer la release (elle contient `cron/`).
 
 ### Suivi
 
-- [ ] Requêtes de suivi prêtes à coller dans phpMyAdmin (fichier `docs/requetes-suivi.sql`) : commandes du jour par statut, file `pending`, erreurs, scans du jour, consommation du bucket sur l'heure.
+- [x] (fait) Requêtes de suivi prêtes à coller dans phpMyAdmin ([`docs/requetes-suivi.sql`](../docs/requetes-suivi.sql)) : commandes du jour par statut, file `pending`, erreurs, scans du jour, consommation du bucket sur l'heure, traitements bloqués, recherche par numéro.
 
 ## Critères de fin
 

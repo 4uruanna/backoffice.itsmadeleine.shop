@@ -5,6 +5,7 @@ Hébergement OVH Perso, PHP 8.5, multisite `app.itsmadeleine.shop` → dossier r
 ```
 ~/backoffice/            ← contenu de build/backoffice/ + .env
 ├── .env                 ← créé à la main sur le serveur, jamais versionné
+├── cron/retry.php       ← cron de rattrapage (M7), lancé par OVH toutes les heures
 ├── migrations/
 ├── public/              ← racine web (index.php, .htaccess, .ovhconfig)
 ├── src/
@@ -39,7 +40,7 @@ Fichiers cachés : activer leur affichage dans le client FTP pour que `public/.h
 
 1. **`.env`** : copier `.env.example` vers `~/backoffice/.env` et remplir les valeurs de production :
    `APP_ENV=production`, `APP_URL=https://app.itsmadeleine.shop`, `DB_*` (base OVH), `SHOPIFY_CLIENT_SECRET` (app `itsmadeleine.app`), `SMTP_HOST=ssl0.ovh.net`, `SMTP_PORT=465`, `SMTP_ENCRYPTION=smtps`, `SMTP_USER=commandes@itsmadeleine.shop`, `SMTP_PASSWORD`, `MAIL_FROM=commandes@itsmadeleine.shop`, `MAIL_FROM_NAME="It's Madeleine"`, `ALERT_EMAIL`, `MAIL_ALLOWLIST` (ton adresse jusqu'à la mise en service, voir M5 et M8).
-2. **Base** : dans phpMyAdmin (espace client OVH → Bases de données), exécuter `migrations/001_init.sql`.
+2. **Base** : dans phpMyAdmin (espace client OVH → Bases de données), exécuter les fichiers de `migrations/` dans l'ordre (`001_init.sql`, `002_alerted_at.sql`…).
 3. **Version de PHP** : `public/.ovhconfig` demande PHP 8.5. OVH lit ce fichier à la racine du multisite (`backoffice/public`) ; si la version de PHP n'est pas la bonne, copier aussi `.ovhconfig` à la racine de l'hébergement ou régler la version dans l'espace client (Multisite → modifier).
 
 ## 4. Vérifications
@@ -70,12 +71,31 @@ read -rs SECRET && B='{"test":true}' && SIG=$(printf '%s' "$B" | openssl dgst -s
 
 Avec `DEBUG_DELIVERIES=1`, le fichier `var/log/deliveries/<date>-test-manuel.json` apparaît alors sur le serveur (à supprimer ensuite). Le journal d'erreurs PHP d'OVH contient aussi une ligne `events: …` par livraison (décision prise, sans donnée personnelle).
 
+## Cron de rattrapage (M7)
+
+À faire une fois, après avoir exécuté `migrations/002_alerted_at.sql` dans phpMyAdmin et déployé la release qui contient `cron/`.
+
+1. **Essai à la main** (facultatif, si un accès SSH est disponible) : `php ~/backoffice/cron/retry.php`. Sinon, passer directement à la déclaration et lire le premier journal.
+2. **Déclaration** : espace client OVH → Hébergements → onglet **Tâches planifiées - Cron** → Ajouter une planification :
+   - commande à exécuter : `backoffice/cron/retry.php` (chemin depuis la racine de l'hébergement) ;
+   - langage : **PHP 8.5** (même version que le site) ;
+   - activation : activée ;
+   - fréquence : toutes les heures ;
+   - journal par e-mail : seulement en cas d'erreur, ou aucun (le journal du cron reste consultable dans les journaux de l'hébergement, dossier `cron`).
+3. **Vérification** : au premier passage, le journal contient `cron retry … (version <commit>)`, le résumé (`traitées`, `file restante`, `alertes`, `purge`) et `fin`. Une ligne `ERREUR :` signale un problème (base, `.env`) ; elle est aussi écrite dans `var/log/alerts.log`.
+
+Le cron envoie les mails en attente (`pending`, `failed`) dans la limite du bucket, puis **un seul** mail d'alerte vers `ALERT_EMAIL` qui liste les nouvelles commandes en `error`. Au premier passage, toutes les commandes déjà en `error` (essais du 14 au 16/11) sont listées une fois.
+
+Suivi : requêtes prêtes à coller dans phpMyAdmin dans [`requetes-suivi.sql`](requetes-suivi.sql).
+
 ## Mise à jour du `.env` sur le serveur
 
 Clés ajoutées depuis le premier déploiement :
 
 - `DEBUG_DELIVERIES=1` (M3) : copie brute de chaque livraison dans `var/log/deliveries/`. À laisser à `1` jusqu'à la fin des tests de M2 (commandes B à E), puis `0`.
 - `SHOPIFY_STORE_HANDLE` : identifiant de la boutique dans l'URL de l'admin (M4).
+- `ALERT_EMAIL` (M7) : destinataire du mail d'alerte groupé du cron. Vide : aucune alerte par mail (seulement `var/log/alerts.log`).
+- `RETENTION_MONTHS` (12) et `MAIL_LOG_RETENTION_DAYS` (30) (M7) : durées de la purge. `0` désactive la purge concernée.
 
 ## Fichiers retirés du dépôt
 

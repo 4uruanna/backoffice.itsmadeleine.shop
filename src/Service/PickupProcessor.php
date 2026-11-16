@@ -36,8 +36,14 @@ final readonly class PickupProcessor
     /** @return string résumé pour le journal (aucune donnée personnelle) */
     public function process(int $id): string
     {
+        return $this->processResult($id)->message;
+    }
+
+    /** Traite la ligne et renvoie son issue (le cron s'arrête au premier `rate_limited`). */
+    public function processResult(int $id): ProcessResult
+    {
         if (!$this->orders->claim($id)) {
-            return "ligne $id : rien à traiter (déjà prise, envoyée ou révoquée)";
+            return new ProcessResult(ProcessResult::SKIPPED, "ligne $id : rien à traiter (déjà prise, envoyée ou révoquée)");
         }
 
         $row = $this->orders->findById($id);
@@ -47,13 +53,13 @@ final readonly class PickupProcessor
             // Normalement impossible : sans e-mail, la ligne est créée en error/no_email (M3).
             $this->orders->release($id, 'no_email');
 
-            return "ligne $id : sans e-mail, laissée en attente";
+            return new ProcessResult(ProcessResult::WAITING, "ligne $id : sans e-mail, laissée en attente");
         }
 
         if ($this->allowlist !== [] && !in_array(strtolower($email), $this->allowlist, true)) {
             $this->orders->release($id, 'not_allowlisted');
 
-            return "ligne $id : destinataire hors MAIL_ALLOWLIST, laissée en attente";
+            return new ProcessResult(ProcessResult::WAITING, "ligne $id : destinataire hors MAIL_ALLOWLIST, laissée en attente");
         }
 
         try {
@@ -66,13 +72,13 @@ final readonly class PickupProcessor
             if (($this->orders->findById($id)['revoked_at'] ?? null) !== null) {
                 $this->orders->release($id, 'revoked');
 
-                return "ligne $id : révoquée avant l'envoi, aucun mail";
+                return new ProcessResult(ProcessResult::WAITING, "ligne $id : révoquée avant l'envoi, aucun mail");
             }
 
             if (!$this->bucket->tryAcquire($id, MailBucket::KIND_QR)) {
                 $this->orders->release($id, 'rate_limited');
 
-                return "ligne $id : plafond d'envoi atteint, en attente du cron";
+                return new ProcessResult(ProcessResult::RATE_LIMITED, "ligne $id : plafond d'envoi atteint, en attente du cron");
             }
 
             $this->transport->send($message);
@@ -80,7 +86,10 @@ final readonly class PickupProcessor
             // Quota du serveur SMTP : ni échec ni essai compté, le cron reprendra la commande.
             $this->orders->release($id, 'rate_limited', $e->getMessage());
 
-            return "ligne $id : quota SMTP dépassé, en attente du cron : " . mb_substr($e->getMessage(), 0, 200);
+            return new ProcessResult(
+                ProcessResult::RATE_LIMITED,
+                "ligne $id : quota SMTP dépassé, en attente du cron : " . mb_substr($e->getMessage(), 0, 200),
+            );
         } catch (\Throwable $e) {
             $status = $this->orders->markFailed($id, $e->getMessage(), $this->maxAttempts);
             if ($status === 'error') {
@@ -91,11 +100,14 @@ final readonly class PickupProcessor
                 ]);
             }
 
-            return "ligne $id : échec d'envoi ($status) : " . mb_substr($e->getMessage(), 0, 200);
+            return new ProcessResult(
+                $status === 'error' ? ProcessResult::ERROR : ProcessResult::FAILED,
+                "ligne $id : échec d'envoi ($status) : " . mb_substr($e->getMessage(), 0, 200),
+            );
         }
 
         $this->orders->markSent($id);
 
-        return "ligne $id : mail envoyé";
+        return new ProcessResult(ProcessResult::SENT, "ligne $id : mail envoyé");
     }
 }

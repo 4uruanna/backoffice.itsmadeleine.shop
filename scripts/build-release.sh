@@ -8,7 +8,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/build/backoffice"
 cd "$ROOT"
 
-if [[ -n "$(git status --porcelain -- public src templates migrations composer.json composer.lock)" ]]; then
+if [[ -n "$(git status --porcelain -- public src templates migrations cron composer.json composer.lock)" ]]; then
     echo "Attention : modifications non commitées dans le code, elles ne seront PAS dans la release." >&2
 fi
 
@@ -16,7 +16,7 @@ rm -rf "$ROOT/build"
 mkdir -p "$OUT"
 
 # Uniquement ce qui doit aller sur le serveur (ni tests, ni Docker, ni shopify/, ni roadmap/).
-git archive HEAD public src templates migrations composer.json composer.lock | tar -x -C "$OUT"
+git archive HEAD public src templates migrations cron composer.json composer.lock | tar -x -C "$OUT"
 
 COMPOSER_ARGS=(install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress)
 

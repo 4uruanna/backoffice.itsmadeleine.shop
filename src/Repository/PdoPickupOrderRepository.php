@@ -53,7 +53,7 @@ final class PdoPickupOrderRepository implements PickupOrderRepository
         $statement = $pdo->prepare(
             "UPDATE pickup_orders
                 SET order_name = ?, customer_email = ?, status_page_url = ?, status = ?, error_code = ?,
-                    attempts = 0, last_error = NULL, webhook_id = ?, updated_at = UTC_TIMESTAMP()
+                    attempts = 0, last_error = NULL, alerted_at = NULL, webhook_id = ?, updated_at = UTC_TIMESTAMP()
               WHERE shopify_order_id = ? AND status = 'error' AND error_code = 'payload_errors'"
         );
         $statement->execute([
@@ -154,16 +154,12 @@ final class PdoPickupOrderRepository implements PickupOrderRepository
     public function markFailed(int $id, string $error, int $maxAttempts): string
     {
         $pdo = ($this->connect)();
-        // MySQL évalue les affectations de gauche à droite avec les valeurs déjà modifiées :
-        // status et error_code sont calculés avant l'incrément d'attempts.
         $pdo->prepare(
             "UPDATE pickup_orders
-                SET status = IF(attempts + 1 >= ?, 'error', 'failed'),
-                    error_code = IF(attempts + 1 >= ?, 'max_attempts', error_code),
-                    attempts = attempts + 1,
+                SET {$this->failedAssignments()},
                     last_error = ?, locked_at = NULL, pending_reason = NULL, updated_at = UTC_TIMESTAMP()
               WHERE id = ? AND status = 'processing'"
-        )->execute([$maxAttempts, $maxAttempts, self::cut($error, 500), $id]);
+        )->execute([$maxAttempts, $maxAttempts, $maxAttempts, self::cut($error, 500), $id]);
 
         $statement = $pdo->prepare('SELECT status FROM pickup_orders WHERE id = ?');
         $statement->execute([$id]);
@@ -179,6 +175,80 @@ final class PdoPickupOrderRepository implements PickupOrderRepository
                     locked_at = NULL, updated_at = UTC_TIMESTAMP()
               WHERE id = ? AND status = 'processing'"
         )->execute([self::cut($reason, 32), self::cut($lastError, 500), $id]);
+    }
+
+    public function findRetryable(int $limit): array
+    {
+        $statement = ($this->connect)()->prepare(
+            "SELECT id FROM pickup_orders
+              WHERE status IN ('pending', 'failed') AND revoked_at IS NULL
+              ORDER BY created_at, id
+              LIMIT ?"
+        );
+        $statement->execute([$limit]);
+
+        return array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    public function countRetryable(): int
+    {
+        return (int) ($this->connect)()->query(
+            "SELECT COUNT(*) FROM pickup_orders WHERE status IN ('pending', 'failed') AND revoked_at IS NULL"
+        )->fetchColumn();
+    }
+
+    public function unlockStale(int $minutes, int $maxAttempts): int
+    {
+        $statement = ($this->connect)()->prepare(
+            "UPDATE pickup_orders
+                SET {$this->failedAssignments()},
+                    last_error = 'stale_lock', locked_at = NULL, pending_reason = NULL, updated_at = UTC_TIMESTAMP()
+              WHERE status = 'processing'
+                AND (locked_at IS NULL OR locked_at < UTC_TIMESTAMP() - INTERVAL ? MINUTE)"
+        );
+        $statement->execute([$maxAttempts, $maxAttempts, $maxAttempts, $minutes]);
+
+        return $statement->rowCount();
+    }
+
+    public function findUnalertedErrors(int $limit): array
+    {
+        $statement = ($this->connect)()->prepare(
+            "SELECT id, shopify_order_id, order_name, error_code, attempts, last_error, created_at, updated_at
+               FROM pickup_orders
+              WHERE status = 'error' AND alerted_at IS NULL
+              ORDER BY created_at, id
+              LIMIT ?"
+        );
+        $statement->execute([$limit]);
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function markAlerted(array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($ids), '?'));
+        ($this->connect)()->prepare(
+            "UPDATE pickup_orders SET alerted_at = UTC_TIMESTAMP() WHERE id IN ($placeholders)"
+        )->execute(array_values($ids));
+    }
+
+    /**
+     * Affectations d'un échec compté (3 paramètres : $maxAttempts × 3). MySQL évalue les
+     * affectations de gauche à droite avec les valeurs déjà modifiées : status, error_code et
+     * alerted_at sont calculés avant l'incrément d'attempts. Une ligne qui passe en `error`
+     * redevient à signaler (alerted_at = NULL).
+     */
+    private function failedAssignments(): string
+    {
+        return "status = IF(attempts + 1 >= ?, 'error', 'failed'),
+                    error_code = IF(attempts + 1 >= ?, 'max_attempts', error_code),
+                    alerted_at = IF(attempts + 1 >= ?, NULL, alerted_at),
+                    attempts = attempts + 1";
     }
 
     private static function cut(?string $value, int $length): ?string

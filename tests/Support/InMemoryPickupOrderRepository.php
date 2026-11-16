@@ -13,6 +13,8 @@ final class InMemoryPickupOrderRepository implements PickupOrderRepository
     /** @var array<int, array<string, mixed>> par shopify_order_id */
     public array $rows = [];
     private int $nextId = 1;
+    /** Horloge de created_at : une seconde de plus par ligne, pour un ordre d'ancienneté stable. */
+    private int $clock = 1_700_000_000;
     /** @var (\Closure(): mixed)|null appelé après assignToken (simuler une annulation simultanée) */
     public ?\Closure $afterAssignToken = null;
 
@@ -39,6 +41,8 @@ final class InMemoryPickupOrderRepository implements PickupOrderRepository
             'sent_at' => null,
             'revoked_at' => null,
             'revoked_reason' => null,
+            'alerted_at' => null,
+            'created_at' => gmdate('Y-m-d H:i:s', $this->clock++),
         ];
 
         return $this->rows[$shopifyOrderId]['id'];
@@ -60,6 +64,7 @@ final class InMemoryPickupOrderRepository implements PickupOrderRepository
             'last_error' => null,
             'webhook_id' => $webhookId,
             'attempts' => 0,
+            'alerted_at' => null,
         ] + $row;
 
         return $row['id'];
@@ -141,15 +146,7 @@ final class InMemoryPickupOrderRepository implements PickupOrderRepository
         \assert($key !== null);
         $row = $this->rows[$key];
         if ($row['status'] === 'processing') {
-            $attempts = $row['attempts'] + 1;
-            $this->rows[$key] = [
-                'status' => $attempts >= $maxAttempts ? 'error' : 'failed',
-                'error_code' => $attempts >= $maxAttempts ? 'max_attempts' : $row['error_code'],
-                'attempts' => $attempts,
-                'last_error' => mb_substr($error, 0, 500),
-                'locked_at' => null,
-                'pending_reason' => null,
-            ] + $row;
+            $this->countFailure($key, $error, $maxAttempts);
         }
 
         return $this->rows[$key]['status'];
@@ -166,6 +163,75 @@ final class InMemoryPickupOrderRepository implements PickupOrderRepository
                 'locked_at' => null,
             ] + $this->rows[$key];
         }
+    }
+
+    public function findRetryable(int $limit): array
+    {
+        return array_slice(array_column($this->retryable(), 'id'), 0, $limit);
+    }
+
+    public function countRetryable(): int
+    {
+        return count($this->retryable());
+    }
+
+    public function unlockStale(int $minutes, int $maxAttempts): int
+    {
+        $limit = gmdate('Y-m-d H:i:s', time() - $minutes * 60);
+        $count = 0;
+        foreach ($this->rows as $key => $row) {
+            if ($row['status'] === 'processing' && ($row['locked_at'] === null || $row['locked_at'] < $limit)) {
+                $this->countFailure($key, 'stale_lock', $maxAttempts);
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    public function findUnalertedErrors(int $limit): array
+    {
+        $rows = array_filter($this->rows, static fn (array $r): bool => $r['status'] === 'error' && $r['alerted_at'] === null);
+        usort($rows, static fn (array $a, array $b): int => [$a['created_at'], $a['id']] <=> [$b['created_at'], $b['id']]);
+
+        return array_slice($rows, 0, $limit);
+    }
+
+    public function markAlerted(array $ids): void
+    {
+        foreach ($ids as $id) {
+            $key = $this->keyOf($id);
+            if ($key !== null) {
+                $this->rows[$key]['alerted_at'] = gmdate('Y-m-d H:i:s');
+            }
+        }
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function retryable(): array
+    {
+        $rows = array_filter(
+            $this->rows,
+            static fn (array $r): bool => in_array($r['status'], ['pending', 'failed'], true) && $r['revoked_at'] === null,
+        );
+        usort($rows, static fn (array $a, array $b): int => [$a['created_at'], $a['id']] <=> [$b['created_at'], $b['id']]);
+
+        return $rows;
+    }
+
+    private function countFailure(int $key, string $error, int $maxAttempts): void
+    {
+        $row = $this->rows[$key];
+        $attempts = $row['attempts'] + 1;
+        $this->rows[$key] = [
+            'status' => $attempts >= $maxAttempts ? 'error' : 'failed',
+            'error_code' => $attempts >= $maxAttempts ? 'max_attempts' : $row['error_code'],
+            'alerted_at' => $attempts >= $maxAttempts ? null : $row['alerted_at'],
+            'attempts' => $attempts,
+            'last_error' => mb_substr($error, 0, 500),
+            'locked_at' => null,
+            'pending_reason' => null,
+        ] + $row;
     }
 
     private function keyOf(int $id): ?int

@@ -11,7 +11,6 @@ use App\Mail\MailBucket;
 use App\Mail\MailTransport;
 use App\Mail\MailTransports;
 use App\Mail\PdoMailBucket;
-use App\Mail\QrMailBuilder;
 use App\Repository\PdoPickupOrderRepository;
 use App\Repository\PdoScanRepository;
 use App\Repository\PickupOrderRepository;
@@ -21,11 +20,8 @@ use App\Service\DeferredTasks;
 use App\Service\DeliveryLog;
 use App\Service\OrderDecider;
 use App\Service\OrderEventHandler;
-use App\Service\PickupProcessor;
-use App\Service\QrGenerator;
 use App\Service\ShopifyHmac;
 use App\Service\Template;
-use PDO;
 use Slim\App;
 use Slim\Factory\AppFactory as SlimAppFactory;
 
@@ -35,7 +31,7 @@ use Slim\Factory\AppFactory as SlimAppFactory;
 final class AppFactory
 {
     /**
-     * @param (\Closure(): PDO)|null $connect connexion à la base (remplaçable dans les tests)
+     * @param (\Closure(): \PDO)|null $connect connexion à la base (remplaçable dans les tests)
      * @param DeferredTasks|null $tasks tâches à exécuter après la réponse (voir public/index.php)
      */
     public static function create(
@@ -50,7 +46,7 @@ final class AppFactory
         ?MailTransport $transport = null,
         ?MailBucket $bucket = null,
     ): App {
-        $connect ??= self::lazyConnection($config);
+        $connect ??= Services::connection($config);
         $tasks ??= new DeferredTasks();
         $orders ??= new PdoPickupOrderRepository($connect);
         $alerts ??= new AlertLog($projectRoot . '/var/log/alerts.log');
@@ -59,19 +55,7 @@ final class AppFactory
         $transport ??= MailTransports::fromConfig($config);
         $bucket ??= new PdoMailBucket($connect, $config->int('MAIL_MAX_PER_HOUR', 120));
 
-        $processor = new PickupProcessor(
-            $orders,
-            new QrMailBuilder(
-                $templates,
-                new QrGenerator((string) $config->get('APP_URL', 'https://app.itsmadeleine.shop')),
-                (string) $config->get('MAIL_CONTACT', QrMailBuilder::DEFAULT_CONTACT),
-            ),
-            $transport,
-            $bucket,
-            $alerts,
-            $config->int('MAX_ATTEMPTS', 3),
-            self::allowlist($config->get('MAIL_ALLOWLIST')),
-        );
+        $processor = Services::pickupProcessor($config, $orders, $templates, $transport, $bucket, $alerts);
 
         $secret = $config->get('SHOPIFY_CLIENT_SECRET');
         $hmac = $secret === null ? null : new ShopifyHmac($secret);
@@ -113,28 +97,5 @@ final class AppFactory
         ));
 
         return $app;
-    }
-
-    /** @return list<string> adresses en minuscules ; vide = aucun filtre */
-    private static function allowlist(?string $value): array
-    {
-        if ($value === null) {
-            return [];
-        }
-
-        return array_values(array_filter(array_map(
-            static fn (string $address): string => strtolower(trim($address)),
-            explode(',', $value),
-        )));
-    }
-
-    /** @return \Closure(): PDO */
-    private static function lazyConnection(Config $config): \Closure
-    {
-        $pdo = null;
-
-        return static function () use ($config, &$pdo): PDO {
-            return $pdo ??= Database::connect($config);
-        };
     }
 }
