@@ -71,7 +71,10 @@ Les lignes créées avant ce déploiement n'ont pas de jeton : il faut une nouve
    ```sql
    SELECT id, order_name, status, token FROM pickup_orders ORDER BY id DESC LIMIT 5;
    ```
-2. Sur le poste, générer le QR (`qr-<début du jeton>.png` à la racine du dépôt) et l'afficher à l'écran :
+2. Sur le poste, générer le QR (`qr-<début du jeton>.png` à la racine du dépôt) et l'afficher à l'écran. Une seule fois avant, installer les dépendances dans le dépôt (`vendor/` n'est pas versionné, et celui de `build/` ne sert qu'à la release) :
+   ```bash
+   docker compose run --rm php composer install
+   ```
    ```bash
    docker compose run --rm php php scripts/qr.php <jeton>
    ```

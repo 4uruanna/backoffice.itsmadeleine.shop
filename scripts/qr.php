@@ -12,11 +12,16 @@ declare(strict_types=1);
 
 use App\Service\QrGenerator;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
-
 if (PHP_SAPI !== 'cli') {
     exit(1);
 }
+
+$autoload = dirname(__DIR__) . '/vendor/autoload.php';
+if (!is_file($autoload)) {
+    fwrite(STDERR, "vendor/ absent : lancer d'abord `docker compose run --rm php composer install`.\n");
+    exit(1);
+}
+require $autoload;
 
 $token = $argv[1] ?? '';
 if (!QrGenerator::isValidToken($token)) {
