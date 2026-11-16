@@ -18,7 +18,7 @@
 | M1 | ✅ Terminé | — |
 | M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), fixtures à pousser, commandes de test à annuler |
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
-| M4 | Déployé, scan validé en production (16/11) | Scan depuis un téléphone non connecté, scan après annulation (page rouge), contrôle de `scans` ; reliquats de la section « Reprise au démarrage » (mail Gmail avant M5, fixtures, nettoyage) |
+| M4 | ✅ Validé en production (16/11) | Confirmer le nombre de lignes dans `scans` ; reliquats de la section « Reprise au démarrage » (mail Gmail avant M5, fixtures, nettoyage) |
 | M5 à M8 | À faire | — |
 
 ## Planning
@@ -42,7 +42,7 @@ Planning initial, avec ce qui a été réalisé. Le jour d'avance pris le 14/11 
 | M1 | [Socle de l'API et sonde de livraison](roadmap/M1-socle.md) ✅ 14/11 | M0 | Oui |
 | M2 | [Validation sur la boutique (go/no-go)](roadmap/M2-go-no-go.md) ✅ **go plan A** le 14/11 — reste les commandes B à E | M0, M1 | Oui, décide plan A ou plan B |
 | M3 | [Réception Events](roadmap/M3-reception-events.md) ✅ 14/11 | M2 | Oui |
-| M4 | [QR code et route de scan](roadmap/M4-qr-et-scan.md) — scan validé en production le 16/11, reste le cas de la commande annulée | M3 | Oui |
+| M4 | [QR code et route de scan](roadmap/M4-qr-et-scan.md) ✅ 16/11 | M3 | Oui |
 | M5 | [Mail au client](roadmap/M5-mail.md) | M4 | Oui |
 | M6 | [Limite d'envoi (bucket)](roadmap/M6-bucket.md) | M5 | Oui |
 | M7 | [Fiabilité : traitement après réponse, cron, alertes, purge](roadmap/M7-fiabilite-cron.md) | M6 | Oui |
