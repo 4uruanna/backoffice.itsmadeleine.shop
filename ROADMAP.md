@@ -18,7 +18,7 @@
 | M1 | ✅ Terminé | — |
 | M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), fixtures à pousser, commandes de test à annuler |
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
-| M4 | ✅ Validé en production (16/11) | Confirmer le nombre de lignes dans `scans` ; reliquats de la section « Reprise au démarrage » (mail Gmail avant M5, fixtures, nettoyage) |
+| M4 | ✅ Validé en production (16/11) | Reliquats de la section « Reprise au démarrage » (mail Gmail avant M5, fixtures, nettoyage) |
 | M5 à M8 | À faire | — |
 
 ## Planning

@@ -1,7 +1,7 @@
 # M4 — QR code et route de scan
 
 **Quand** : lundi 16/11, matin. Avec le jour d'avance pris le 14/11, possible dès le dimanche 15/11.
-**État** : code fait le 15/11, déployé le 16/11 ; scan d'une commande valide validé en production le 16/11. Téléphone non connecté et commande annulée validés le 16/11 ; reste à confirmer le nombre de lignes dans `scans`.
+**État** : code fait le 15/11, déployé le 16/11 ; scan d'une commande valide validé en production le 16/11. ✅ M4 terminé le 16/11 : tous les critères de fin validés en production.
 **Dépend de** : M3 (lignes `pending` en base).
 **Débloque** : M5.
 
@@ -88,7 +88,7 @@ Les lignes créées avant ce déploiement n'ont pas de jeton : il faut une nouve
 - [x] QR scanné avec l'appareil photo d'un téléphone : la commande s'ouvre dans l'app Shopify ou dans le navigateur connecté à l'admin. **Validé le 16/11** sur une nouvelle commande `pending`.
 - [x] Même scan depuis un téléphone **non connecté** : page de connexion Shopify, rien d'autre. **Validé le 16/11.**
 - [x] QR d'une commande annulée : page d'avertissement avec le lien vers la commande ; le lien ouvre bien la commande. **Validé le 16/11.**
-- [ ] Chaque scan crée une ligne dans `scans` avec le bon `result`. 16/11 : une ligne `redirected` (09:35 UTC) et une `revoked` (09:43 UTC), résultats corrects ; à confirmer qu'aucun scan ne manque (3 scans faits ?).
+- [x] Chaque scan crée une ligne dans `scans` avec le bon `result`. **Validé le 16/11** : 2 scans, 2 lignes (`redirected` à 09:35 UTC, `revoked` à 09:43 UTC).
 
 ## Risques
 
