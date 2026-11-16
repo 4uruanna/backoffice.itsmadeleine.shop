@@ -106,7 +106,9 @@ final readonly class SmtpTransport implements MailTransport
     /** Jamais de mot de passe dans last_error ni dans les journaux. */
     private function redact(string $message): string
     {
-        if ($this->password === null || $this->password === '') {
+        // PHPMailer ne met pas le mot de passe dans ses erreurs : ceci n'est qu'une précaution.
+        // En dessous de 6 caractères, le remplacement abîmerait le texte (mots qui contiennent le mot de passe).
+        if ($this->password === null || strlen($this->password) < 6) {
             return $message;
         }
 
