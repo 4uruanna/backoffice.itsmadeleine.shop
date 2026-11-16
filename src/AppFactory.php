@@ -9,9 +9,9 @@ use App\Controller\OrderEventController;
 use App\Controller\ScanController;
 use App\Mail\MailBucket;
 use App\Mail\MailTransport;
+use App\Mail\MailTransports;
 use App\Mail\PdoMailBucket;
 use App\Mail\QrMailBuilder;
-use App\Mail\SmtpTransport;
 use App\Repository\PdoPickupOrderRepository;
 use App\Repository\PdoScanRepository;
 use App\Repository\PickupOrderRepository;
@@ -56,7 +56,7 @@ final class AppFactory
         $alerts ??= new AlertLog($projectRoot . '/var/log/alerts.log');
         $scans ??= new PdoScanRepository($connect);
         $templates ??= new Template($projectRoot . '/templates');
-        $transport ??= SmtpTransport::fromConfig($config);
+        $transport ??= MailTransports::fromConfig($config);
         $bucket ??= new PdoMailBucket($connect, $config->int('MAIL_MAX_PER_HOUR', 120));
 
         $processor = new PickupProcessor(

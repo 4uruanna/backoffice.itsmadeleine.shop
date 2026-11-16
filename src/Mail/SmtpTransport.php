@@ -70,34 +70,16 @@ final readonly class SmtpTransport implements MailTransport
             $mail->Username = (string) $this->user;
             $mail->Password = (string) $this->password;
             $mail->Timeout = $this->timeout;
-            $mail->CharSet = PHPMailer::CHARSET_UTF8;
-            $mail->Encoding = PHPMailer::ENCODING_QUOTED_PRINTABLE;
-            // EHLO et Message-ID au nom du domaine expéditeur, pas du serveur mutualisé.
-            $mail->Hostname = substr((string) strrchr($this->fromAddress, '@'), 1) ?: 'localhost';
             if ($this->debug !== null) {
                 $mail->SMTPDebug = 2;
                 $mail->Debugoutput = $this->debug;
             }
-
-            $mail->setFrom($this->fromAddress, $this->fromName);
-            $mail->addAddress($message->to);
-            $mail->Subject = $message->subject;
-            if ($message->html === '') {
-                $mail->Body = $message->text;
-            } else {
-                $mail->isHTML();
-                $mail->Body = $message->html;
-                $mail->AltBody = $message->text;
-            }
-            foreach ($message->inlineImages as $cid => $image) {
-                $mail->addStringEmbeddedImage($image['data'], $cid, $image['filename'], PHPMailer::ENCODING_BASE64, $image['mime']);
-            }
+            PhpMailerComposer::compose($mail, $message, $this->fromAddress, $this->fromName);
 
             $mail->send();
         } catch (\Throwable $e) {
             // ErrorInfo contient la réponse du serveur (code et motif), absente du message de l'exception.
-            $detail = $mail->ErrorInfo !== '' ? $mail->ErrorInfo : $e->getMessage();
-            $detail = $this->redact(trim((string) preg_replace('/\s+/', ' ', $detail)));
+            $detail = $this->redact(PhpMailerComposer::errorDetail($mail, $e));
             if (RateLimitedException::matches($detail)) {
                 throw new RateLimitedException($detail, 0, $e);
             }

@@ -11,9 +11,23 @@ Explication la plus probable du blocage : OVH limite le SMTP à 200 mails par he
 
 À tester avant ou en parallèle de Mailjet, du plus simple au plus long :
 
-1. [ ] **`SMTP_HOST=smtp.mail.ovh.net`** (port 465, `smtps`) dans le `.env` du serveur : c'est l'hôte indiqué par la documentation récente d'OVH pour les envois depuis un hébergement. Aucun code à changer ; deux commandes de test. Peut échouer de la même façon si la limite par IP s'applique aussi.
-2. [ ] **Fonction `mail()` de PHP** (envoi des « scripts e-mails » de l'hébergement, état « Envoi actif ») : quota propre à l'hébergement, et non partagé avec d'autres clients. D'après les forums d'OVH : environ 100 mails par heure pour l'offre Perso, 200 pour Pro, 2 000 pour Performance (à vérifier dans les spécifications de l'offre). Petit changement de code : `MAIL_TRANSPORT=phpmail` (PHPMailer en mode `mail()`, même mail avec le QR intégré), `MAIL_MAX_PER_HOUR` sous le quota. À vérifier sur un mail reçu : SPF, DKIM et DMARC (signature DKIM des envois de l'hébergement non garantie).
+1. [x] ~~**`SMTP_HOST=smtp.mail.ovh.net`**~~ (16/11 : même refus de quota, piste écartée) (port 465, `smtps`) dans le `.env` du serveur : c'est l'hôte indiqué par la documentation récente d'OVH pour les envois depuis un hébergement. Aucun code à changer ; deux commandes de test. Peut échouer de la même façon si la limite par IP s'applique aussi.
+2. [ ] **Fonction `mail()` de PHP** — **code fait le 16/11** (`PhpMailTransport`, `MAIL_TRANSPORT=phpmail`), test en production en cours — (envoi des « scripts e-mails » de l'hébergement, état « Envoi actif ») : quota propre à l'hébergement, et non partagé avec d'autres clients. D'après les forums d'OVH : environ 100 mails par heure pour l'offre Perso, 200 pour Pro, 2 000 pour Performance (à vérifier dans les spécifications de l'offre). Petit changement de code : `MAIL_TRANSPORT=phpmail` (PHPMailer en mode `mail()`, même mail avec le QR intégré), `MAIL_MAX_PER_HOUR` sous le quota. À vérifier sur un mail reçu : SPF, DKIM et DMARC (signature DKIM des envois de l'hébergement non garantie).
 3. [ ] **Ticket au support OVH**, avec les heures et messages de [M5](M5-mail.md).
+
+### Test de `mail()` en production
+
+1. `.env` du serveur :
+   ```
+   MAIL_TRANSPORT=phpmail
+   MAIL_FROM=retrait@itsmadeleine.shop
+   MAIL_FROM_NAME="It's Madeleine"
+   MAIL_MAX_PER_HOUR=90
+   ```
+   (90 : sous le quota `mail()` de l'offre Perso, environ 100 par heure d'après les forums ; à ajuster selon l'offre.) Les variables `SMTP_*` peuvent rester, elles ne servent plus.
+2. Release (`scripts/build-release.sh`) et envoi FTP.
+3. Deux commandes de test coup sur coup : les deux lignes doivent passer en `sent`.
+4. Dans Gmail, pour chaque mail : arrivé en boîte de réception ou en spam, QR affiché, puis « Afficher l'original » → `SPF`, `DKIM`, `DMARC`.
 
 Si la piste 1 ou 2 fonctionne (envois répétés acceptés, en-têtes à `PASS`), Mailjet devient un repli et non plus un prérequis.
 
