@@ -52,6 +52,8 @@ Envoyer au client un mail simple : texte court, lien vers la page de statut de s
 docker compose run --rm php php scripts/test-smtp.php <adresse gmail> --qr --host=ssl0.ovh.net --port=465 --encryption=smtps --user=commandes@itsmadeleine.shop --from=commandes@itsmadeleine.shop "--from-name=It's Madeleine"
 ```
 
+Résultat (16/11) : depuis le poste, le vrai mail de retrait (commande `#TEST`) est **accepté et reçu** dans Gmail. Le contenu de base n'est donc pas en cause. Restent à départager : les données de la vraie commande (lien `…/authenticate?key=…`, à reproduire avec `--order=` et `--status-url=`), le `.env` du serveur, ou l'envoi depuis l'hébergement. La release avec la raison du refus dans `last_error` doit être déployée pour le savoir.
+
 Les lignes déjà en `pending` avant ce déploiement (tests de M3, M4) ne partent pas : seule une nouvelle livraison déclenche l'envoi, le cron de M7 reprendra le reste.
 
 ## Critères de fin

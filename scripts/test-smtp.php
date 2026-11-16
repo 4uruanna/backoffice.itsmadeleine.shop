@@ -11,7 +11,9 @@ declare(strict_types=1);
  *
  * Usage : php scripts/test-smtp.php <destinataire> [--qr] [--host=ssl0.ovh.net] [--port=465]
  *         [--encryption=smtps] [--user=commandes@itsmadeleine.shop] [--from=…] [--from-name=…]
- *   --qr : envoie le vrai mail de retrait (commande #TEST, QR intégré) au lieu d'un texte simple.
+ *   --qr : envoie le vrai mail de retrait (QR intégré) au lieu d'un texte simple ;
+ *          --order=#1234 et --status-url=https://… reproduisent le mail d'une commande précise
+ *          (valeurs order_name et status_page_url de pickup_orders).
  */
 
 use App\Config;
@@ -38,14 +40,14 @@ $overrides = [];
 foreach (array_slice($argv, 1) as $arg) {
     if ($arg === '--qr') {
         $qr = true;
-    } elseif (preg_match('/^--(host|port|encryption|user|from|from-name)=(.*)$/', $arg, $m) === 1) {
+    } elseif (preg_match('/^--(host|port|encryption|user|from|from-name|order|status-url)=(.*)$/s', $arg, $m) === 1) {
         $overrides[$m[1]] = $m[2];
     } elseif ($to === null) {
         $to = $arg;
     }
 }
 if ($to === null || filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
-    fwrite(STDERR, "Usage : php scripts/test-smtp.php <destinataire> [--qr] [--host=…] [--port=…] [--encryption=smtps|starttls|] [--user=…] [--from=…] [--from-name=…]\n");
+    fwrite(STDERR, "Usage : php scripts/test-smtp.php <destinataire> [--qr] [--host=…] [--port=…] [--encryption=smtps|starttls|] [--user=…] [--from=…] [--from-name=…] [--order=#1234] [--status-url=https://…]\n");
     exit(2);
 }
 
@@ -75,7 +77,9 @@ $fromName = $overrides['from-name'] ?? (string) $config->get('MAIL_FROM_NAME', '
 
 echo "Serveur : $host:$port, chiffrement : " . ($encryption === '' ? 'aucun' : $encryption)
     . ', identifiant : ' . ($user ?? '(sans authentification)') . "\nExpéditeur : $fromName <$from> → $to\n"
-    . 'Mail : ' . ($qr ? 'mail de retrait réel (HTML + QR intégré)' : 'texte simple') . "\n\n";
+    . 'Mail : ' . ($qr
+        ? sprintf('mail de retrait réel (HTML + QR intégré), commande %s, lien de statut %s', $overrides['order'] ?? '#TEST', $overrides['status-url'] ?? 'https://itsmadeleine.shop')
+        : 'texte simple') . "\n\n";
 
 // Seules les commandes connues sont affichées en clair : identifiants (base64) et corps masqués,
 // les lignes masquées consécutives regroupées en une seule.
@@ -102,7 +106,7 @@ $message = $qr
     ? (new QrMailBuilder(
         new Template($root . '/templates'),
         new QrGenerator((string) $config->get('APP_URL', 'https://app.itsmadeleine.shop')),
-    ))->build($to, '#TEST', 'https://itsmadeleine.shop', QrGenerator::newToken())
+    ))->build($to, $overrides['order'] ?? '#TEST', $overrides['status-url'] ?? 'https://itsmadeleine.shop', QrGenerator::newToken())
     : new MailMessage($to, 'Test SMTP itsmadeleine ' . gmdate('Y-m-d H:i') . ' UTC', '', "Mail de test envoyé par scripts/test-smtp.php.\n");
 
 try {
