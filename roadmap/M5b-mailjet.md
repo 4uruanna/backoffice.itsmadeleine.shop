@@ -37,6 +37,8 @@ Explication la plus probable du blocage : OVH limite le SMTP à 200 mails par he
 
 **D'abord, tester `mail()` sur cet hébergement** avec `scripts/test-mail-hebergement.php` (autonome : renseigner `$to`, déposer sous un nom difficile à deviner, ouvrir une fois, supprimer). Attendu : mail reçu, `SPF`, `DKIM`, `DMARC` à `PASS`, aucun avis de non-remise dans les Scripts e-mails. Relever aussi l'offre de cet hébergement (quota `mail()` par heure, PHP 8.5, base de données disponible).
 
+**Résultat du test (16/11)** : mail accepté et **reçu**, avec `SPF` `PASS` (IP 46.105.60.65, relais de l'hébergement), `DKIM` `PASS` (`d=itsmadeleine.shop`) et `DMARC` `PASS`, mais **classé en indésirables** dans Gmail. Offre **Perso** (quota `mail()` d'environ 100 par heure → `MAIL_MAX_PER_HOUR=90`), une base de données libre. L'authentification est donc complète ; le classement en spam vient probablement du contenu du test (texte minimal, nom du serveur, version de PHP) et de la réputation de l'IP du relais mutualisé. À revérifier avec le vrai mail de retrait après migration, sur Gmail et Outlook.
+
 Si le test est concluant, migration (environ une heure, plus la propagation DNS de `app.`) :
 
 1. [ ] Hébergement `itsmadeleine.shop` : créer une base MySQL, y lancer `migrations/001_init.sql`, vérifier `GET_LOCK` (requête de M6).
