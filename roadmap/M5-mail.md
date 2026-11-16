@@ -54,6 +54,8 @@ docker compose run --rm php php scripts/test-smtp.php <adresse gmail> --qr --hos
 
 Résultat (16/11) : depuis le poste, le vrai mail de retrait (commande `#TEST`) est **accepté et reçu** dans Gmail. Le contenu de base n'est donc pas en cause. Restent à départager : les données de la vraie commande (lien `…/authenticate?key=…`, à reproduire avec `--order=` et `--status-url=`), le `.env` du serveur, ou l'envoi depuis l'hébergement. La release avec la raison du refus dans `last_error` doit être déployée pour le savoir.
 
+Le même jour, le mail **de la vraie commande** (même numéro, même lien de statut `…/authenticate?key=…`) est aussi **accepté** depuis le poste. Le contenu est donc hors de cause : le refus vient du serveur OVH. Pistes : valeurs du `.env` du serveur (`MAIL_FROM`, `MAIL_FROM_NAME`, `SMTP_USER`), envois de mails bloqués ou désactivés pour l'hébergement (espace client, Hébergements, section des scripts e-mails), ou politique du proxy SMTP d'OVH pour les envois venant de l'hébergement. La raison exacte viendra de `last_error` une fois la release du 16/11 déployée.
+
 Les lignes déjà en `pending` avant ce déploiement (tests de M3, M4) ne partent pas : seule une nouvelle livraison déclenche l'envoi, le cron de M7 reprendra le reste.
 
 ## Critères de fin
