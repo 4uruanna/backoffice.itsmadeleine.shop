@@ -37,6 +37,8 @@ else
 fi
 
 rm -f "$OUT/composer.json" "$OUT/composer.lock"
+# Version affichée par GET /health : vérifie que le serveur a bien reçu ce commit.
+git rev-parse --short HEAD > "$OUT/VERSION"
 # Paquets installés depuis les sources (repli de Composer) : pas de .git sur le serveur.
 find "$OUT/vendor" -name .git -prune -exec rm -rf {} +
 

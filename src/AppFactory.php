@@ -94,7 +94,12 @@ final class AppFactory
         $isProduction = $config->get('APP_ENV', 'production') === 'production';
         $app->addErrorMiddleware(!$isProduction, true, false);
 
-        $app->get('/health', new HealthController($connect));
+        $versionFile = $projectRoot . '/VERSION';
+        $app->get('/health', new HealthController(
+            $connect,
+            is_file($versionFile) ? trim((string) file_get_contents($versionFile)) : 'dev',
+            strtolower((string) $config->get('MAIL_TRANSPORT', 'smtp')),
+        ));
         $app->post('/webhooks/shopify/order-paid', new OrderEventController($hmac, $handler, $deliveryLog));
         $app->get('/r/{token}', new ScanController(
             $orders,

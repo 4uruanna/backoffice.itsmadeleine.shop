@@ -67,7 +67,7 @@ final class AppTest extends TestCase
         $response = $this->handle($this->app(connect: fn () => new PDO('sqlite::memory:')), 'GET', '/health');
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertSame('{"status":"ok"}', (string) $response->getBody());
+        self::assertSame('{"status":"ok","version":"dev","mail_transport":"smtp"}', (string) $response->getBody());
     }
 
     public function testHealthBaseInjoignable(): void
@@ -77,7 +77,7 @@ final class AppTest extends TestCase
         $response = $this->handle($app, 'GET', '/health');
 
         self::assertSame(503, $response->getStatusCode());
-        self::assertSame('{"status":"error"}', (string) $response->getBody());
+        self::assertSame('{"status":"error","version":"dev","mail_transport":"smtp"}', (string) $response->getBody());
     }
 
     public function testLivraisonSigneeCreeLaCommandeEtProgrammeLeTraitement(): void

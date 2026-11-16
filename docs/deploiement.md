@@ -48,7 +48,7 @@ Fichiers cachés : activer leur affichage dans le client FTP pour que `public/.h
 curl -s https://app.itsmadeleine.shop/health
 ```
 
-Attendu : `{"status":"ok"}` (sinon `503` : identifiants de base dans `.env`).
+Attendu : `{"status":"ok","version":"<commit>","mail_transport":"<transport>"}`, avec le commit affiché à la fin de `scripts/build-release.sh` et le transport du `.env` du serveur (`phpmail` depuis le 16/11). Sinon `503` : identifiants de base dans `.env`. Une version `dev` ou ancienne : la release envoyée n'est pas la bonne.
 
 Fichiers sensibles inaccessibles (attendu : `403` ou `404`) :
 
