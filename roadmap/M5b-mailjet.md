@@ -29,6 +29,8 @@ Explication la plus probable du blocage : OVH limite le SMTP à 200 mails par he
 3. Deux commandes de test coup sur coup : les deux lignes doivent passer en `sent`.
 4. Dans Gmail, pour chaque mail : arrivé en boîte de réception ou en spam, QR affiché, puis « Afficher l'original » → `SPF`, `DKIM`, `DMARC`.
 
+**Résultat (16/11)** : `/health` affiche `phpmail`, le service « Scripts e-mails » voit enfin les envois, mais renvoie un avis de non-remise : `550 5.7.1 Rejected by policy: From header domain does not align with authenticated domain`. Le relais `mail()` d'OVH n'accepte que les mails dont l'en-tête `From` est sur le domaine avec lequel l'hébergement est authentifié. Si l'alignement suit la règle « relâchée » de DMARC, `app.itsmadeleine.shop` et `itsmadeleine.shop` passeraient : le domaine retenu par OVH pour l'hébergement est donc probablement **un autre domaine** (domaine principal de l'hébergement). À vérifier dans l'espace client, puis : rattacher `itsmadeleine.shop` à l'hébergement en multisite **sans modifier sa zone DNS**, ou, pour un simple test, `MAIL_FROM=retrait@app.itsmadeleine.shop`.
+
 Si la piste 1 ou 2 fonctionne (envois répétés acceptés, en-têtes à `PASS`), Mailjet devient un repli et non plus un prérequis.
 
 ## Objectif
