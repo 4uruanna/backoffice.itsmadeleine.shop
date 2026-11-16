@@ -31,6 +31,23 @@ Explication la plus probable du blocage : OVH limite le SMTP à 200 mails par he
 
 **Résultat (16/11)** : `/health` affiche `phpmail`, le service « Scripts e-mails » voit enfin les envois, mais renvoie un avis de non-remise : `550 5.7.1 Rejected by policy: From header domain does not align with authenticated domain`. Le relais `mail()` d'OVH n'accepte que les mails dont l'en-tête `From` est sur le domaine avec lequel l'hébergement est authentifié. Si l'alignement suit la règle « relâchée » de DMARC, `app.itsmadeleine.shop` et `itsmadeleine.shop` passeraient : le domaine retenu par OVH pour l'hébergement est donc probablement **un autre domaine** (domaine principal de l'hébergement). À vérifier dans l'espace client, puis : rattacher `itsmadeleine.shop` à l'hébergement en multisite **sans modifier sa zone DNS**, ou, pour un simple test, `MAIL_FROM=retrait@app.itsmadeleine.shop`.
 
+**Cause (16/11)** : l'hébergement actuel a pour domaines `amnesic.dev` (`./www/`) et `app.itsmadeleine.shop` (`./app/public`) ; `mail()` n'y accepte donc qu'un expéditeur en `@amnesic.dev`. `itsmadeleine.shop` est seul sur **un autre hébergement OVH**.
+
+### Piste 2 bis : migrer l'API vers l'hébergement de `itsmadeleine.shop`
+
+**D'abord, tester `mail()` sur cet hébergement** avec `scripts/test-mail-hebergement.php` (autonome : renseigner `$to`, déposer sous un nom difficile à deviner, ouvrir une fois, supprimer). Attendu : mail reçu, `SPF`, `DKIM`, `DMARC` à `PASS`, aucun avis de non-remise dans les Scripts e-mails. Relever aussi l'offre de cet hébergement (quota `mail()` par heure, PHP 8.5, base de données disponible).
+
+Si le test est concluant, migration (environ une heure, plus la propagation DNS de `app.`) :
+
+1. [ ] Hébergement `itsmadeleine.shop` : créer une base MySQL, y lancer `migrations/001_init.sql`, vérifier `GET_LOCK` (requête de M6).
+2. [ ] Ancienne base : exporter `pickup_orders`, `scans`, `mail_log` (phpMyAdmin, données seules) et les importer dans la nouvelle.
+3. [ ] Envoyer la release dans un dossier dédié (ex. `~/app/`) et y créer le `.env` : nouvelle base, `MAIL_TRANSPORT=phpmail`, `MAIL_FROM=retrait@itsmadeleine.shop`, `MAIL_MAX_PER_HOUR` sous le quota `mail()` de l'offre, autres valeurs reprises de l'ancien `.env`.
+4. [ ] Multisite : retirer `app.itsmadeleine.shop` de l'hébergement `amnesic.dev`, puis l'ajouter sur l'hébergement `itsmadeleine.shop` avec la racine `app/public`, SSL activé, mise à jour de la zone DNS de `app.` acceptée (seul `app.` change, pas la racine du domaine).
+5. [ ] Après propagation : `/health` → bonne `version`, `mail_transport: phpmail` ; certificat HTTPS valide ; deux commandes de test → `sent`, mails reçus, en-têtes à `PASS`.
+6. [ ] L'URL de l'API ne change pas : rien à modifier côté Shopify (abonnement Events) ni dans les QR déjà envoyés.
+
+Pendant la propagation, une livraison Shopify peut arriver sur l'ancien serveur : faire la bascule hors des heures de commande, et vérifier ensuite qu'aucune ligne n'a été créée dans l'ancienne base.
+
 Si la piste 1 ou 2 fonctionne (envois répétés acceptés, en-têtes à `PASS`), Mailjet devient un repli et non plus un prérequis.
 
 ## Objectif
