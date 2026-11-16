@@ -16,7 +16,7 @@ Rejouer tous les scénarios sur la boutique de production, avec le code final d�
 
 ## Scénarios
 
-**Cadence du cron** : il ne passe qu'une fois par heure (sauf lancement à la main par SSH, si l'offre le permet). Le scénario 6 demande trois passages (environ 2 h), le 7 un passage : **les lancer en premier mercredi**, puis dérouler les autres en attendant. Penser à remettre `MAIL_MAX_PER_HOUR` à sa valeur (90) et `MAIL_FROM` après coup, l'OPcache d'OVH pouvant mettre quelques minutes à relire le `.env`.
+**Cadence du cron** : il ne passe qu'une fois par heure (sauf lancement à la main par SSH, si l'offre le permet). Le scénario 6 demande trois passages (environ 2 h), le 7 un passage : **les lancer en premier mercredi**, puis dérouler les autres en attendant. Penser à remettre `MAIL_MAX_PER_HOUR` à sa valeur (90) et `MAIL_FROM` après coup.
 
 | # | Scénario | Attendu |
 |---|---|---|
