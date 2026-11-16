@@ -19,7 +19,7 @@
 | M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), commandes de test à annuler |
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
 | M4 | ✅ Validé en production (16/11) | Reliquats de la section « Reprise au démarrage » (commande B, nettoyage), non bloquants |
-| M5 | Mail envoyé depuis le serveur (#1109, 16/11) | Quota OVH de `commandes@` toujours saturé (#1110 refusé 43 s après #1109) : trouver qui d'autre envoie depuis ce compte |
+| M5 | Mail envoyé depuis le serveur (#1109, 16/11), puis envois refusés | **Bloquant** : OVH bloque l'envoi SMTP depuis l'hébergement (même avec une boîte neuve) ; passer par un service transactionnel en HTTPS |
 | M6 | Code fait (16/11), testé en local ; `GET_LOCK` OK sur OVH | Déployer, commande de test |
 | M7, M8 | À faire | — |
 
@@ -96,7 +96,7 @@ Ces changements découlent des décisions ci-dessus ; ils sont détaillés dans 
 
 ## Points encore ouverts
 
-- **Quota OVH de `commandes@` saturé** (16/11) : 200 mails par heure et par compte atteints alors que l'API n'en envoie que quelques-uns. Bloquant pour la mise en service tant que la cause n'est pas trouvée (voir [M5](roadmap/M5-mail.md)).
+- **Envoi SMTP depuis l'hébergement OVH bloqué** (16/11) : refus « Mail quota exceeded … 200 messages per hour and per account » pour `commandes@` puis pour une boîte neuve (`retrait@`), alors que le même compte envoie normalement depuis le poste. **Bloquant** : passer par un service d'envoi transactionnel en HTTPS, et ouvrir un ticket OVH (voir [M5](roadmap/M5-mail.md)).
 
 - ~~E-mail absent sur 6 commandes de test sur 9~~ : expliqué le 14/11, ces commandes n'avaient pas de client rattaché (cas `no_email` prévu). Go confirmé.
 - **Paiement différé** (commande B de M2 : en attente puis payée) : pas encore testé. Non bloquant, la table de décision ignore `PENDING` et traite le passage à `PAID`.
