@@ -20,6 +20,11 @@ Générer un jeton et un QR par commande. Au scan, journaliser puis rediriger le
   - diagnostic complet : envoyer un mail à l'adresse donnée par mail-tester.com et lire la note (SPF, DKIM, DMARC, listes noires).
 
   Attendu dans l'en-tête du mail reçu (« Afficher l'original ») : `SPF: PASS`, `DKIM: PASS`.
+
+  **16/11** : connexion impossible au webmail OVH avec cette adresse ; dans Mail (macOS), la réception marche (adresse et mot de passe valides) mais pas l'envoi, sans retour « Undelivered » : le mail ne part pas du poste, c'est le serveur d'envoi qui refuse. Diagnostic avec `scripts/test-smtp.php`, qui affiche la réponse du serveur SMTP (identifiants masqués, mot de passe demandé au clavier) :
+  ```bash
+  docker compose run --rm php php scripts/test-smtp.php <adresse gmail> --host=ssl0.ovh.net --port=465 --encryption=smtps --user=commandes@itsmadeleine.shop
+  ```
 - [ ] **Fixtures réelles (M2)** : régénérer avec le nouveau nommage puis pousser. Elles sont vérifiées par `tests/Unit/RealFixturesTest.php`.
   ```bash
   git pull && rm -f tests/fixtures/livraison-*.json

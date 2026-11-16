@@ -22,7 +22,7 @@ Envoyer au client un mail simple : texte court, lien vers la page de statut de s
 
 ## Tâches
 
-- [ ] Service `Mailer` (PHPMailer) : `smtp.mail.ovh.net`, port 465, `SMTPSecure = 'ssl'`, authentification avec la boîte dédiée, `CharSet = 'UTF-8'`, délai d'attente court (10 s).
+- [ ] Service `Mailer` (PHPMailer) : `SMTP_HOST` (`ssl0.ovh.net`, valeur notée en M0, à confirmer par `scripts/test-smtp.php`), port 465, `SMTPSecure = PHPMailer::ENCRYPTION_SMTPS`, authentification avec la boîte dédiée, `CharSet = 'UTF-8'`, délai d'attente court (10 s).
 - [ ] En local : Mailpit (`SMTP_HOST=mailpit`, port 1025, sans TLS) via `.env`.
 - [ ] Gabarits `templates/mail/qr.html.php` et `qr.txt.php`, valeurs échappées.
 - [ ] Rédiger le texte final (une ou deux phrases), relu par toi.
