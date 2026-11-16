@@ -5,6 +5,7 @@
  *
  * @var string $orderName
  * @var string|null $statusPageUrl
+ * @var string $contactEmail
  */
 ?>
 Bonjour,
@@ -21,4 +22,10 @@ Voir ma commande et le point de retrait :
 
 
 <?php endif; ?>
+Vous pouvez aussi retirer votre commande en indiquant son numéro (<?= $orderName ?>)
+et en présentant la pièce d'identité de la personne au nom de laquelle elle a été passée.
+
+Une question ? Écrivez-nous à <?= $contactEmail ?>
+
+
 It's Madeleine

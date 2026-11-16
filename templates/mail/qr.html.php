@@ -6,6 +6,7 @@
  * @var string $orderName
  * @var string|null $statusPageUrl
  * @var string $qrCid
+ * @var string $contactEmail
  */
 ?>
 <!doctype html>
@@ -33,6 +34,8 @@
               <a href="<?= $e($statusPageUrl) ?>" style="color:#222222;font-weight:bold;">Voir ma commande et le point de retrait</a>
             </p>
 <?php endif; ?>
+            <p style="margin:0 0 24px;">Vous pouvez aussi retirer votre commande en indiquant son numéro (<?= $e($orderName) ?>) et en présentant la pièce d'identité de la personne au nom de laquelle elle a été passée.</p>
+            <p style="margin:0 0 24px;padding-top:16px;border-top:1px solid #e5e5e5;">Une question ? Écrivez-nous à <a href="mailto:<?= $e($contactEmail) ?>" style="color:#222222;"><?= $e($contactEmail) ?></a>.</p>
             <p style="margin:0;">It's Madeleine</p>
           </td>
         </tr>

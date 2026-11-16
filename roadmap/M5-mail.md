@@ -15,6 +15,8 @@ Envoyer au client un mail simple : texte court, lien vers la page de statut de s
 - **Objet** : « Votre QR code de retrait — commande #1234 ».
 - **Corps HTML** :
   1. « Bonjour, » puis la phrase validée le 16/11 : **« Présentez ce QR code le jour du concert pour retirer votre commande. »** ;
+  5. (ajouté le 16/11) « Vous pouvez aussi retirer votre commande en indiquant son numéro (#1234) et en présentant la pièce d'identité de la personne au nom de laquelle elle a été passée. » ;
+  6. (ajouté le 16/11) « Une question ? Écrivez-nous à commandes@itsmadeleine.shop. » (`MAIL_CONTACT`) ;
   2. le QR en image intégrée (CID), avec un texte alternatif ;
   3. « Commande #1234 », en clair, pour une recherche manuelle si le QR est illisible ;
   4. un lien « Voir ma commande et le point de retrait » → `status_page_url`.

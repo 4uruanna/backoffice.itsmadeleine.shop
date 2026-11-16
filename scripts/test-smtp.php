@@ -106,6 +106,7 @@ $message = $qr
     ? (new QrMailBuilder(
         new Template($root . '/templates'),
         new QrGenerator((string) $config->get('APP_URL', 'https://app.itsmadeleine.shop')),
+        (string) $config->get('MAIL_CONTACT', QrMailBuilder::DEFAULT_CONTACT),
     ))->build($to, $overrides['order'] ?? '#TEST', $overrides['status-url'] ?? 'https://itsmadeleine.shop', QrGenerator::newToken())
     : new MailMessage($to, 'Test SMTP itsmadeleine ' . gmdate('Y-m-d H:i') . ' UTC', '', "Mail de test envoyé par scripts/test-smtp.php.\n");
 

@@ -61,7 +61,11 @@ final class AppFactory
 
         $processor = new PickupProcessor(
             $orders,
-            new QrMailBuilder($templates, new QrGenerator((string) $config->get('APP_URL', 'https://app.itsmadeleine.shop'))),
+            new QrMailBuilder(
+                $templates,
+                new QrGenerator((string) $config->get('APP_URL', 'https://app.itsmadeleine.shop')),
+                (string) $config->get('MAIL_CONTACT', QrMailBuilder::DEFAULT_CONTACT),
+            ),
             $transport,
             $bucket,
             $alerts,
