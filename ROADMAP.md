@@ -20,7 +20,7 @@
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
 | M4 | ✅ Validé en production (16/11) | Reliquats de la section « Reprise au démarrage » (commande B, nettoyage), non bloquants |
 | M5 | Mail et gabarits faits (16/11) | OVH bloque l'envoi SMTP depuis l'hébergement → envoi par `mail()` ([M5b](roadmap/M5b-envoi-hebergement.md)) |
-| M5b | ✅ Envoi rétabli par `mail()` de l'hébergement (16/11) | Délivrabilité du vrai mail (Gmail, Outlook : boîte de réception ou indésirables) ; plafond horaire selon l'offre |
+| M5b | ✅ Envoi rétabli par `mail()` de l'hébergement (16/11) ; Gmail : boîte de réception | **Outlook : indésirables** → en-têtes à relever, atténuations (texte, message aux clients, consigne au staff) |
 | M6 | Code fait (16/11), testé en local ; `GET_LOCK` OK sur OVH | Déployer, commande de test |
 | M7, M8 | À faire | — |
 
@@ -101,7 +101,7 @@ Ces changements découlent des décisions ci-dessus ; ils sont détaillés dans 
 
 ## Points encore ouverts
 
-- ~~**Envoi SMTP depuis l'hébergement OVH bloqué**~~ (16/11) : contourné le soir même par la fonction `mail()` de l'hébergement, expéditeur aligné sur le domaine de l'hébergement ([M5b](roadmap/M5b-envoi-hebergement.md)). Reste la délivrabilité du vrai mail (boîte de réception ou indésirables).
+- ~~**Envoi SMTP depuis l'hébergement OVH bloqué**~~ (16/11) : contourné le soir même par la fonction `mail()` de l'hébergement, expéditeur aligné sur le domaine de l'hébergement ([M5b](roadmap/M5b-envoi-hebergement.md)). Gmail : boîte de réception ; **Outlook : indésirables** (atténuations dans M5b).
 - **Volume** : environ 3 000 mails par mois (16/11). Le plafond horaire (`MAIL_MAX_PER_HOUR`, sous le quota `mail()` de l'offre) étale les pics ; les commandes en attente partent avec le cron (M7).
 
 - ~~E-mail absent sur 6 commandes de test sur 9~~ : expliqué le 14/11, ces commandes n'avaient pas de client rattaché (cas `no_email` prévu). Go confirmé.

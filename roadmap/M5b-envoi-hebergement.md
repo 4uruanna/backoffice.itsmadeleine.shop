@@ -3,7 +3,7 @@
 **Quand** : lundi 16/11 (ajouté et résolu le même jour).
 **Dépend de** : M5 (mail et gabarits), M6 (bucket).
 **Débloque** : M7, M8.
-**État** : ✅ envoi rétabli le 16/11 au soir. Restent la délivrabilité du vrai mail (boîte de réception ou indésirables) et le plafond horaire selon l'offre de l'hébergement.
+**État** : ✅ envoi rétabli le 16/11 au soir. Gmail : boîte de réception (16/11) ; **Outlook : indésirables**, atténuations en cours. Reste le plafond horaire selon l'offre de l'hébergement.
 
 ## Problème
 
@@ -41,7 +41,10 @@ MAIL_LOG_RETENTION_DAYS=30
 
 - [x] Configuration finale relevée le 16/11 (ci-dessus).
 - [ ] Préciser l'hébergement qui envoie et son offre (pour ajuster `MAIL_MAX_PER_HOUR`).
-- [ ] **Délivrabilité du vrai mail de retrait** : deux commandes de test, mails vérifiés dans Gmail **et** Outlook/Hotmail : boîte de réception ou indésirables, QR affiché, `SPF`, `DKIM`, `DMARC` à `PASS`.
+- [x] **Délivrabilité du vrai mail de retrait** (16/11) : **Gmail : boîte de réception, QR affiché.** **Outlook : indésirables.**
+- [ ] Outlook : relever dans la source du mail (« Afficher la source du message ») les lignes `Authentication-Results` (`spf`, `dkim`, `dmarc`, `compauth`) et `X-Forefront-Antispam-Report` (`SCL`, `SFV`), pour savoir si c'est l'authentification ou la réputation de l'IP mutualisée.
+- [ ] Atténuations sans changer d'infrastructure : texte du mail un peu plus fourni (moins d'image par rapport au texte), message sur la page de remerciement et dans la confirmation de commande Shopify (« votre QR code arrive de `commandes@itsmadeleine.shop`, pensez à vérifier vos indésirables »), et consigne au staff : sans QR, retrouver la commande par le nom ou le numéro (M8).
+- [ ] Après lancement (M9) : selon les rapports DMARC, passer `_dmarc` de `p=none` à `p=quarantine` (Microsoft favorise les domaines à politique DMARC appliquée), une fois vérifié que tous les envois légitimes du domaine (boîtes MX Plan, `mail()` de l'hébergement, Shopify s'il envoie au nom du domaine) passent DKIM ou SPF alignés.
 - [ ] Si le vrai mail arrive en indésirables : relire le contenu (objet, texte, lien), marquer « Non spam » sur les tests, et réévaluer (le passage par un service transactionnel reste possible en dernier recours, il n'est pas prévu).
 - [ ] Ticket au support OVH sur le refus SMTP (facultatif, pour garder le repli SMTP).
 - [ ] Les commandes de test restées en `pending` / `rate_limited` partiront avec le cron (M7).
