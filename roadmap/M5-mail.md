@@ -2,7 +2,7 @@
 
 **Quand** : lundi 16/11, après-midi.
 **Dépend de** : M4 (QR), M0 (boîte mail, DKIM).
-**Débloque** : M6.
+**Débloque** : M6, [M5b](M5b-mailjet.md) (envoi par Mailjet, décidé le 16/11).
 **État** : code fait le lundi 16/11 (95 tests verts, dont MySQL ; parcours complet vérifié en local avec Mailpit). Restent le déploiement et l'envoi réel vers Gmail et Outlook.
 
 ## Objectif

@@ -43,8 +43,8 @@ WHERE id = ? AND status IN ('pending','failed') AND revoked_at IS NULL;
 
 ## Critères de fin
 
-- Réponse au webhook en moins d'une seconde, même avec un SMTP lent (simuler en local un SMTP qui ne répond pas).
-- SMTP coupé (mauvais mot de passe) : la commande passe `failed`, le cron la rejoue, puis `error` au 3e échec, et une seule alerte part.
+- Réponse au webhook en moins d'une seconde, même avec un envoi lent (simuler en local un SMTP ou une API Mailjet qui ne répond pas).
+- Envoi coupé (mauvais mot de passe SMTP ou clé Mailjet invalide) : la commande passe `failed`, le cron la rejoue, puis `error` au 3e échec, et une seule alerte part.
 - Bucket saturé : le cron vide la file au passage suivant, les plus anciennes d'abord.
 - Le cron tourne sur OVH et son journal montre le résumé.
 

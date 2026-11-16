@@ -19,7 +19,8 @@
 | M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), commandes de test à annuler |
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
 | M4 | ✅ Validé en production (16/11) | Reliquats de la section « Reprise au démarrage » (commande B, nettoyage), non bloquants |
-| M5 | Mail envoyé depuis le serveur (#1109, 16/11), puis envois refusés | **Bloquant** : OVH bloque l'envoi SMTP depuis l'hébergement (même avec une boîte neuve) ; passer par un service transactionnel en HTTPS |
+| M5 | Mail et gabarits faits ; un mail envoyé depuis le serveur (#1109, 16/11), puis envois refusés | OVH bloque l'envoi SMTP depuis l'hébergement, même avec une boîte neuve → envoi par Mailjet ([M5b](roadmap/M5b-mailjet.md)) |
+| M5b | À faire (décidé le 16/11) | Compte Mailjet, domaine et DNS (DKIM, SPF) dès le 16/11 au soir ; code le 17/11 au matin |
 | M6 | Code fait (16/11), testé en local ; `GET_LOCK` OK sur OVH | Déployer, commande de test |
 | M7, M8 | À faire | — |
 
@@ -32,7 +33,7 @@ Planning initial, avec ce qui a été réalisé. Le jour d'avance pris le 14/11 
 | Sam. 14/11 | [M0](roadmap/M0-prerequis.md), [M1](roadmap/M1-socle.md) | App Shopify installée, abonnement déployé, DNS mail en propagation, socle en ligne sur `app.itsmadeleine.shop` avec une sonde qui journalise les livraisons | ✅ Tout, plus le go de M2 et le code de M3 |
 | Dim. 15/11 | [M2](roadmap/M2-go-no-go.md) (matin), [M3](roadmap/M3-reception-events.md) | Go/no-go prononcé ; réception Events complète (HMAC, décision, dédoublonnage, révocation) | Fait dès le 14/11 ; code de M4 fait le 15/11 (QR, route de scan, page d'avertissement) |
 | Lun. 16/11 | [M4](roadmap/M4-qr-et-scan.md), [M5](roadmap/M5-mail.md) | QR généré, scan qui redirige ou avertit, mail envoyé de bout en bout | M4 validé en production ; M0 terminé ; code de M5 fait (prise en charge atomique et réponse avant envoi avancées de M7) |
-| Mar. 17/11 | [M6](roadmap/M6-bucket.md), [M7](roadmap/M7-fiabilite-cron.md) | Plafond de mails par heure, traitement après réponse, cron de rattrapage, alertes, purge | Code de M6 fait dès le 16/11 |
+| Mar. 17/11 | [M5b](roadmap/M5b-mailjet.md), [M6](roadmap/M6-bucket.md), [M7](roadmap/M7-fiabilite-cron.md) | Envoi par Mailjet validé en production (matin) ; cron de rattrapage, alertes, purge (après-midi) | Code de M6 fait dès le 16/11 ; M5b ajouté le 16/11 après le blocage SMTP d'OVH |
 | Mer. 18/11 | [M8](roadmap/M8-recette-mise-en-service.md) | Recette sur la boutique de production, mise en service | |
 | Après le 19/11 | [M9](roadmap/M9-apres-lancement.md) | Consolidation (CI, supervision, améliorations) | |
 
@@ -46,13 +47,14 @@ Planning initial, avec ce qui a été réalisé. Le jour d'avance pris le 14/11 
 | M3 | [Réception Events](roadmap/M3-reception-events.md) ✅ 14/11 | M2 | Oui |
 | M4 | [QR code et route de scan](roadmap/M4-qr-et-scan.md) ✅ 16/11 | M3 | Oui |
 | M5 | [Mail au client](roadmap/M5-mail.md) — code fait le 16/11, reste le test en production | M4 | Oui |
+| M5b | [Envoi par Mailjet (API HTTPS)](roadmap/M5b-mailjet.md) — ajouté le 16/11 | M5, M6 | Oui : sans lui, aucun mail ne part du serveur |
 | M6 | [Limite d'envoi (bucket)](roadmap/M6-bucket.md) — code fait le 16/11 | M5 | Oui |
-| M7 | [Fiabilité : traitement après réponse, cron, alertes, purge](roadmap/M7-fiabilite-cron.md) | M6 | Oui |
+| M7 | [Fiabilité : traitement après réponse, cron, alertes, purge](roadmap/M7-fiabilite-cron.md) | M6 (M5b pour les tests en production) | Oui |
 | M8 | [Recette et mise en service](roadmap/M8-recette-mise-en-service.md) | M7 | Oui |
 | M9 | [Après lancement](roadmap/M9-apres-lancement.md) | M8 | Non |
 | — | [Annexe : plan B (QR dans la notification Shopify)](roadmap/annexe-plan-b.md) — non utilisé | M2 en no-go | Seulement en cas de no-go |
 
-Chemin critique : M0 → M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8, avec désormais environ un jour de marge. Seules les tâches DNS de M0 (propagation) et la rédaction du mail (M5) peuvent avancer en parallèle.
+Chemin critique : M0 → M1 → M2 → M3 → M4 → M5 → M6 → **M5b** → M7 → M8. La marge d'un jour est consommée par M5b. Les démarches Mailjet (compte, domaine, DNS) avancent en parallèle du code de M7 ; la propagation DNS est le point à lancer au plus tôt.
 
 ## Décisions prises
 
@@ -65,7 +67,7 @@ Plan v2 (§2), plus les décisions du 14/11 :
 | App Shopify | `itsmadeleine.app` (`client_id` `a977545e…`), créée dans le Dev Dashboard **de l'organisation du client** (une app de l'organisation du développeur ne s'installe pas sur sa boutique) ; config dans `shopify/shopify.app.toml`, Shopify CLI 5 avec pnpm dans `shopify/` |
 | Forfait Shopify | Basic : l'e-mail client est bien accessible à l'app (vérifié en M2), pas de changement de forfait |
 | URL de l'API | `https://app.itsmadeleine.shop` (au lieu de `backoffice.` prévu au départ, changé le 14/11) ; dossier sur l'hébergement inchangé : `backoffice/public` |
-| DNS et mail | Zone DNS et mails du domaine chez OVH ; envoi depuis `commandes@itsmadeleine.shop` (MX Plan) |
+| DNS et mail | Zone DNS et boîtes mail du domaine chez OVH (MX Plan). Envoi depuis `retrait@itsmadeleine.shop` par Mailjet depuis le 16/11 (au départ : `commandes@` en SMTP OVH) |
 | Développement local | Docker Compose (PHP 8.5 comme OVH, MySQL 8.4, Mailpit) + PHPUnit sur les parties critiques |
 | Déploiement | FTP/SFTP manuel, `vendor/` compris, release préparée par `scripts/build-release.sh` (Docker, ou Composer du poste avec `USE_HOST_COMPOSER=1`) ; CI reportée en M9. Pas à pas : [`docs/deploiement.md`](docs/deploiement.md) |
 | Hébergement | OVH Perso, PHP 8.5 (FPM, `fastcgi_finish_request` et GD disponibles), multisite `app.itsmadeleine.shop` → `backoffice/public` |
@@ -75,6 +77,8 @@ Plan v2 (§2), plus les décisions du 14/11 :
 | Livraison valide après `errors` | Elle reprend la commande (`error` dû à `payload_errors` → `pending`) |
 | Contenu du mail | Texte simple + lien vers la page de statut de la commande (`statusPageUrl`, qui indique le point de retrait) + QR + numéro de commande. Phrase validée le 16/11 : « Présentez ce QR code le jour du concert pour retirer votre commande. » |
 | Garde-fou avant mise en service | `MAIL_ALLOWLIST` (16/11) : tant qu'elle est renseignée, seuls ses destinataires reçoivent le mail ; vidée en M8 |
+| Envoi des mails | **Mailjet par API HTTPS** (16/11), expéditeur `retrait@itsmadeleine.shop` : OVH refuse les envois SMTP depuis l'hébergement. Offre gratuite (200 mails par jour), QR toujours intégré au mail. SMTP conservé pour le local (Mailpit) et en repli |
+| Plafonds d'envoi | `MAIL_MAX_PER_HOUR=60` sur le serveur (16/11), `MAIL_MAX_PER_DAY=200` (offre gratuite Mailjet, M5b) |
 | Alertes internes | Vers `ALERT_EMAIL` (adresse perso, dans `.env`) |
 | Commande annulée ou remboursée en totalité | **QR invalidé** (modifie le §11 du plan v2). Remboursement partiel : QR toujours valide |
 | Scan d'un QR invalidé | Page d'avertissement « ne pas remettre », avec lien vers la commande, scan journalisé |
@@ -93,10 +97,12 @@ Ces changements découlent des décisions ci-dessus ; ils sont détaillés dans 
 6. **Recette** : commandes provisoires (brouillons) créées dans l'admin et marquées payées : ni paiement réel ni passerelle de test à activer sur la boutique de production (M2, M8).
 7. **Insertion idempotente** : `INSERT … ON DUPLICATE KEY UPDATE id = id` au lieu d'`INSERT IGNORE`, qui avalerait aussi les vraies erreurs (M3).
 8. **Sonde** : remplacée par la réception Events en M3 ; la copie brute des livraisons reste disponible derrière `DEBUG_DELIVERIES=1` (purge en M7).
+9. **Envoi des mails** : par l'API HTTPS de Mailjet au lieu du SMTP d'OVH (M5b), après le blocage SMTP de l'hébergement le 16/11. Le service transactionnel prévu en M9 est avancé.
 
 ## Points encore ouverts
 
-- **Envoi SMTP depuis l'hébergement OVH bloqué** (16/11) : refus « Mail quota exceeded … 200 messages per hour and per account » pour `commandes@` puis pour une boîte neuve (`retrait@`), alors que le même compte envoie normalement depuis le poste. **Bloquant** : passer par un service d'envoi transactionnel en HTTPS, et ouvrir un ticket OVH (voir [M5](roadmap/M5-mail.md)).
+- **Envoi SMTP depuis l'hébergement OVH bloqué** (16/11) : refus « Mail quota exceeded … 200 messages per hour and per account » pour `commandes@` puis pour une boîte neuve (`retrait@`), alors que le même compte envoie normalement depuis le poste. Contourné par Mailjet ([M5b](roadmap/M5b-mailjet.md)) ; ticket OVH à ouvrir pour garder le repli (voir [M5](roadmap/M5-mail.md)).
+- **Volume par jour** : l'offre gratuite de Mailjet couvre 200 mails par jour. Nombre maximal de commandes à retirer sur une journée à confirmer ; au-delà, offre payante.
 
 - ~~E-mail absent sur 6 commandes de test sur 9~~ : expliqué le 14/11, ces commandes n'avaient pas de client rattaché (cas `no_email` prévu). Go confirmé.
 - **Paiement différé** (commande B de M2 : en attente puis payée) : pas encore testé. Non bloquant, la table de décision ignore `PENDING` et traite le passage à `PAID`.

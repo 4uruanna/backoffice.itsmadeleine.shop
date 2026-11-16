@@ -10,7 +10,7 @@ Rejouer tous les scénarios sur la boutique de production, avec le code final d�
 
 ## Préparation
 
-- [ ] Déploiement FTP de la version finale (`composer install --no-dev`), migration à jour, `.env` relu (`MAIL_MAX_PER_HOUR=120`, `DEBUG_DELIVERIES=0`).
+- [ ] Déploiement FTP de la version finale (`composer install --no-dev`), migration à jour, `.env` relu (`MAIL_TRANSPORT=mailjet`, `MAIL_MAX_PER_HOUR=60`, `MAIL_MAX_PER_DAY=200`, `DEBUG_DELIVERIES=0`).
 - [ ] Produit de test de M2 (tagué, non publié) toujours disponible.
 - [ ] Commandes passées par brouillon depuis l'admin (voir M2), client = ta propre adresse.
 
@@ -23,7 +23,7 @@ Rejouer tous les scénarios sur la boutique de production, avec le code final d�
 | 3 | Commande non taguée | Aucun mail, ligne `ignored` |
 | 4 | Panier mixte (tagué + non tagué) | Un mail |
 | 5 | Livraison en double (renvoyer depuis le tableau de bord de l'app si possible, sinon `curl` signé avec une fixture) | Aucun second mail |
-| 6 | SMTP en panne (mauvais mot de passe dans `.env`, cron lancé à la main) | `failed` → `error` au 3e échec, une alerte groupée |
+| 6 | Envoi en panne (clé Mailjet invalide dans `.env`, cron lancé à la main) | `failed` → `error` au 3e échec, une alerte groupée |
 | 7 | Bucket saturé (`MAIL_MAX_PER_HOUR=1`, deux commandes) | Un mail, une commande `pending` / `rate_limited`, envoyée au passage suivant du cron après remise à 120 |
 | 8 | Commande sans e-mail client (brouillon sans client) | `error` / `no_email`, alerte |
 | 9 | Scan depuis le téléphone du staff connecté à l'admin | La commande s'ouvre (app Shopify ou navigateur) |
@@ -36,7 +36,7 @@ Rejouer tous les scénarios sur la boutique de production, avec le code final d�
 | 16 | Mail reçu sur Gmail et sur Outlook | Hors spam, QR affiché, lien de statut correct |
 | 17 | Si possible, une vraie commande en ligne payée avec un petit montant, puis remboursée | Même résultat que 1, puis 12 |
 
-- [ ] Rétablir `.env` après les scénarios 6 et 7 (mot de passe SMTP, plafond à 120).
+- [ ] Rétablir `.env` après les scénarios 6 et 7 (clé Mailjet, plafonds `MAIL_MAX_PER_HOUR=60` et `MAIL_MAX_PER_DAY=200`).
 
 ## Mise en service
 
