@@ -26,6 +26,7 @@ SELECT RELEASE_LOCK('mail_bucket');
 - [ ] Tout envoi passe par `tryAcquire` avant l'appel SMTP, alertes comprises.
 - [ ] Bucket vide → la commande repasse en `pending` avec `pending_reason = 'rate_limited'`, **sans** incrémenter `attempts`.
 - [ ] Échec SMTP après acquisition : le jeton reste consommé (prudence vis-à-vis du quota OVH).
+- [ ] Refus SMTP de quota d'OVH (`550 5.7.0 Mail quota exceeded … 200 messages per hour and per account`, vu le 16/11) : traité comme un bucket vide (`pending` / `rate_limited`, `attempts` inchangé), pas comme un échec.
 - [ ] Toutes les dates en UTC (`UTC_TIMESTAMP()` en SQL), cohérentes avec la connexion PDO.
 - [ ] Tests PHPUnit (sur la base MySQL du Docker) : plafond à 2, deux acquisitions réussies, la troisième échoue ; une ligne vieille de 61 min ne compte plus.
 

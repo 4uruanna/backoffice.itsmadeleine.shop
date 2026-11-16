@@ -56,6 +56,8 @@ Résultat (16/11) : depuis le poste, le vrai mail de retrait (commande `#TEST`) 
 
 Le même jour, le mail **de la vraie commande** (même numéro, même lien de statut `…/authenticate?key=…`) est aussi **accepté** depuis le poste. Le contenu est donc hors de cause : le refus vient du serveur OVH. Pistes : valeurs du `.env` du serveur (`MAIL_FROM`, `MAIL_FROM_NAME`, `SMTP_USER`), envois de mails bloqués ou désactivés pour l'hébergement (espace client, Hébergements, section des scripts e-mails), ou politique du proxy SMTP d'OVH pour les envois venant de l'hébergement. La raison exacte viendra de `last_error` une fois la release du 16/11 déployée.
 
+**Cause trouvée (16/11)** : `.env` identiques, envoi de scripts de l'hébergement « actif ». `last_error` avec la release du 16/11 : `550 5.7.0 Mail quota exceeded for commandes@itsmadeleine.shop: You have exceeded the limit of 200 messages per hour and per account.` **Quota OVH de 200 mails par heure et par compte dépassé**, alors que l'API et les tests n'ont envoyé que quelques mails : quelque chose d'autre envoie depuis ce compte. À vérifier en priorité : compte compromis utilisé pour du spam (rebonds dans la boîte de réception de `commandes@`, état du compte dans l'espace client), puis changer le mot de passe (`.env` du serveur et Mail sur macOS ensuite). Pour M6 : traiter ce refus de quota comme `rate_limited` (attente sans compter d'essai) plutôt que comme un échec.
+
 Les lignes déjà en `pending` avant ce déploiement (tests de M3, M4) ne partent pas : seule une nouvelle livraison déclenche l'envoi, le cron de M7 reprendra le reste.
 
 ## Critères de fin
