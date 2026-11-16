@@ -20,7 +20,7 @@
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
 | M4 | ✅ Validé en production (16/11) | Reliquats de la section « Reprise au démarrage » (fixtures, commande B, nettoyage), non bloquants |
 | M5 | Code fait (16/11), mail réel envoyé depuis le poste | Envoi depuis le serveur refusé par le quota OVH (200 mails/h par compte, cause à confirmer) ; mot de passe changé, nouvel essai |
-| M6 | Code fait (16/11), testé en local | Vérifier `GET_LOCK` sur la base OVH, puis déployer |
+| M6 | Code fait (16/11), testé en local ; `GET_LOCK` OK sur OVH | Déployer, commande de test |
 | M7, M8 | À faire | — |
 
 ## Planning

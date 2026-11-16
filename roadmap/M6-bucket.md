@@ -3,7 +3,7 @@
 **Quand** : mardi 17/11, matin.
 **Dépend de** : M5 (envoi fonctionnel).
 **Débloque** : M7.
-**État** : code fait le lundi 16/11 (108 tests verts, dont MySQL et accès simultanés ; critère de fin vérifié en local). Restent la vérification de `GET_LOCK` sur la base OVH et le déploiement.
+**État** : code fait le lundi 16/11 (108 tests verts, dont MySQL et accès simultanés ; critère de fin vérifié en local). `GET_LOCK` vérifié sur la base OVH le 16/11 ; reste le déploiement.
 
 ## Objectif
 
@@ -38,6 +38,7 @@ SELECT RELEASE_LOCK('mail_bucket');
    SELECT GET_LOCK('test_verrou', 1) AS pris, RELEASE_LOCK('test_verrou') AS libere;
    ```
    Attendu : `1` et `1`. Sinon, **ne pas déployer** : aucun mail ne partirait (bucket toujours vide), il faudra un autre verrou.
+   **16/11 : `1` et `1`, `GET_LOCK` disponible sur la base OVH.**
 2. `.env` du serveur : `MAIL_MAX_PER_HOUR=60` (déjà fait le 16/11).
 3. Release (`scripts/build-release.sh`) et envoi par FTP.
 4. Après une commande de test envoyée : `SELECT * FROM mail_log ORDER BY id DESC LIMIT 5;` → une ligne `qr` par mail.
@@ -49,4 +50,4 @@ SELECT RELEASE_LOCK('mail_bucket');
 
 ## Risques
 
-- La base MySQL mutualisée OVH doit autoriser `GET_LOCK` : à tester dès le déploiement de M6 (un appel suffit).
+- ~~La base MySQL mutualisée OVH doit autoriser `GET_LOCK`~~ : vérifié le 16/11.
