@@ -1,7 +1,7 @@
 # M4 — QR code et route de scan
 
 **Quand** : lundi 16/11, matin. Avec le jour d'avance pris le 14/11, possible dès le dimanche 15/11.
-**État** : code fait le dimanche 15/11 ; restent le déploiement et le test au téléphone.
+**État** : code fait le 15/11, déployé le 16/11 ; scan d'une commande valide validé en production le 16/11. Restent le téléphone non connecté, la commande annulée et le contrôle de `scans`.
 **Dépend de** : M3 (lignes `pending` en base).
 **Débloque** : M5.
 
@@ -60,7 +60,7 @@ Code livré le 15/11 (80 tests verts, dont MySQL 8.4 ; parcours complet vérifi�
 
 ### Déploiement
 
-- [ ] Préparer la release (`scripts/build-release.sh`, qui inclut désormais le nouveau dossier `templates/`) et l'envoyer par FTP. Vérifier sur le serveur la présence de `~/backoffice/templates/scan/`.
+- [x] Préparer la release (`scripts/build-release.sh`, qui inclut désormais le nouveau dossier `templates/`) et l'envoyer par FTP (16/11 : une nouvelle commande a bien reçu un jeton en production).
 - [ ] Vérifier `https://app.itsmadeleine.shop/r/00000000000000000000000000000000` → page « QR code non reconnu » (404).
 
 ### Test au téléphone (critères de fin)
@@ -85,10 +85,10 @@ Les lignes créées avant ce déploiement n'ont pas de jeton : il faut une nouve
 
 ## Critères de fin
 
-- QR scanné avec l'appareil photo d'un téléphone : la commande s'ouvre dans l'app Shopify ou dans le navigateur connecté à l'admin.
-- Même scan depuis un téléphone **non connecté** : page de connexion Shopify, rien d'autre.
-- QR d'une commande annulée : page d'avertissement avec le lien vers la commande ; le lien ouvre bien la commande.
-- Chaque scan crée une ligne dans `scans` avec le bon `result`.
+- [x] QR scanné avec l'appareil photo d'un téléphone : la commande s'ouvre dans l'app Shopify ou dans le navigateur connecté à l'admin. **Validé le 16/11** sur une nouvelle commande `pending`.
+- [ ] Même scan depuis un téléphone **non connecté** : page de connexion Shopify, rien d'autre.
+- [ ] QR d'une commande annulée : page d'avertissement avec le lien vers la commande ; le lien ouvre bien la commande.
+- [ ] Chaque scan crée une ligne dans `scans` avec le bon `result`.
 
 ## Risques
 
