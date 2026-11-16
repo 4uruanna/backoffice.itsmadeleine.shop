@@ -14,7 +14,7 @@
 
 | Jalon | État | Reste à faire |
 |---|---|---|
-| M0 | Presque terminé | Mail de test vers Gmail (`spf=pass`, `dkim=pass`) une fois le DKIM propagé |
+| M0 | Presque terminé | Envoi SMTP OK et mail reçu dans Gmail (16/11) ; relever les en-têtes `spf=pass`, `dkim=pass` |
 | M1 | ✅ Terminé | — |
 | M2 | ✅ Go plan A confirmé (14/11) | Restent, non bloquants : paiement différé (B), fixtures à pousser, commandes de test à annuler |
 | M3 | ✅ Validé en production (14/11) | Relever le temps de réponse dans les journaux OVH (non bloquant) |
