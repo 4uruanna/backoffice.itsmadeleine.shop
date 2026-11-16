@@ -25,6 +25,8 @@ Générer un jeton et un QR par commande. Au scan, journaliser puis rediriger le
   ```bash
   docker compose run --rm php php scripts/test-smtp.php <adresse gmail> --host=ssl0.ovh.net --port=465 --encryption=smtps --user=commandes@itsmadeleine.shop
   ```
+
+  **Résultat (16/11)** : `ssl0.ovh.net:465` en SMTPS, `AUTH LOGIN` → `235 Authentication successful`, mail accepté (`250 2.0.0 … queued`). L'envoi depuis le serveur OVH fonctionne avec les paramètres de M0 ; l'échec venait de la configuration de Mail (macOS), sans effet sur l'API. Reste à confirmer l'arrivée dans Gmail et les en-têtes `SPF: PASS` / `DKIM: PASS`.
 - [ ] **Fixtures réelles (M2)** : régénérer avec le nouveau nommage puis pousser. Elles sont vérifiées par `tests/Unit/RealFixturesTest.php`.
   ```bash
   git pull && rm -f tests/fixtures/livraison-*.json
