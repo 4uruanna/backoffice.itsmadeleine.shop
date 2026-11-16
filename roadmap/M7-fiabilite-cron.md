@@ -29,7 +29,11 @@
 - bucket saturé : un mail part, la commande suivante passe `rate_limited` et le passage s'arrête ; la suite au passage suivant ;
 - verrou tenu par une autre session : « un autre passage est en cours », sortie 0.
 
-**Reste, sur OVH (dans cet ordre)** :
+Tests relancés dans Docker Compose (PHP 8.5.12, PHPUnit 13.4.7) : **156 tests OK**, comme dans l'environnement de développement.
+
+**Fait sur OVH le 16/11 au soir** : migration `002` exécutée, `ALERT_EMAIL` renseignée, release déployée, tâche planifiée déclarée. **Reste : lire le journal du premier passage** (résumé, mails de test partis, alerte reçue), puis cocher les critères de fin.
+
+Étapes suivies (pour mémoire) :
 
 1. phpMyAdmin : exécuter `migrations/002_alerted_at.sql` **avant** de déployer (sinon la colonne `alerted_at` manque et `markFailed` échoue).
 2. `.env` du serveur : renseigner `ALERT_EMAIL`.
@@ -67,7 +71,7 @@ WHERE id = ? AND status IN ('pending','failed') AND revoked_at IS NULL;
 - [x] Les alertes notées en M3 dans `var/log/alerts.log` passent désormais par ce mail (le journal reste en secours ; une erreur du cron y est aussi écrite, code `cron_failed`).
 - [x] (fait, `Purger`) **Purge** : `pickup_orders` (et leurs `scans`, par cascade) dont `created_at` a plus de `RETENTION_MONTHS` (12) ; `mail_log` de plus de `MAIL_LOG_RETENTION_DAYS` (30) ; fichiers de `var/log/` de plus de 30 jours (sauf `.htaccess`). Une durée à `0` désactive la purge concernée.
 - [x] Sortie texte résumée (une ligne par commande traitée, puis traitées, envoyées, en attente, en erreur, file restante, alertes, purge), lisible dans le journal du cron OVH, sans donnée personnelle.
-- [ ] Déclarer la tâche dans l'espace client OVH : `backoffice/cron/retry.php`, toutes les heures, même version de PHP, journal activé. Pas à pas : [`docs/deploiement.md`](../docs/deploiement.md#cron-de-rattrapage-m7). **Avant** : exécuter `migrations/002_alerted_at.sql` dans phpMyAdmin, renseigner `ALERT_EMAIL` dans le `.env` du serveur, déployer la release (elle contient `cron/`).
+- [x] (fait le 16/11) Déclarer la tâche dans l'espace client OVH : `backoffice/cron/retry.php`, toutes les heures, même version de PHP, journal activé. Pas à pas : [`docs/deploiement.md`](../docs/deploiement.md#cron-de-rattrapage-m7). **Avant** : exécuter `migrations/002_alerted_at.sql` dans phpMyAdmin, renseigner `ALERT_EMAIL` dans le `.env` du serveur, déployer la release (elle contient `cron/`).
 
 ### Suivi
 

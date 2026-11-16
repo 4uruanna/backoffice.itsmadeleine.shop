@@ -16,6 +16,8 @@ Rejouer tous les scénarios sur la boutique de production, avec le code final d�
 
 ## Scénarios
 
+**Cadence du cron** : il ne passe qu'une fois par heure (sauf lancement à la main par SSH, si l'offre le permet). Le scénario 6 demande trois passages (environ 2 h), le 7 un passage : **les lancer en premier mercredi**, puis dérouler les autres en attendant. Penser à remettre `MAIL_MAX_PER_HOUR` à sa valeur (90) et `MAIL_FROM` après coup, l'OPcache d'OVH pouvant mettre quelques minutes à relire le `.env`.
+
 | # | Scénario | Attendu |
 |---|---|---|
 | 1 | Commande taguée, payée à la création | Mail reçu en quelques secondes, ligne `sent` |
@@ -24,7 +26,7 @@ Rejouer tous les scénarios sur la boutique de production, avec le code final d�
 | 4 | Panier mixte (tagué + non tagué) | Un mail |
 | 5 | Livraison en double (renvoyer depuis le tableau de bord de l'app si possible, sinon `curl` signé avec une fixture) | Aucun second mail |
 | 6 | Envoi en panne (`MAIL_FROM` sur un autre domaine dans `.env` → refus d'OVH, cron lancé à la main) | `failed` → `error` au 3e échec, une alerte groupée |
-| 7 | Bucket saturé (`MAIL_MAX_PER_HOUR=1`, deux commandes) | Un mail, une commande `pending` / `rate_limited`, envoyée au passage suivant du cron après remise à 120 |
+| 7 | Bucket saturé (`MAIL_MAX_PER_HOUR=1`, deux commandes) | Un mail, une commande `pending` / `rate_limited`, envoyée au passage suivant du cron après remise à 90 |
 | 8 | Commande sans e-mail client (brouillon sans client) | `error` / `no_email`, alerte |
 | 9 | Scan depuis le téléphone du staff connecté à l'admin | La commande s'ouvre (app Shopify ou navigateur) |
 | 10 | Scan depuis un téléphone non connecté | Page de connexion Shopify |
