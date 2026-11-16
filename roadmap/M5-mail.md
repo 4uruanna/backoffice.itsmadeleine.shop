@@ -47,6 +47,11 @@ Envoyer au client un mail simple : texte court, lien vers la page de statut de s
 4. Refaire avec une adresse Outlook/Hotmail (à ajouter à `MAIL_ALLOWLIST`, séparée par une virgule).
 5. En cas de problème : `SELECT order_name, status, attempts, pending_reason, last_error FROM pickup_orders ORDER BY id DESC LIMIT 5;` et le journal d'erreurs PHP d'OVH (lignes `events:`).
 
+**16/11, premier essai en production** : ligne `failed`, `last_error = SMTP Error: data not accepted.` Le serveur d'OVH accepte l'identifiant et le destinataire, puis refuse le contenu (le mail texte de `scripts/test-smtp.php` passait). PHPMailer ne mettait pas la raison du refus dans l'exception : `SmtpTransport` reprend désormais `ErrorInfo` (code SMTP et motif). Diagnostic, avec le vrai mail de retrait et le dialogue SMTP affiché :
+```bash
+docker compose run --rm php php scripts/test-smtp.php <adresse gmail> --qr --host=ssl0.ovh.net --port=465 --encryption=smtps --user=commandes@itsmadeleine.shop --from=commandes@itsmadeleine.shop "--from-name=It's Madeleine"
+```
+
 Les lignes déjà en `pending` avant ce déploiement (tests de M3, M4) ne partent pas : seule une nouvelle livraison déclenche l'envoi, le cron de M7 reprendra le reste.
 
 ## Critères de fin

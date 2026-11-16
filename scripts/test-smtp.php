@@ -3,19 +3,23 @@
 declare(strict_types=1);
 
 /**
- * Envoie un mail de test par SMTP et affiche le dialogue avec le serveur (identifiants masqués).
- * Sert à diagnostiquer l'envoi depuis commandes@itsmadeleine.shop (M0, avant M5).
+ * Envoie un mail de test par SMTP et affiche le dialogue avec le serveur (identifiants et corps masqués).
+ * Passe par SmtpTransport, le même code que l'API.
  *
  * Paramètres lus dans .env : SMTP_HOST, SMTP_PORT, SMTP_ENCRYPTION (smtps, starttls ou vide),
  * SMTP_USER, SMTP_PASSWORD, MAIL_FROM, MAIL_FROM_NAME. SMTP_PASSWORD vide : demandé au clavier.
  *
- * Usage : php scripts/test-smtp.php <destinataire> [--host=ssl0.ovh.net] [--port=465] [--encryption=smtps]
- *         [--user=commandes@itsmadeleine.shop]
+ * Usage : php scripts/test-smtp.php <destinataire> [--qr] [--host=ssl0.ovh.net] [--port=465]
+ *         [--encryption=smtps] [--user=commandes@itsmadeleine.shop] [--from=…] [--from-name=…]
+ *   --qr : envoie le vrai mail de retrait (commande #TEST, QR intégré) au lieu d'un texte simple.
  */
 
 use App\Config;
-use PHPMailer\PHPMailer\Exception as MailerException;
-use PHPMailer\PHPMailer\PHPMailer;
+use App\Mail\MailMessage;
+use App\Mail\QrMailBuilder;
+use App\Mail\SmtpTransport;
+use App\Service\QrGenerator;
+use App\Service\Template;
 
 if (PHP_SAPI !== 'cli') {
     exit(1);
@@ -29,25 +33,24 @@ if (!is_file($root . '/vendor/autoload.php')) {
 require $root . '/vendor/autoload.php';
 
 $to = null;
+$qr = false;
 $overrides = [];
 foreach (array_slice($argv, 1) as $arg) {
-    if (preg_match('/^--(host|port|encryption|user)=(.*)$/', $arg, $m) === 1) {
+    if ($arg === '--qr') {
+        $qr = true;
+    } elseif (preg_match('/^--(host|port|encryption|user|from|from-name)=(.*)$/', $arg, $m) === 1) {
         $overrides[$m[1]] = $m[2];
     } elseif ($to === null) {
         $to = $arg;
     }
 }
 if ($to === null || filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
-    fwrite(STDERR, "Usage : php scripts/test-smtp.php <destinataire> [--host=…] [--port=…] [--encryption=smtps|starttls|] [--user=…]\n");
+    fwrite(STDERR, "Usage : php scripts/test-smtp.php <destinataire> [--qr] [--host=…] [--port=…] [--encryption=smtps|starttls|] [--user=…] [--from=…] [--from-name=…]\n");
     exit(2);
 }
 
 $config = Config::fromEnvironment($root);
-$host = $overrides['host'] ?? $config->require('SMTP_HOST');
-$port = (int) ($overrides['port'] ?? $config->int('SMTP_PORT', 465));
-$encryption = strtolower($overrides['encryption'] ?? (string) $config->get('SMTP_ENCRYPTION', ''));
 $user = $overrides['user'] ?? $config->get('SMTP_USER');
-$from = $config->get('MAIL_FROM', $user ?? '');
 $password = $config->get('SMTP_PASSWORD');
 
 if ($user !== null && $password === null) {
@@ -64,29 +67,19 @@ if ($user !== null && $password === null) {
     fwrite(STDOUT, "\n");
 }
 
-echo "Serveur : $host:$port, chiffrement : " . ($encryption === '' ? 'aucun' : $encryption)
-    . ', identifiant : ' . ($user ?? '(sans authentification)') . "\nExpéditeur : $from → $to\n\n";
+$host = $overrides['host'] ?? (string) $config->get('SMTP_HOST', '');
+$port = (int) ($overrides['port'] ?? $config->int('SMTP_PORT', 465));
+$encryption = strtolower($overrides['encryption'] ?? (string) $config->get('SMTP_ENCRYPTION', ''));
+$from = $overrides['from'] ?? (string) $config->get('MAIL_FROM', (string) $user);
+$fromName = $overrides['from-name'] ?? (string) $config->get('MAIL_FROM_NAME', '');
 
-$mail = new PHPMailer(true);
-$mail->isSMTP();
-$mail->Host = $host;
-$mail->Port = $port;
-$mail->SMTPSecure = match ($encryption) {
-    'smtps', 'ssl' => PHPMailer::ENCRYPTION_SMTPS,
-    'starttls', 'tls' => PHPMailer::ENCRYPTION_STARTTLS,
-    default => '',
-};
-$mail->SMTPAutoTLS = $mail->SMTPSecure !== '';
-$mail->SMTPAuth = $user !== null;
-$mail->Username = (string) $user;
-$mail->Password = (string) $password;
-$mail->Timeout = 15;
-$mail->CharSet = PHPMailer::CHARSET_UTF8;
-$mail->SMTPDebug = 2;
+echo "Serveur : $host:$port, chiffrement : " . ($encryption === '' ? 'aucun' : $encryption)
+    . ', identifiant : ' . ($user ?? '(sans authentification)') . "\nExpéditeur : $fromName <$from> → $to\n"
+    . 'Mail : ' . ($qr ? 'mail de retrait réel (HTML + QR intégré)' : 'texte simple') . "\n\n";
 
 // Seules les commandes connues sont affichées en clair : identifiants (base64) et corps masqués,
 // les lignes masquées consécutives regroupées en une seule.
-$mail->Debugoutput = static function (string $line): void {
+$debug = static function (string $line): void {
     static $masked = false;
     $line = rtrim($line);
     if (preg_match('/^CLIENT -> SERVER: ?(.*)$/s', $line, $m) === 1
@@ -103,14 +96,19 @@ $mail->Debugoutput = static function (string $line): void {
     echo $line, "\n";
 };
 
+$transport = (new SmtpTransport($host, $port, $encryption, $user, $password, $from, $fromName, 15))->withDebug($debug);
+
+$message = $qr
+    ? (new QrMailBuilder(
+        new Template($root . '/templates'),
+        new QrGenerator((string) $config->get('APP_URL', 'https://app.itsmadeleine.shop')),
+    ))->build($to, '#TEST', 'https://itsmadeleine.shop', QrGenerator::newToken())
+    : new MailMessage($to, 'Test SMTP itsmadeleine ' . gmdate('Y-m-d H:i') . ' UTC', '', "Mail de test envoyé par scripts/test-smtp.php.\n");
+
 try {
-    $mail->setFrom((string) $from, (string) $config->get('MAIL_FROM_NAME', ''));
-    $mail->addAddress($to);
-    $mail->Subject = 'Test SMTP itsmadeleine ' . gmdate('Y-m-d H:i') . ' UTC';
-    $mail->Body = "Mail de test envoyé par scripts/test-smtp.php.\n";
-    $mail->send();
+    $transport->send($message);
     echo "\nOK : mail accepté par $host. Vérifier la réception (et les en-têtes SPF/DKIM).\n";
-} catch (MailerException $e) {
+} catch (\RuntimeException $e) {
     echo "\nÉCHEC : " . $e->getMessage() . "\n";
     exit(1);
 }

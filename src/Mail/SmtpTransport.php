@@ -22,7 +22,17 @@ final readonly class SmtpTransport implements MailTransport
         private string $fromAddress,
         private string $fromName,
         private int $timeout = 10,
+        /** @var (\Closure(string): void)|null dialogue SMTP (scripts/test-smtp.php) ; null en production */
+        private ?\Closure $debug = null,
     ) {
+    }
+
+    public function withDebug(\Closure $debug): self
+    {
+        return new self(
+            $this->host, $this->port, $this->encryption, $this->user, $this->password,
+            $this->fromAddress, $this->fromName, $this->timeout, $debug,
+        );
     }
 
     public static function fromConfig(Config $config): self
@@ -64,20 +74,30 @@ final readonly class SmtpTransport implements MailTransport
             $mail->Encoding = PHPMailer::ENCODING_QUOTED_PRINTABLE;
             // EHLO et Message-ID au nom du domaine expéditeur, pas du serveur mutualisé.
             $mail->Hostname = substr((string) strrchr($this->fromAddress, '@'), 1) ?: 'localhost';
+            if ($this->debug !== null) {
+                $mail->SMTPDebug = 2;
+                $mail->Debugoutput = $this->debug;
+            }
 
             $mail->setFrom($this->fromAddress, $this->fromName);
             $mail->addAddress($message->to);
             $mail->Subject = $message->subject;
-            $mail->isHTML();
-            $mail->Body = $message->html;
-            $mail->AltBody = $message->text;
+            if ($message->html === '') {
+                $mail->Body = $message->text;
+            } else {
+                $mail->isHTML();
+                $mail->Body = $message->html;
+                $mail->AltBody = $message->text;
+            }
             foreach ($message->inlineImages as $cid => $image) {
                 $mail->addStringEmbeddedImage($image['data'], $cid, $image['filename'], PHPMailer::ENCODING_BASE64, $image['mime']);
             }
 
             $mail->send();
         } catch (\Throwable $e) {
-            throw new \RuntimeException($this->redact($e->getMessage()), 0, $e);
+            // ErrorInfo contient la réponse du serveur (code et motif), absente du message de l'exception.
+            $detail = $mail->ErrorInfo !== '' ? $mail->ErrorInfo : $e->getMessage();
+            throw new \RuntimeException($this->redact(trim((string) preg_replace('/\s+/', ' ', $detail))), 0, $e);
         } finally {
             $mail->smtpClose();
         }
