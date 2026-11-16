@@ -8,9 +8,9 @@
 
 **Point de non-retour** : **dimanche 15/11 à midi** (go/no-go du jalon M2). ✅ Franchi le samedi 14/11 : **go plan A**, l'e-mail client arrive bien dans la charge utile malgré le forfait Basic. Le [plan B](roadmap/annexe-plan-b.md) n'est plus nécessaire.
 
-## État au lundi 16/11
+## État au lundi 16/11 au soir
 
-**Environ un jour d'avance** : M0, M1, la décision de M2 et M3 sont faits ; M3 est validé en production. M0 et M4 sont terminés le 16/11 ; le code de M5 est fait le 16/11, reste son test en production. Les reliquats de M0 à M3 sont regroupés au début de [M4](roadmap/M4-qr-et-scan.md#reprise-au-démarrage--reliquats-de-m0-à-m3), pour être repris au démarrage.
+**Environ un jour d'avance**, conservé malgré le blocage SMTP d'OVH. M0 à M4 sont terminés et validés en production. M5 (mail), M6 (bucket) et M5b (envoi par la fonction `mail()` de l'hébergement) sont en production : le mail de retrait arrive en boîte de réception sur Gmail, en indésirables sur Outlook (authentification complète, `SCL 5`). **Prochaine étape : M7** (cron de rattrapage, alertes groupées, purge), point de reprise en tête de [M7](roadmap/M7-fiabilite-cron.md). Reliquats non bloquants au début de [M4](roadmap/M4-qr-et-scan.md#reprise-au-démarrage--reliquats-de-m0-à-m3).
 
 | Jalon | État | Reste à faire |
 |---|---|---|

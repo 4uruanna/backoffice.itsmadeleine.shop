@@ -4,6 +4,19 @@
 **Dépend de** : M6.
 **Débloque** : M8.
 
+## Reprise (état au 16/11 au soir)
+
+À lire avant de commencer.
+
+- **Déjà fait en M5/M6** (cases cochées ci-dessous) : réponse à Shopify avant l'envoi (`fastcgi_finish_request`), prise en charge atomique (`PickupOrderRepository::claim`), passage en `error` / `max_attempts` au 3e échec avec alerte dans `var/log/alerts.log`, bucket (`PdoMailBucket`, `mail_log`).
+- **Point d'entrée à réutiliser** : `PickupProcessor::process(int $id)` (`src/Service/`) fait tout le traitement d'une ligne (prise en charge, liste d'autorisation, jeton, contrôle de révocation, bucket, envoi, statut). Le cron n'a qu'à choisir les lignes et l'appeler ; il ne doit pas dupliquer cette logique.
+- **États à rattraper** : `pending` (dont `pending_reason` = `rate_limited`, `not_allowlisted`, `revoked`) et `failed`. Une ligne `pending` / `revoked` reste révoquée (`claim` l'exclut). Une ligne `not_allowlisted` repart dès que `MAIL_ALLOWLIST` est vidée (M8).
+- **Envoi en production** : `MAIL_TRANSPORT=phpmail` (fonction `mail()` de l'hébergement), voir [M5b](M5b-envoi-hebergement.md). Les alertes groupées passent par le même transport et le même bucket (`kind = 'alert'`).
+- **En base de production** : plusieurs commandes de test en `pending` / `rate_limited` et en `failed` (essais du 16/11 pendant le blocage SMTP). Le premier passage du cron les enverra à l'adresse de `MAIL_ALLOWLIST` : prévenu, c'est attendu.
+- **Outils** : `/health` affiche la version déployée et le transport ; `scripts/build-release.sh` écrit `VERSION`. Tests : Docker Compose (`docker compose run --rm php vendor/bin/phpunit`), MySQL compris.
+- **Hébergement OVH** : `.ovhconfig` en `environment=production` (OPcache : un fichier PHP remplacé peut mettre quelques minutes à être pris en compte). Le cron OVH lance `php` en ligne de commande : vérifier sa version (8.5) dans la déclaration de la tâche.
+- **En suspens, hors M7** : enrichir le texte du mail pour Outlook (en indésirables, `SCL 5`, voir M5b) ; il faut savoir si autre chose que le QR est à présenter le jour du concert et s'il faut une ligne de contact.
+
 ## Objectif
 
 Répondre à Shopify immédiatement, traiter ensuite, rattraper tout ce qui a échoué ou attendu, prévenir en cas de problème, et purger.
