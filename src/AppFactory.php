@@ -7,7 +7,9 @@ namespace App;
 use App\Controller\HealthController;
 use App\Controller\OrderEventController;
 use App\Controller\ScanController;
+use App\Mail\MailBucket;
 use App\Mail\MailTransport;
+use App\Mail\PdoMailBucket;
 use App\Mail\QrMailBuilder;
 use App\Mail\SmtpTransport;
 use App\Repository\PdoPickupOrderRepository;
@@ -46,6 +48,7 @@ final class AppFactory
         ?ScanRepository $scans = null,
         ?Template $templates = null,
         ?MailTransport $transport = null,
+        ?MailBucket $bucket = null,
     ): App {
         $connect ??= self::lazyConnection($config);
         $tasks ??= new DeferredTasks();
@@ -54,11 +57,13 @@ final class AppFactory
         $scans ??= new PdoScanRepository($connect);
         $templates ??= new Template($projectRoot . '/templates');
         $transport ??= SmtpTransport::fromConfig($config);
+        $bucket ??= new PdoMailBucket($connect, $config->int('MAIL_MAX_PER_HOUR', 120));
 
         $processor = new PickupProcessor(
             $orders,
             new QrMailBuilder($templates, new QrGenerator((string) $config->get('APP_URL', 'https://app.itsmadeleine.shop'))),
             $transport,
+            $bucket,
             $alerts,
             $config->int('MAX_ATTEMPTS', 3),
             self::allowlist($config->get('MAIL_ALLOWLIST')),
@@ -76,7 +81,7 @@ final class AppFactory
             $orders,
             $alerts,
             $tasks,
-            // Traitement d'une commande `pending` : prise en charge, jeton, mail (M5) ; bucket en M6.
+            // Traitement d'une commande `pending` : prise en charge, jeton, bucket (M6), mail (M5).
             static function (int $pickupOrderId) use ($processor): void {
                 error_log('events: ' . $processor->process($pickupOrderId));
             },

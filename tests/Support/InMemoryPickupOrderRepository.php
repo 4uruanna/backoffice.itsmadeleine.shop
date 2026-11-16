@@ -155,11 +155,16 @@ final class InMemoryPickupOrderRepository implements PickupOrderRepository
         return $this->rows[$key]['status'];
     }
 
-    public function release(int $id, string $reason): void
+    public function release(int $id, string $reason, ?string $lastError = null): void
     {
         $key = $this->keyOf($id);
         if ($key !== null && $this->rows[$key]['status'] === 'processing') {
-            $this->rows[$key] = ['status' => 'pending', 'pending_reason' => $reason, 'locked_at' => null] + $this->rows[$key];
+            $this->rows[$key] = [
+                'status' => 'pending',
+                'pending_reason' => $reason,
+                'last_error' => $lastError === null ? $this->rows[$key]['last_error'] : mb_substr($lastError, 0, 500),
+                'locked_at' => null,
+            ] + $this->rows[$key];
         }
     }
 

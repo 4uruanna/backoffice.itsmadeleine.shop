@@ -171,13 +171,14 @@ final class PdoPickupOrderRepository implements PickupOrderRepository
         return (string) $statement->fetchColumn();
     }
 
-    public function release(int $id, string $reason): void
+    public function release(int $id, string $reason, ?string $lastError = null): void
     {
         ($this->connect)()->prepare(
             "UPDATE pickup_orders
-                SET status = 'pending', pending_reason = ?, locked_at = NULL, updated_at = UTC_TIMESTAMP()
+                SET status = 'pending', pending_reason = ?, last_error = COALESCE(?, last_error),
+                    locked_at = NULL, updated_at = UTC_TIMESTAMP()
               WHERE id = ? AND status = 'processing'"
-        )->execute([self::cut($reason, 32), $id]);
+        )->execute([self::cut($reason, 32), self::cut($lastError, 500), $id]);
     }
 
     private static function cut(?string $value, int $length): ?string

@@ -240,6 +240,11 @@ final class PdoPickupOrderRepositoryTest extends TestCase
         self::assertSame(0, (int) $row['attempts']);
         self::assertNull($row['locked_at']);
 
+        $this->repository->claim($id);
+        $this->repository->release($id, 'rate_limited', 'Mail quota exceeded');
+        self::assertSame('Mail quota exceeded', $this->repository->findById($id)['last_error']);
+        self::assertSame(0, (int) $this->repository->findById($id)['attempts']);
+
         self::assertTrue($this->repository->claim($id), 'reprise possible ensuite');
         $this->repository->markSent($id);
         self::assertNull($this->repository->findById($id)['pending_reason']);

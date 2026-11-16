@@ -9,6 +9,8 @@ use App\Mail\QrMailBuilder;
 use App\Service\PickupProcessor;
 use App\Service\QrGenerator;
 use App\Service\Template;
+use App\Mail\RateLimitedException;
+use App\Tests\Support\FakeMailBucket;
 use App\Tests\Support\InMemoryPickupOrderRepository;
 use App\Tests\Support\SpyAlertLog;
 use App\Tests\Support\SpyMailTransport;
@@ -23,6 +25,7 @@ final class PickupProcessorTest extends TestCase
     private InMemoryPickupOrderRepository $orders;
     private SpyMailTransport $transport;
     private SpyAlertLog $alerts;
+    private FakeMailBucket $bucket;
     private int $id;
 
     protected function setUp(): void
@@ -30,6 +33,7 @@ final class PickupProcessorTest extends TestCase
         $this->orders = new InMemoryPickupOrderRepository();
         $this->transport = new SpyMailTransport();
         $this->alerts = new SpyAlertLog();
+        $this->bucket = new FakeMailBucket();
         $this->id = (int) $this->orders->insertIfAbsent(
             self::SHOPIFY_ID,
             new OrderSnapshot(self::SHOPIFY_ID, '#1094', 'Client@Example.com', 'https://example.myshopify.com/s', 'PAID', null, ['retrait-qr']),
@@ -44,6 +48,7 @@ final class PickupProcessorTest extends TestCase
             $this->orders,
             new QrMailBuilder(new Template(dirname(__DIR__, 2) . '/templates'), new QrGenerator('https://app.itsmadeleine.shop')),
             $this->transport,
+            $this->bucket,
             $this->alerts,
             3,
             $allowlist,
@@ -159,5 +164,57 @@ final class PickupProcessorTest extends TestCase
         $this->processor(['client@example.com'])->process($this->id);
         self::assertSame('sent', $this->row()['status']);
         self::assertNull($this->row()['pending_reason']);
+    }
+
+    public function testJetonDuBucketPrisAvantChaqueEnvoi(): void
+    {
+        $this->processor()->process($this->id);
+
+        self::assertSame([['pickup_order_id' => $this->id, 'kind' => 'qr']], $this->bucket->taken);
+    }
+
+    public function testBucketVideCommandeEnAttenteSansEssai(): void
+    {
+        $this->bucket->remaining = 0;
+
+        $summary = $this->processor()->process($this->id);
+
+        self::assertStringContainsString('plafond d\'envoi atteint', $summary);
+        self::assertSame([], $this->transport->sent);
+        self::assertSame('pending', $this->row()['status']);
+        self::assertSame('rate_limited', $this->row()['pending_reason']);
+        self::assertSame(0, $this->row()['attempts']);
+        $token = $this->row()['token'];
+
+        // Passage suivant (cron, M7), bucket de nouveau disponible : envoi avec le même QR.
+        $this->bucket->remaining = 1;
+        $this->processor()->process($this->id);
+        self::assertSame('sent', $this->row()['status']);
+        self::assertSame($token, $this->row()['token']);
+    }
+
+    public function testCommandeHorsListeNeConsommePasDeJeton(): void
+    {
+        $this->processor(['moi@example.com'])->process($this->id);
+
+        self::assertSame([], $this->bucket->taken);
+    }
+
+    public function testQuotaSmtpDepasseCommandeEnAttenteSansEssai(): void
+    {
+        $this->transport->failures = [];
+        $this->transport->before = static function (): void {
+            throw new RateLimitedException('SMTP Error: data not accepted. Detail: Mail quota exceeded for commandes@itsmadeleine.shop SMTP code: 550');
+        };
+
+        $summary = $this->processor()->process($this->id);
+
+        self::assertStringContainsString('quota SMTP dépassé', $summary);
+        self::assertSame('pending', $this->row()['status']);
+        self::assertSame('rate_limited', $this->row()['pending_reason']);
+        self::assertSame(0, $this->row()['attempts'], 'aucun essai compté : jamais d\'erreur définitive pour un quota');
+        self::assertStringContainsString('Mail quota exceeded', $this->row()['last_error']);
+        self::assertCount(1, $this->bucket->taken, 'le jeton reste consommé');
+        self::assertSame([], $this->alerts->alerts);
     }
 }

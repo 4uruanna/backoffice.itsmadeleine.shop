@@ -11,6 +11,7 @@ use App\Service\DeferredTasks;
 use App\Service\QrGenerator;
 use App\Service\Template;
 use App\Service\ShopifyHmac;
+use App\Tests\Support\FakeMailBucket;
 use App\Tests\Support\InMemoryPickupOrderRepository;
 use App\Tests\Support\InMemoryScanRepository;
 use App\Tests\Support\Payloads;
@@ -311,6 +312,7 @@ final class AppTest extends TestCase
             $this->scans,
             new Template(dirname(__DIR__, 2) . '/templates'),
             $this->transport,
+            new FakeMailBucket(),
         );
     }
 

@@ -57,6 +57,12 @@ final class TestDatabase
         return $pdo;
     }
 
+    /** Seconde connexion à la base de test (verrous tenus par une autre session). */
+    public static function connect(TestCase $test): PDO
+    {
+        return Database::connect(self::config($test));
+    }
+
     /** @return list<string> */
     private static function statements(string $sql): array
     {

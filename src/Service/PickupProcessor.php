@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Mail\MailBucket;
 use App\Mail\MailTransport;
 use App\Mail\QrMailBuilder;
+use App\Mail\RateLimitedException;
 use App\Repository\PickupOrderRepository;
 
 /**
  * Traitement d'une commande à retrait par QR (M5) : prise en charge atomique, jeton, mail.
  * Appelé après la réponse à Shopify (DeferredTasks), puis par le cron de rattrapage (M7).
- * M6 : prise d'un jeton du bucket juste avant l'envoi.
+ * M6 : jeton du bucket pris juste avant l'envoi ; bucket vide ou quota SMTP dépassé →
+ * la commande attend (`pending` / `rate_limited`), sans compter d'essai.
  */
 final readonly class PickupProcessor
 {
@@ -23,6 +26,7 @@ final readonly class PickupProcessor
         private PickupOrderRepository $orders,
         private QrMailBuilder $mails,
         private MailTransport $transport,
+        private MailBucket $bucket,
         private AlertLog $alerts,
         private int $maxAttempts = 3,
         private array $allowlist = [],
@@ -65,7 +69,18 @@ final readonly class PickupProcessor
                 return "ligne $id : révoquée avant l'envoi, aucun mail";
             }
 
+            if (!$this->bucket->tryAcquire($id, MailBucket::KIND_QR)) {
+                $this->orders->release($id, 'rate_limited');
+
+                return "ligne $id : plafond d'envoi atteint, en attente du cron";
+            }
+
             $this->transport->send($message);
+        } catch (RateLimitedException $e) {
+            // Quota du serveur SMTP : ni échec ni essai compté, le cron reprendra la commande.
+            $this->orders->release($id, 'rate_limited', $e->getMessage());
+
+            return "ligne $id : quota SMTP dépassé, en attente du cron : " . mb_substr($e->getMessage(), 0, 200);
         } catch (\Throwable $e) {
             $status = $this->orders->markFailed($id, $e->getMessage(), $this->maxAttempts);
             if ($status === 'error') {

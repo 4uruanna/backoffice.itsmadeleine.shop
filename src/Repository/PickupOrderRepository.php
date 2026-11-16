@@ -71,6 +71,9 @@ interface PickupOrderRepository
      */
     public function markFailed(int $id, string $error, int $maxAttempts): string;
 
-    /** Rend la ligne sans tentative d'envoi : `processing` → `pending`, avec la raison (`attempts` inchangé). */
-    public function release(int $id, string $reason): void;
+    /**
+     * Rend la ligne sans tentative d'envoi : `processing` → `pending`, avec la raison (`attempts` inchangé).
+     * $lastError renseigné : remplace `last_error` (ex. refus de quota du serveur SMTP).
+     */
+    public function release(int $id, string $reason, ?string $lastError = null): void;
 }

@@ -97,7 +97,11 @@ final readonly class SmtpTransport implements MailTransport
         } catch (\Throwable $e) {
             // ErrorInfo contient la réponse du serveur (code et motif), absente du message de l'exception.
             $detail = $mail->ErrorInfo !== '' ? $mail->ErrorInfo : $e->getMessage();
-            throw new \RuntimeException($this->redact(trim((string) preg_replace('/\s+/', ' ', $detail))), 0, $e);
+            $detail = $this->redact(trim((string) preg_replace('/\s+/', ' ', $detail)));
+            if (RateLimitedException::matches($detail)) {
+                throw new RateLimitedException($detail, 0, $e);
+            }
+            throw new \RuntimeException($detail, 0, $e);
         } finally {
             $mail->smtpClose();
         }
