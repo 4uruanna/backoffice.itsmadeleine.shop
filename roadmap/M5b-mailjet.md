@@ -5,6 +5,18 @@
 **Débloque** : M7, M8.
 **Pourquoi** : le 16/11, OVH refuse les envois SMTP qui partent de l'hébergement web (« Mail quota exceeded … 200 messages per hour and per account »), y compris pour une boîte neuve qui n'avait rien envoyé, alors que les mêmes comptes envoient normalement depuis le poste (voir [M5](M5-mail.md)). Le service transactionnel prévu en M9 est avancé.
 
+## Pistes pour rester chez OVH (16/11)
+
+Explication la plus probable du blocage : OVH limite le SMTP à 200 mails par heure **par compte** et à 300 par heure **par adresse IP**. L'IP de l'hébergement mutualisé est partagée avec de nombreux autres clients, qui peuvent épuiser la limite par IP ; le message renvoyé parle pourtant du compte. Cela colle avec les observations : boîte neuve refusée depuis le serveur, mêmes comptes acceptés depuis le poste.
+
+À tester avant ou en parallèle de Mailjet, du plus simple au plus long :
+
+1. [ ] **`SMTP_HOST=smtp.mail.ovh.net`** (port 465, `smtps`) dans le `.env` du serveur : c'est l'hôte indiqué par la documentation récente d'OVH pour les envois depuis un hébergement. Aucun code à changer ; deux commandes de test. Peut échouer de la même façon si la limite par IP s'applique aussi.
+2. [ ] **Fonction `mail()` de PHP** (envoi des « scripts e-mails » de l'hébergement, état « Envoi actif ») : quota propre à l'hébergement, et non partagé avec d'autres clients. D'après les forums d'OVH : environ 100 mails par heure pour l'offre Perso, 200 pour Pro, 2 000 pour Performance (à vérifier dans les spécifications de l'offre). Petit changement de code : `MAIL_TRANSPORT=phpmail` (PHPMailer en mode `mail()`, même mail avec le QR intégré), `MAIL_MAX_PER_HOUR` sous le quota. À vérifier sur un mail reçu : SPF, DKIM et DMARC (signature DKIM des envois de l'hébergement non garantie).
+3. [ ] **Ticket au support OVH**, avec les heures et messages de [M5](M5-mail.md).
+
+Si la piste 1 ou 2 fonctionne (envois répétés acceptés, en-têtes à `PASS`), Mailjet devient un repli et non plus un prérequis.
+
 ## Objectif
 
 Envoyer le mail de retrait par l'API HTTPS de Mailjet, avec l'expéditeur `retrait@itsmadeleine.shop`, sans rien changer au reste : même contenu, QR toujours intégré au mail, mêmes statuts, même bucket, même cron.
