@@ -2,7 +2,7 @@
 
 **Quand** : lundi 16/11, après-midi.
 **Dépend de** : M4 (QR), M0 (boîte mail, DKIM).
-**Débloque** : M6, [M5b](M5b-mailjet.md) (envoi par Mailjet, décidé le 16/11).
+**Débloque** : M6, [M5b](M5b-envoi-hebergement.md) (envoi par la fonction `mail()` de l'hébergement, 16/11).
 **État** : code fait le lundi 16/11 (95 tests verts, dont MySQL ; parcours complet vérifié en local avec Mailpit). Restent le déploiement et l'envoi réel vers Gmail et Outlook.
 
 ## Objectif
@@ -62,7 +62,7 @@ Le même jour, le mail **de la vraie commande** (même numéro, même lien de st
 
 Juste après, le même mail envoyé **depuis le poste** avec le même compte est **accepté**. Comme lors des essais précédents, le poste passe alors que le serveur est refusé : le blocage semble viser les envois **depuis l'hébergement** plutôt que le compte. Test décisif : une nouvelle boîte (`retrait@`) dans le `.env` du serveur. Si elle est aussi refusée depuis le serveur, solutions : ticket au support OVH, ou envoi par un service transactionnel en HTTPS (prévu en M9, à avancer ; DNS à ajouter).
 
-**16/11, test décisif** : nouvelle boîte `retrait@itsmadeleine.shop` dans le `.env` du serveur → #1111 refusé de la même façon (`Mail quota exceeded for retrait@…`), alors que cette boîte n'avait jamais rien envoyé. **Le quota ne vient pas du compte : OVH bloque les envois SMTP qui partent de l'hébergement web.** L'envoi depuis l'hébergement par `ssl0.ovh.net` n'est donc pas utilisable pour la mise en service. Solutions : ticket au support OVH (délai incertain) et, en parallèle, envoi par un service transactionnel appelé en HTTPS (avancé depuis M9).
+**16/11, test décisif** : nouvelle boîte `retrait@itsmadeleine.shop` dans le `.env` du serveur → #1111 refusé de la même façon (`Mail quota exceeded for retrait@…`), alors que cette boîte n'avait jamais rien envoyé. **Le quota ne vient pas du compte : OVH bloque les envois SMTP qui partent de l'hébergement web.** L'envoi depuis l'hébergement par `ssl0.ovh.net` n'est donc pas utilisable pour la mise en service. Solution retenue le soir même : fonction `mail()` de l'hébergement, voir [M5b](M5b-envoi-hebergement.md).
 
 Les lignes déjà en `pending` avant ce déploiement (tests de M3, M4) ne partent pas : seule une nouvelle livraison déclenche l'envoi, le cron de M7 reprendra le reste.
 

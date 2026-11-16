@@ -21,8 +21,8 @@ Consolider ce qui a été sacrifié au délai, puis améliorer le service à par
 - [ ] **Renvoi manuel** du mail (petite page protégée ou script en ligne de commande) : client qui a supprimé le mail.
 - [ ] Reprise automatique des `error` / `no_email` si une livraison ultérieure apporte un e-mail.
 - [ ] Page de scan intermédiaire « déjà scanné le … » si le staff le juge utile.
-- [x] ~~Service transactionnel par API HTTPS si la délivrabilité OVH se révèle mauvaise~~ : avancé en [M5b](M5b-mailjet.md) (Mailjet) le 16/11, après le blocage SMTP de l'hébergement.
-- [ ] Selon la réponse du support OVH : garder Mailjet, ou revenir au SMTP d'OVH (`MAIL_TRANSPORT=smtp`).
+- [ ] Service transactionnel par API HTTPS si la délivrabilité de `mail()` se révèle mauvaise (mails en indésirables). Non prévu à ce stade ([M5b](M5b-envoi-hebergement.md)).
+- [ ] Selon la réponse éventuelle du support OVH : revenir au SMTP d'OVH (`MAIL_TRANSPORT=smtp`) ou garder `mail()`.
 
 ## Hors périmètre, à rediscuter
 
