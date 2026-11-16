@@ -58,6 +58,8 @@ Le même jour, le mail **de la vraie commande** (même numéro, même lien de st
 
 **Cause trouvée (16/11)** : `.env` identiques, envoi de scripts de l'hébergement « actif ». `last_error` avec la release du 16/11 : `550 5.7.0 Mail quota exceeded for commandes@itsmadeleine.shop: You have exceeded the limit of 200 messages per hour and per account.` **Quota OVH de 200 mails par heure et par compte dépassé**, alors que l'API et les tests n'ont envoyé que quelques mails : quelque chose d'autre envoie depuis ce compte. À vérifier en priorité : compte compromis utilisé pour du spam (rebonds dans la boîte de réception de `commandes@`, état du compte dans l'espace client), puis changer le mot de passe (`.env` du serveur et Mail sur macOS ensuite). Pour M6 : traiter ce refus de quota comme `rate_limited` (attente sans compter d'essai) plutôt que comme un échec.
 
+**16/11, après changement du mot de passe et déploiement de M6** : #1109 **envoyé depuis le serveur** (15:27:54 UTC), #1110 refusé 43 s plus tard par le quota d'OVH (`550 5.7.0`, 15:28:37 UTC), correctement mis en `pending` / `rate_limited` sans essai compté. Le compteur d'OVH reste donc à environ 200 mails par heure pour `commandes@`, alors que l'API n'en envoie que quelques-uns : un autre expéditeur utilise ce compte, ou OVH compte autrement que ce qu'annonce le message. Pistes : autre appareil, site ou service configuré avec cette boîte ; redirection ou répondeur sur le compte ; nouvelle boîte dédiée pour comparer ; ticket au support OVH avec les heures exactes.
+
 Les lignes déjà en `pending` avant ce déploiement (tests de M3, M4) ne partent pas : seule une nouvelle livraison déclenche l'envoi, le cron de M7 reprendra le reste.
 
 ## Critères de fin
