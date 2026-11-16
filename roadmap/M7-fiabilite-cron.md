@@ -12,9 +12,9 @@ Répondre à Shopify immédiatement, traiter ensuite, rattraper tout ce qui a é
 
 ### Traitement après réponse
 
-- [ ] `public/index.php` : `$app->run()`, puis `fastcgi_finish_request()` s'il existe (résultat de M2), puis exécution de `DeferredTasks`. `ignore_user_abort(true)` et `set_time_limit(60)` avant le traitement.
-- [ ] Sans `fastcgi_finish_request` : traitement synchrone avant la réponse (un nouvel essai de Shopify n'enverra pas de doublon, grâce au dédoublonnage et à la prise en charge atomique).
-- [ ] Prise en charge atomique :
+- [x] (fait en M5, 16/11) `public/index.php` : `$app->run()`, puis `fastcgi_finish_request()` s'il existe (résultat de M2), puis exécution de `DeferredTasks`. `ignore_user_abort(true)` et `set_time_limit(60)` avant le traitement.
+- [x] (fait en M5) Sans `fastcgi_finish_request` : traitement synchrone avant la réponse (un nouvel essai de Shopify n'enverra pas de doublon, grâce au dédoublonnage et à la prise en charge atomique).
+- [x] (fait en M5 : `PickupOrderRepository::claim`, appelée par `PickupProcessor`) Prise en charge atomique :
 
 ```sql
 UPDATE pickup_orders
@@ -29,7 +29,7 @@ WHERE id = ? AND status IN ('pending','failed') AND revoked_at IS NULL;
 - [ ] Garde-fou : refuser l'exécution hors ligne de commande (`PHP_SAPI !== 'cli'`) ; verrou `GET_LOCK('cron_retry', 0)` pour éviter deux passages simultanés.
 - [ ] Débloquer : `processing` dont `locked_at` a plus de 15 min → `failed` (`last_error = 'stale_lock'`).
 - [ ] Reprendre `pending` et `failed` non révoquées, **les plus anciennes d'abord** ; s'arrêter dès que le bucket est vide.
-- [ ] Échec au-delà de `MAX_ATTEMPTS` (3) → `error`, `error_code = 'max_attempts'`, à mettre dans l'alerte.
+- [x] (fait en M5 : `markFailed`, alerte dans `var/log/alerts.log`) Échec au-delà de `MAX_ATTEMPTS` (3) → `error`, `error_code = 'max_attempts'`, à mettre dans l'alerte.
 - [ ] Une commande révoquée encore `pending` ou `failed` n'est jamais envoyée (reste en l'état, visible dans les requêtes de suivi).
 - [ ] **Alertes groupées** : un seul mail par passage vers `ALERT_EMAIL`, qui liste les nouvelles `error` (`payload_errors`, `no_email`, `max_attempts`) depuis le passage précédent. Le mail d'alerte passe par le bucket (`kind = 'alert'`) ; bucket vide → l'alerte attend le passage suivant.
 - [ ] Les alertes notées en M3 dans `var/log/alerts.log` passent désormais par ce mail (le journal reste en secours).

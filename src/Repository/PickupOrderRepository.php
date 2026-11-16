@@ -49,4 +49,28 @@ interface PickupOrderRepository
 
     /** @return array<string, mixed>|null */
     public function findByToken(string $token): ?array;
+
+    /** @return array<string, mixed>|null */
+    public function findById(int $id): ?array;
+
+    /**
+     * Prise en charge atomique : `pending` ou `failed`, non révoquée → `processing`.
+     *
+     * @return bool true si cet appel a pris la ligne (sinon : déjà prise, envoyée, révoquée…)
+     */
+    public function claim(int $id): bool;
+
+    /** `processing` → `sent`, `sent_at`. */
+    public function markSent(int $id): void;
+
+    /**
+     * Échec d'envoi : `attempts + 1`, `last_error` ; `failed`, ou `error` / `max_attempts`
+     * quand `attempts` atteint $maxAttempts.
+     *
+     * @return string nouveau statut (`failed` ou `error`)
+     */
+    public function markFailed(int $id, string $error, int $maxAttempts): string;
+
+    /** Rend la ligne sans tentative d'envoi : `processing` → `pending`, avec la raison (`attempts` inchangé). */
+    public function release(int $id, string $reason): void;
 }

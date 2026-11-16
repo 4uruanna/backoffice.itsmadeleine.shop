@@ -40,6 +40,7 @@ Rejouer tous les scénarios sur la boutique de production, avec le code final d�
 
 ## Mise en service
 
+- [ ] **Vider `MAIL_ALLOWLIST`** dans le `.env` du serveur (garde-fou de M5), puis vérifier les commandes restées en attente : `SELECT order_name, created_at FROM pickup_orders WHERE status = 'pending' AND pending_reason = 'not_allowlisted';` Ce sont de vraies commandes : le cron (M7) leur enverra le mail au passage suivant.
 - [ ] Annuler et archiver toutes les commandes de test ; laisser le produit de test non publié (ou l'archiver).
 - [ ] Taguer `retrait-qr` sur les vrais produits à retirer en boutique.
 - [ ] Brief du staff (5 min) : scanner avec l'appareil photo, rester connecté à l'app Shopify sur le téléphone, marquer la commande comme retirée dans Shopify, ne rien remettre si la page rouge s'affiche.

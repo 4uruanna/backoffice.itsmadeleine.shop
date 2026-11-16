@@ -38,7 +38,7 @@ Fichiers cachés : activer leur affichage dans le client FTP pour que `public/.h
 ## 3. Premier déploiement uniquement
 
 1. **`.env`** : copier `.env.example` vers `~/backoffice/.env` et remplir les valeurs de production :
-   `APP_ENV=production`, `APP_URL=https://app.itsmadeleine.shop`, `DB_*` (base OVH), `SHOPIFY_CLIENT_SECRET` (app `itsmadeleine.app`), `SMTP_HOST=ssl0.ovh.net`, `SMTP_PORT=465`, `SMTP_ENCRYPTION=smtps`, `SMTP_USER=commandes@itsmadeleine.shop`, `SMTP_PASSWORD`, `ALERT_EMAIL`.
+   `APP_ENV=production`, `APP_URL=https://app.itsmadeleine.shop`, `DB_*` (base OVH), `SHOPIFY_CLIENT_SECRET` (app `itsmadeleine.app`), `SMTP_HOST=ssl0.ovh.net`, `SMTP_PORT=465`, `SMTP_ENCRYPTION=smtps`, `SMTP_USER=commandes@itsmadeleine.shop`, `SMTP_PASSWORD`, `MAIL_FROM=commandes@itsmadeleine.shop`, `MAIL_FROM_NAME="It's Madeleine"`, `ALERT_EMAIL`, `MAIL_ALLOWLIST` (ton adresse jusqu'à la mise en service, voir M5 et M8).
 2. **Base** : dans phpMyAdmin (espace client OVH → Bases de données), exécuter `migrations/001_init.sql`.
 3. **Version de PHP** : `public/.ovhconfig` demande PHP 8.5. OVH lit ce fichier à la racine du multisite (`backoffice/public`) ; si la version de PHP n'est pas la bonne, copier aussi `.ovhconfig` à la racine de l'hébergement ou régler la version dans l'espace client (Multisite → modifier).
 

@@ -15,6 +15,7 @@ use App\Tests\Support\InMemoryPickupOrderRepository;
 use App\Tests\Support\InMemoryScanRepository;
 use App\Tests\Support\Payloads;
 use App\Tests\Support\SpyAlertLog;
+use App\Tests\Support\SpyMailTransport;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -30,6 +31,7 @@ final class AppTest extends TestCase
     private string $root;
     private InMemoryPickupOrderRepository $orders;
     private InMemoryScanRepository $scans;
+    private SpyMailTransport $transport;
     private DeferredTasks $tasks;
     private string|false $previousErrorLog;
 
@@ -39,6 +41,7 @@ final class AppTest extends TestCase
         mkdir($this->root);
         $this->orders = new InMemoryPickupOrderRepository();
         $this->scans = new InMemoryScanRepository();
+        $this->transport = new SpyMailTransport();
         $this->tasks = new DeferredTasks();
         // Les contrôleurs journalisent chaque livraison : pas dans la sortie des tests.
         $this->previousErrorLog = ini_set('error_log', '/dev/null');
@@ -140,17 +143,27 @@ final class AppTest extends TestCase
         self::assertSame('Order', $record['headers']['Shopify-Topic']);
     }
 
-    public function testTraitementDiffereAttribueUnJetonStable(): void
+    public function testTraitementDiffereEnvoieLeMailAvecLeQr(): void
     {
         $this->post($this->app(), json_encode(Payloads::order()), signed: true);
+        self::assertSame([], $this->transport->sent, 'rien avant la fin de la réponse');
+
         $this->tasks->run();
 
-        $token = $this->orders->findByShopifyOrderId(8264632992077)['token'];
-        self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $token);
+        $row = $this->orders->findByShopifyOrderId(8264632992077);
+        self::assertSame('sent', $row['status']);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $row['token']);
+        self::assertCount(1, $this->transport->sent);
+        self::assertSame('client@example.com', $this->transport->sent[0]->to);
+    }
 
-        // Nouvel essai (cron, M7) : même jeton, donc même QR.
-        $this->orders->assignToken($this->orders->findByShopifyOrderId(8264632992077)['id'], str_repeat('f', 32));
-        self::assertSame($token, $this->orders->findByShopifyOrderId(8264632992077)['token']);
+    public function testListeDAutorisationLueDansLaConfiguration(): void
+    {
+        $this->post($this->app(allowlist: ' Moi@Example.com , autre@example.com '), json_encode(Payloads::order()), signed: true);
+        $this->tasks->run();
+
+        self::assertSame([], $this->transport->sent);
+        self::assertSame('not_allowlisted', $this->orders->findByShopifyOrderId(8264632992077)['pending_reason']);
     }
 
     public function testScanRedirigeVersLaCommandeDansLAdmin(): void
@@ -275,6 +288,7 @@ final class AppTest extends TestCase
         ?\Closure $connect = null,
         bool $debugDeliveries = false,
         ?string $storeHandle = 'itsmadeleine-love-2',
+        ?string $allowlist = null,
     ): App {
         $values = ['APP_ENV' => 'test', 'DEBUG_DELIVERIES' => $debugDeliveries ? '1' : '0'];
         if ($secret !== null) {
@@ -282,6 +296,9 @@ final class AppTest extends TestCase
         }
         if ($storeHandle !== null) {
             $values['SHOPIFY_STORE_HANDLE'] = $storeHandle;
+        }
+        if ($allowlist !== null) {
+            $values['MAIL_ALLOWLIST'] = $allowlist;
         }
 
         return AppFactory::create(
@@ -293,6 +310,7 @@ final class AppTest extends TestCase
             new SpyAlertLog(),
             $this->scans,
             new Template(dirname(__DIR__, 2) . '/templates'),
+            $this->transport,
         );
     }
 

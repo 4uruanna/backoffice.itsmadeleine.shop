@@ -120,6 +120,66 @@ final class PdoPickupOrderRepository implements PickupOrderRepository
         return $row === false ? null : $row;
     }
 
+    public function findById(int $id): ?array
+    {
+        $statement = ($this->connect)()->prepare('SELECT * FROM pickup_orders WHERE id = ?');
+        $statement->execute([$id]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
+    public function claim(int $id): bool
+    {
+        $statement = ($this->connect)()->prepare(
+            "UPDATE pickup_orders
+                SET status = 'processing', locked_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP()
+              WHERE id = ? AND status IN ('pending', 'failed') AND revoked_at IS NULL"
+        );
+        $statement->execute([$id]);
+
+        return $statement->rowCount() === 1;
+    }
+
+    public function markSent(int $id): void
+    {
+        ($this->connect)()->prepare(
+            "UPDATE pickup_orders
+                SET status = 'sent', sent_at = UTC_TIMESTAMP(), locked_at = NULL, pending_reason = NULL,
+                    last_error = NULL, updated_at = UTC_TIMESTAMP()
+              WHERE id = ? AND status = 'processing'"
+        )->execute([$id]);
+    }
+
+    public function markFailed(int $id, string $error, int $maxAttempts): string
+    {
+        $pdo = ($this->connect)();
+        // MySQL évalue les affectations de gauche à droite avec les valeurs déjà modifiées :
+        // status et error_code sont calculés avant l'incrément d'attempts.
+        $pdo->prepare(
+            "UPDATE pickup_orders
+                SET status = IF(attempts + 1 >= ?, 'error', 'failed'),
+                    error_code = IF(attempts + 1 >= ?, 'max_attempts', error_code),
+                    attempts = attempts + 1,
+                    last_error = ?, locked_at = NULL, pending_reason = NULL, updated_at = UTC_TIMESTAMP()
+              WHERE id = ? AND status = 'processing'"
+        )->execute([$maxAttempts, $maxAttempts, self::cut($error, 500), $id]);
+
+        $statement = $pdo->prepare('SELECT status FROM pickup_orders WHERE id = ?');
+        $statement->execute([$id]);
+
+        return (string) $statement->fetchColumn();
+    }
+
+    public function release(int $id, string $reason): void
+    {
+        ($this->connect)()->prepare(
+            "UPDATE pickup_orders
+                SET status = 'pending', pending_reason = ?, locked_at = NULL, updated_at = UTC_TIMESTAMP()
+              WHERE id = ? AND status = 'processing'"
+        )->execute([self::cut($reason, 32), $id]);
+    }
+
     private static function cut(?string $value, int $length): ?string
     {
         return $value === null ? null : mb_substr($value, 0, $length);

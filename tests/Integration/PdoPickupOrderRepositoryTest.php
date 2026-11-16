@@ -183,4 +183,65 @@ final class PdoPickupOrderRepositoryTest extends TestCase
         $this->expectException(\PDOException::class);
         (new PdoScanRepository(fn () => $this->pdo))->record($id, 'inconnu', null, null);
     }
+
+    public function testPriseEnChargeAtomiqueEtEnvoi(): void
+    {
+        $id = (int) $this->repository->insertIfAbsent(self::ID, $this->order(), 'pending', null, null, null);
+
+        self::assertTrue($this->repository->claim($id));
+        self::assertFalse($this->repository->claim($id), 'déjà prise');
+        $row = $this->repository->findById($id);
+        self::assertSame('processing', $row['status']);
+        self::assertNotNull($row['locked_at']);
+
+        $this->repository->markSent($id);
+        $row = $this->repository->findById($id);
+        self::assertSame('sent', $row['status']);
+        self::assertNull($row['locked_at']);
+        self::assertLessThan(5, abs(strtotime($row['sent_at'] . ' UTC') - time()), 'sent_at en UTC');
+        self::assertFalse($this->repository->claim($id), 'envoyée : jamais reprise');
+    }
+
+    public function testRevoqueeJamaisPriseEnCharge(): void
+    {
+        $id = (int) $this->repository->insertIfAbsent(self::ID, $this->order(), 'pending', null, null, null);
+        $this->repository->revoke(self::ID, 'cancelled');
+
+        self::assertFalse($this->repository->claim($id));
+    }
+
+    public function testEchecsSuccessifsPuisErreur(): void
+    {
+        $id = (int) $this->repository->insertIfAbsent(self::ID, $this->order(), 'pending', null, null, null);
+
+        foreach ([1 => 'failed', 2 => 'failed', 3 => 'error'] as $attempt => $expected) {
+            self::assertTrue($this->repository->claim($id), "essai $attempt");
+            self::assertSame($expected, $this->repository->markFailed($id, str_repeat('x', 600), 3));
+            $row = $this->repository->findById($id);
+            self::assertSame($attempt, (int) $row['attempts']);
+            self::assertSame($expected === 'error' ? 'max_attempts' : null, $row['error_code']);
+            self::assertSame(500, strlen($row['last_error']));
+            self::assertNull($row['locked_at']);
+        }
+
+        self::assertFalse($this->repository->claim($id), 'error : jamais rejouée');
+    }
+
+    public function testLiberationSansTentative(): void
+    {
+        $id = (int) $this->repository->insertIfAbsent(self::ID, $this->order(), 'pending', null, null, null);
+        $this->repository->claim($id);
+
+        $this->repository->release($id, 'not_allowlisted');
+
+        $row = $this->repository->findById($id);
+        self::assertSame('pending', $row['status']);
+        self::assertSame('not_allowlisted', $row['pending_reason']);
+        self::assertSame(0, (int) $row['attempts']);
+        self::assertNull($row['locked_at']);
+
+        self::assertTrue($this->repository->claim($id), 'reprise possible ensuite');
+        $this->repository->markSent($id);
+        self::assertNull($this->repository->findById($id)['pending_reason']);
+    }
 }

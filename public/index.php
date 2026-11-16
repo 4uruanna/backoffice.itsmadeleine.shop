@@ -16,6 +16,13 @@ $tasks = new DeferredTasks();
 
 AppFactory::create(Config::fromEnvironment($root), $root, tasks: $tasks)->run();
 
-// M3 : tâches exécutées à la fin de la requête. M7 : fastcgi_finish_request() avant,
-// pour répondre à Shopify sans attendre l'envoi du mail.
-$tasks->run();
+// Réponse envoyée à Shopify avant l'envoi du mail (OVH : PHP-FPM, fastcgi_finish_request disponible).
+// Sans cette fonction (Apache mod_php en local), le traitement se fait avant la fin de la réponse.
+if ($tasks->count() > 0) {
+    ignore_user_abort(true);
+    set_time_limit(60);
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
+    $tasks->run();
+}

@@ -7,6 +7,9 @@ namespace App;
 use App\Controller\HealthController;
 use App\Controller\OrderEventController;
 use App\Controller\ScanController;
+use App\Mail\MailTransport;
+use App\Mail\QrMailBuilder;
+use App\Mail\SmtpTransport;
 use App\Repository\PdoPickupOrderRepository;
 use App\Repository\PdoScanRepository;
 use App\Repository\PickupOrderRepository;
@@ -16,6 +19,7 @@ use App\Service\DeferredTasks;
 use App\Service\DeliveryLog;
 use App\Service\OrderDecider;
 use App\Service\OrderEventHandler;
+use App\Service\PickupProcessor;
 use App\Service\QrGenerator;
 use App\Service\ShopifyHmac;
 use App\Service\Template;
@@ -41,6 +45,7 @@ final class AppFactory
         ?AlertLog $alerts = null,
         ?ScanRepository $scans = null,
         ?Template $templates = null,
+        ?MailTransport $transport = null,
     ): App {
         $connect ??= self::lazyConnection($config);
         $tasks ??= new DeferredTasks();
@@ -48,6 +53,16 @@ final class AppFactory
         $alerts ??= new AlertLog($projectRoot . '/var/log/alerts.log');
         $scans ??= new PdoScanRepository($connect);
         $templates ??= new Template($projectRoot . '/templates');
+        $transport ??= SmtpTransport::fromConfig($config);
+
+        $processor = new PickupProcessor(
+            $orders,
+            new QrMailBuilder($templates, new QrGenerator((string) $config->get('APP_URL', 'https://app.itsmadeleine.shop'))),
+            $transport,
+            $alerts,
+            $config->int('MAX_ATTEMPTS', 3),
+            self::allowlist($config->get('MAIL_ALLOWLIST')),
+        );
 
         $secret = $config->get('SHOPIFY_CLIENT_SECRET');
         $hmac = $secret === null ? null : new ShopifyHmac($secret);
@@ -61,15 +76,9 @@ final class AppFactory
             $orders,
             $alerts,
             $tasks,
-            // Traitement d'une commande `pending` : jeton (M4), mail (M5), bucket (M6), verrou (M7).
-            // Le jeton est enregistré avant tout envoi : un nouvel essai réutilise le même QR.
-            static function (int $pickupOrderId) use ($orders): void {
-                $token = $orders->assignToken($pickupOrderId, QrGenerator::newToken());
-                error_log(sprintf(
-                    'events: ligne %d %s, mail à venir (M5-M7)',
-                    $pickupOrderId,
-                    $token === null ? 'introuvable' : 'avec jeton',
-                ));
+            // Traitement d'une commande `pending` : prise en charge, jeton, mail (M5) ; bucket en M6.
+            static function (int $pickupOrderId) use ($processor): void {
+                error_log('events: ' . $processor->process($pickupOrderId));
             },
         );
 
@@ -90,6 +99,19 @@ final class AppFactory
         ));
 
         return $app;
+    }
+
+    /** @return list<string> adresses en minuscules ; vide = aucun filtre */
+    private static function allowlist(?string $value): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            static fn (string $address): string => strtolower(trim($address)),
+            explode(',', $value),
+        )));
     }
 
     /** @return \Closure(): PDO */
