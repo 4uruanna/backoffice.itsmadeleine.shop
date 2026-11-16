@@ -60,6 +60,8 @@ Le même jour, le mail **de la vraie commande** (même numéro, même lien de st
 
 **16/11, après changement du mot de passe et déploiement de M6** : #1109 **envoyé depuis le serveur** (15:27:54 UTC), #1110 refusé 43 s plus tard par le quota d'OVH (`550 5.7.0`, 15:28:37 UTC), correctement mis en `pending` / `rate_limited` sans essai compté. Le compteur d'OVH reste donc à environ 200 mails par heure pour `commandes@`, alors que l'API n'en envoie que quelques-uns : un autre expéditeur utilise ce compte, ou OVH compte autrement que ce qu'annonce le message. Pistes : autre appareil, site ou service configuré avec cette boîte ; redirection ou répondeur sur le compte ; nouvelle boîte dédiée pour comparer ; ticket au support OVH avec les heures exactes.
 
+Juste après, le même mail envoyé **depuis le poste** avec le même compte est **accepté**. Comme lors des essais précédents, le poste passe alors que le serveur est refusé : le blocage semble viser les envois **depuis l'hébergement** plutôt que le compte. Test décisif : une nouvelle boîte (`retrait@`) dans le `.env` du serveur. Si elle est aussi refusée depuis le serveur, solutions : ticket au support OVH, ou envoi par un service transactionnel en HTTPS (prévu en M9, à avancer ; DNS à ajouter).
+
 Les lignes déjà en `pending` avant ce déploiement (tests de M3, M4) ne partent pas : seule une nouvelle livraison déclenche l'envoi, le cron de M7 reprendra le reste.
 
 ## Critères de fin
