@@ -58,14 +58,14 @@ Méthode retenue : un échec **immédiat**, détecté par l'application (ou, au 
 | 4 | Panier mixte (tagué + non tagué) | Un mail |
 | 5 | Livraison en double (renvoyer depuis le tableau de bord de l'app si possible, sinon `curl` signé avec une fixture) | Aucun second mail |
 | 6 | Envoi en panne (`MAIL_FROM` vide dans `.env` → échec immédiat ; voir le déroulé ci-dessus) | `failed` → `error` au 3e échec, une alerte groupée |
-| 7 | Bucket saturé (`MAIL_MAX_PER_HOUR=1`, deux commandes) | Un mail, une commande `pending` / `rate_limited`, envoyée au passage suivant du cron après remise à 90 |
+| 7 | Bucket saturé (`MAIL_MAX_PER_HOUR=1`, deux commandes) | Un mail, une commande `pending` / `rate_limited`, envoyée au passage suivant du cron après remise à 90 ✅ 17/11 (#1126 à #1128) |
 | 8 | Commande sans e-mail client (brouillon sans client) | `error` / `no_email`, alerte |
 | 9 | Scan depuis le téléphone du staff connecté à l'admin | La commande s'ouvre (app Shopify ou navigateur) |
 | 10 | Scan depuis un téléphone non connecté | Page de connexion Shopify |
 | 11 | Commande annulée **après** l'envoi, puis scan | Page d'avertissement « annulée » avec le lien vers la commande |
 | 12 | Commande remboursée en totalité, puis scan | Page d'avertissement « remboursée » |
 | 13 | Commande remboursée partiellement, puis scan | Redirection normale |
-| 14 | Commande annulée **avant** l'envoi (bucket saturé) | Aucun mail ne part |
+| 14 | Commande annulée **avant** l'envoi (bucket saturé) | Aucun mail ne part ✅ 17/11 (#1126 à #1128) |
 | 15 | Jeton inventé (`/r/000…`) | `404` neutre |
 | 16 | Mail reçu sur Gmail et sur Outlook | Hors spam, QR affiché, lien de statut correct |
 | 17 | Si possible, une vraie commande en ligne payée avec un petit montant, puis remboursée | Même résultat que 1, puis 12 |
