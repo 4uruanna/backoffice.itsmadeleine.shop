@@ -31,7 +31,7 @@
 
 Tests relancés dans Docker Compose (PHP 8.5.12, PHPUnit 13.4.7) : **156 tests OK**, comme dans l'environnement de développement.
 
-**Fait sur OVH le 16/11 au soir** : migration `002` exécutée, `ALERT_EMAIL` renseignée, release déployée, tâche planifiée déclarée. **Reste : lire le journal du premier passage** (résumé, mails de test partis, alerte reçue), puis cocher les critères de fin.
+**Fait sur OVH le 16/11 au soir** : migration `002` exécutée, `ALERT_EMAIL` renseignée, release déployée, tâche planifiée déclarée. **Le 17/11 : le cron tourne sur OVH** et s'exécute correctement. Reste à confirmer la réception des mails de test (adresse de `MAIL_ALLOWLIST`) et de l'alerte groupée (`ALERT_EMAIL`) ; les critères d'envoi coupé et de bucket saturé, validés en local, seront rejoués en production en M8 (scénarios 6 et 7).
 
 Étapes suivies (pour mémoire) :
 
@@ -79,10 +79,10 @@ WHERE id = ? AND status IN ('pending','failed') AND revoked_at IS NULL;
 
 ## Critères de fin
 
-- Réponse au webhook en moins d'une seconde, même avec un envoi lent (simuler en local un SMTP qui ne répond pas).
-- Envoi coupé (mauvais mot de passe SMTP en local, ou `MAIL_FROM` refusé par l'hébergement) : la commande passe `failed`, le cron la rejoue, puis `error` au 3e échec, et une seule alerte part.
-- Bucket saturé : le cron vide la file au passage suivant, les plus anciennes d'abord.
-- Le cron tourne sur OVH et son journal montre le résumé.
+- ✅ (M5) Réponse au webhook en moins d'une seconde, même avec un envoi lent (simuler en local un SMTP qui ne répond pas) : réponse envoyée avant le traitement (`fastcgi_finish_request`).
+- Envoi coupé (mauvais mot de passe SMTP en local, ou `MAIL_FROM` refusé par l'hébergement) : la commande passe `failed`, le cron la rejoue, puis `error` au 3e échec, et une seule alerte part. ✅ en local (16/11) ; en production : scénario 6 de M8.
+- Bucket saturé : le cron vide la file au passage suivant, les plus anciennes d'abord. ✅ en local (16/11) ; en production : scénario 7 de M8.
+- ✅ (17/11) Le cron tourne sur OVH et son journal montre le résumé.
 
 ## Risques
 
