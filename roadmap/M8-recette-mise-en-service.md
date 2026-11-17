@@ -34,7 +34,9 @@ Résultat (17/11) : aucun mail sur l'heure glissante, `MAIL_MAX_PER_HOUR=1`. #11
 
 **Premier essai (17/11) : non concluant.** Avec `MAIL_FROM=commandes@example.com`, la commande est passée `sent` sans que le mail arrive. `mail()` remet le message au `sendmail` local de l'hébergement, qui l'accepte ; le refus d'OVH (`550 5.7.1 … From header domain does not align`, vu en M5b) vient **plus tard**, du relais, sous forme d'avis de non-remise. L'application ne peut pas le voir : ce n'est pas un moyen de provoquer un échec. Voir le risque ci-dessous.
 
-Méthode retenue : un échec **immédiat**, détecté par l'application.
+Le refus de M5b était lui aussi passé par `mail()` et n'était apparu que dans le panneau **Scripts e-mails** de l'espace client, pas dans `last_error`. Les erreurs remontées dans `last_error` le 16/11 venaient du SMTP (quota, classé `rate_limited` depuis M6).
+
+Méthode retenue : un échec **immédiat**, détecté par l'application (ou, au choix, `MAIL_TRANSPORT=smtp` avec un faux `SMTP_PASSWORD`).
 
 1. `MAIL_FROM=` (vide) dans le `.env` : l'envoi échoue tout de suite (`Configuration manquante : MAIL_FROM`).
 2. Un brouillon tagué marqué payé : 1er échec à la réception (`failed`, 1 essai).
@@ -42,7 +44,7 @@ Méthode retenue : un échec **immédiat**, détecté par l'application.
 4. Rétablir `MAIL_FROM=commandes@itsmadeleine.shop` : au passage suivant, **une** alerte arrive (la commande y figure) ; la commande reste en `error`, sans mail au client.
 5. Raccourci possible si le temps manque : après le 1er échec, `UPDATE pickup_orders SET attempts = 2 WHERE order_name = '#…';` pour passer en `error` dès le passage suivant.
 
-**Risque mis en évidence : refus différés invisibles.** Un mail refusé après coup (par le relais d'OVH, ou par la boîte du client : adresse inexistante, boîte pleine) reste `sent` en base, sans alerte. Atténuations en v1 : le client peut retirer avec son numéro de commande et une pièce d'identité (écrit dans le mail et à annoncer sur Shopify) ; surveiller les avis de non-remise dans la boîte `commandes@itsmadeleine.shop` pendant la surveillance renforcée (vérifier d'abord qu'ils y arrivent, OVH réécrivant l'expéditeur d'enveloppe). Lecture automatique des avis de non-remise : à étudier en M9.
+**Risque mis en évidence : refus différés invisibles.** Un mail refusé après coup (par le relais d'OVH, ou par la boîte du client : adresse inexistante, boîte pleine) reste `sent` en base, sans alerte. Atténuations en v1 : le client peut retirer avec son numéro de commande et une pièce d'identité (écrit dans le mail et à annoncer sur Shopify) ; surveiller les avis de non-remise dans l'espace client OVH (Hébergements → **Scripts e-mails**, là où le refus de M5b était apparu) pendant la surveillance renforcée, et accessoirement dans la boîte `commandes@itsmadeleine.shop`. Lecture automatique des avis de non-remise : à étudier en M9.
 
 ### Liste complète
 
@@ -77,7 +79,7 @@ Méthode retenue : un échec **immédiat**, détecté par l'application.
 - [ ] Taguer `retrait-qr` sur les vrais produits à retirer en boutique.
 - [ ] Brief du staff (5 min) : scanner avec l'appareil photo, rester connecté à l'app Shopify sur le téléphone, marquer la commande comme retirée dans Shopify, ne rien remettre si la page rouge s'affiche. Client sans QR (mail en indésirables, notamment Outlook) : numéro de commande et pièce d'identité de la personne au nom de laquelle la commande a été passée (comme l'indique le mail), commande retrouvée dans Shopify.
 - [ ] Vider ou conserver les lignes de test en base (les supprimer pour un suivi propre).
-- [ ] Surveillance renforcée jeudi 19 et vendredi 20 : requêtes de suivi matin et soir, boîte d'alertes, journal du cron, **avis de non-remise dans la boîte `commandes@itsmadeleine.shop`** (refus différés, invisibles pour l'application).
+- [ ] Surveillance renforcée jeudi 19 et vendredi 20 : requêtes de suivi matin et soir, boîte d'alertes, journal du cron, **avis de non-remise dans l'espace client OVH (Hébergements → Scripts e-mails)** (refus différés, invisibles pour l'application).
 
 ## Critères de fin
 
