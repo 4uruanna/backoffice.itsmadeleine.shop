@@ -35,4 +35,7 @@ Consolider ce qui a été sacrifié au délai, puis améliorer le service à par
 
 Jalon ouvert : chaque élément est fermé individuellement.
 
-- [ ] Refus différés (17/11, M8 scénario 6) : un mail accepté par `mail()` puis refusé par le relais d'OVH ou la boîte du client reste `sent`. Étudier la lecture des avis de non-remise de `commandes@` (IMAP) pour passer la commande en `error` et l'inclure dans l'alerte.
+- [ ] Refus différés (17/11, M8 scénario 6) : un mail accepté par `mail()` puis refusé par le relais d'OVH ou la boîte du client reste `sent`. Pistes, dans l'ordre :
+  1. **API OVH** : relever par le cron les avis de non-remise des Scripts e-mails de l'hébergement (endpoint à vérifier, du type `/hosting/web/{service}/email/bounces`), passer la commande concernée en `error` (`bounced`) et l'inclure dans l'alerte. Surveiller aussi l'état du service (OVH peut bloquer `mail()` si les rebonds se multiplient).
+  2. **Service transactionnel** (Mailjet, Brevo…) avec webhooks de remise et de rebond : vraie confirmation de remise au serveur du destinataire, et sans doute une meilleure délivrabilité sur Outlook. Écarté en M5b faute de besoin ; à reconsidérer selon les rebonds observés.
+  Dans tous les cas, ni la boîte de réception ni le dossier des indésirables ne sont observables : la preuve de réception reste le scan en boutique.
