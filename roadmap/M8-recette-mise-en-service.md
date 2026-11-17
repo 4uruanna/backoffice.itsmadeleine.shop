@@ -59,9 +59,9 @@ Méthode retenue : un échec **immédiat**, détecté par l'application (ou, au 
 | 5 | Livraison en double (renvoyer depuis le tableau de bord de l'app si possible, sinon `curl` signé avec une fixture) | Aucun second mail — 17/11 (#1139) : Shopify a envoyé deux livraisons (`create` et `update`) à la même milliseconde, puis les deux ont été rejouées à l'identique (signature d'origine) → `200` et `200` ; idem pour #1140 (panier mixte). ✅ `sent_at` inchangé (20:21:54 et 20:26:37 UTC) : aucun second envoi |
 | 6 | Envoi en panne (`MAIL_FROM` vide dans `.env` → échec immédiat ; voir le déroulé ci-dessus) | `failed` → `error` au 3e échec, une alerte groupée — ⏭️ **non rejoué en production** (décision du 17/11 : cas jugé très peu probable). Couvert par les tests unitaires et d'intégration, le passage complet du cron en local (16/11) et, en production, l'insertion `docs/test-cron.sql` (échec rejoué, alerte groupée reçue) ; seul le passage `failed` → `error` / `max_attempts` n'a pas été vu en production |
 | 7 | Bucket saturé (`MAIL_MAX_PER_HOUR=1`, deux commandes) | Un mail, une commande `pending` / `rate_limited`, envoyée au passage suivant du cron après remise à 90 ✅ 17/11 (#1126 à #1128) |
-| 8 | Commande sans e-mail client (brouillon sans client) | `error` / `no_email`, alerte |
-| 9 | Scan depuis le téléphone du staff connecté à l'admin | La commande s'ouvre (app Shopify ou navigateur) |
-| 10 | Scan depuis un téléphone non connecté | Page de connexion Shopify |
+| 8 | Commande sans e-mail client (brouillon sans client) | `error` / `no_email`, alerte ✅ 17/11 |
+| 9 | Scan depuis le téléphone du staff connecté à l'admin | La commande s'ouvre (app Shopify ou navigateur) ✅ 17/11 (#1136) |
+| 10 | Scan depuis un téléphone non connecté | Page de connexion Shopify ✅ 17/11 (#1136) |
 | 11 | Commande annulée **après** l'envoi, puis scan | Page d'avertissement « annulée » avec le lien vers la commande |
 | 12 | Commande remboursée en totalité, puis scan | Page d'avertissement « remboursée » |
 | 13 | Commande remboursée partiellement, puis scan | Redirection normale |
