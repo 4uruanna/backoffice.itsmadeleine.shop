@@ -34,3 +34,5 @@ Consolider ce qui a été sacrifié au délai, puis améliorer le service à par
 ## Critères de fin
 
 Jalon ouvert : chaque élément est fermé individuellement.
+
+- [ ] Refus différés (17/11, M8 scénario 6) : un mail accepté par `mail()` puis refusé par le relais d'OVH ou la boîte du client reste `sent`. Étudier la lecture des avis de non-remise de `commandes@` (IMAP) pour passer la commande en `error` et l'inclure dans l'alerte.
