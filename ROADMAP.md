@@ -10,7 +10,7 @@
 
 ## État au lundi 16/11 au soir
 
-**Environ un jour d'avance**, conservé malgré le blocage SMTP d'OVH. M0 à M4 sont terminés et validés en production. M5 (mail), M6 (bucket) et M5b (envoi par la fonction `mail()` de l'hébergement) sont en production : le mail de retrait arrive en boîte de réception sur Gmail, en indésirables sur Outlook (authentification complète, `SCL 5`). **M7** (cron de rattrapage, alertes groupées, purge) : code fait, testé et **déployé sur OVH** le 16/11 au soir (migration `002`, `ALERT_EMAIL`, release, tâche planifiée). Le 17/11, le cron tourne correctement sur OVH. **Prochaine étape : M8** (recette et mise en service), voir l'état en tête de [M7](roadmap/M7-fiabilite-cron.md). Reliquats non bloquants au début de [M4](roadmap/M4-qr-et-scan.md#reprise-au-démarrage--reliquats-de-m0-à-m3).
+**Environ un jour d'avance**, conservé malgré le blocage SMTP d'OVH. M0 à M4 sont terminés et validés en production. M5 (mail), M6 (bucket) et M5b (envoi par la fonction `mail()` de l'hébergement) sont en production : le mail de retrait arrive en boîte de réception sur Gmail, en indésirables sur Outlook (authentification complète, `SCL 5`). **M7** (cron de rattrapage, alertes groupées, purge) : code fait, testé et **déployé sur OVH** le 16/11 au soir (migration `002`, `ALERT_EMAIL`, release, tâche planifiée). Le 17/11, le cron est **validé en production** (envois, commande annulée ignorée, alerte groupée). **Prochaine étape : M8** (recette et mise en service), voir l'état en tête de [M7](roadmap/M7-fiabilite-cron.md). Reliquats non bloquants au début de [M4](roadmap/M4-qr-et-scan.md#reprise-au-démarrage--reliquats-de-m0-à-m3).
 
 | Jalon | État | Reste à faire |
 |---|---|---|
@@ -22,7 +22,7 @@
 | M5 | Mail et gabarits faits (16/11) | OVH bloque l'envoi SMTP depuis l'hébergement → envoi par `mail()` ([M5b](roadmap/M5b-envoi-hebergement.md)) |
 | M5b | ✅ Envoi rétabli par `mail()` de l'hébergement (16/11) ; Gmail : boîte de réception | **Outlook : indésirables** → en-têtes à relever, atténuations (texte, message aux clients, consigne au staff) |
 | M6 | Code fait (16/11), testé en local ; `GET_LOCK` OK sur OVH | Déployer, commande de test |
-| M7 | ✅ En production (17/11) : le cron tourne sur OVH ; 156 tests OK sous PHP 8.5 | Test par insertion SQL : 3 mails envoyés par le cron (17/11, 09:00 UTC). Confirmer la réception de l'alerte groupée ; envoi coupé et bucket saturé rejoués en M8 |
+| M7 | ✅ En production (17/11) : le cron tourne sur OVH ; 156 tests OK sous PHP 8.5 | Validé par insertion SQL (17/11, 09:00 UTC) : 3 mails envoyés, annulée jamais envoyée, alerte groupée envoyée. Supprimer les lignes `#TEST-CRON-%` ; envoi coupé et bucket saturé rejoués en M8 |
 | M8 | À faire | — |
 
 ## Planning
