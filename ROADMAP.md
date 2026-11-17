@@ -22,7 +22,7 @@
 | M5 | Mail et gabarits faits (16/11) | OVH bloque l'envoi SMTP depuis l'hébergement → envoi par `mail()` ([M5b](roadmap/M5b-envoi-hebergement.md)) |
 | M5b | ✅ Envoi rétabli par `mail()` de l'hébergement (16/11) ; Gmail : boîte de réception | **Outlook : indésirables** → en-têtes à relever, atténuations (texte, message aux clients, consigne au staff) |
 | M6 | Code fait (16/11), testé en local ; `GET_LOCK` OK sur OVH | Déployer, commande de test |
-| M7 | ✅ En production (17/11) : le cron tourne sur OVH ; 156 tests OK sous PHP 8.5 | Commandes de test toutes annulées : aucun mail envoyé, comme prévu. Confirmer la réception de l'alerte groupée ; envoi coupé et bucket saturé rejoués en M8 |
+| M7 | ✅ En production (17/11) : le cron tourne sur OVH ; 156 tests OK sous PHP 8.5 | Test par insertion SQL : 3 mails envoyés par le cron (17/11, 09:00 UTC). Confirmer la réception de l'alerte groupée ; envoi coupé et bucket saturé rejoués en M8 |
 | M8 | À faire | — |
 
 ## Planning
