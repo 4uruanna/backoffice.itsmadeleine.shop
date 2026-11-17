@@ -16,6 +16,28 @@ Rejouer tous les scénarios sur la boutique de production, avec le code final d�
 
 ## Scénarios
 
+### Déroulé proposé pour les scénarios liés au cron (7 + 14, puis 6)
+
+Les deux modifient le `.env` et dépendent du bucket : **l'un après l'autre**, jamais en même temps. Compter 3 à 4 passages du cron au total.
+
+**Scénarios 7 et 14 (bucket saturé, annulation avant l'envoi)** — un passage du cron :
+
+1. Requête 5 de `docs/requetes-suivi.sql` : nombre de mails partis sur l'heure glissante (N). Mettre `MAIL_MAX_PER_HOUR` à N + 1 dans le `.env` (1 si aucun mail depuis une heure).
+2. Trois brouillons tagués, client = ton adresse, marqués payés, à une minute d'écart : 7a, 7b, 14.
+3. Attendu tout de suite : 7a reçu ; 7b et 14 en `pending` / `rate_limited`.
+4. Annuler 14 dans Shopify (révocation).
+5. Remettre `MAIL_MAX_PER_HOUR=90`, attendre le passage du cron : 7b reçu, 14 reste `pending` révoquée, **aucun mail pour 14**.
+
+**Scénario 6 (envoi en panne)** — trois passages du cron :
+
+1. `MAIL_FROM` sur un autre domaine dans le `.env` (refusé par l'hébergement, vu en M5b).
+2. Un brouillon tagué marqué payé : 1er échec à la réception (`failed`, 1 essai).
+3. Passage du cron : 2e échec (`failed`, 2 essais). Passage suivant : 3e échec → `error` / `max_attempts`. **L'alerte part par le même transport : elle échoue aussi** (« échec d'envoi de l'alerte, nouvel essai au passage suivant »), c'est attendu.
+4. Rétablir `MAIL_FROM` : au passage suivant, **une** alerte arrive (la commande y figure) ; la commande reste en `error`, sans mail au client.
+5. Raccourci possible si le temps manque : après le 1er échec, `UPDATE pickup_orders SET attempts = 2 WHERE order_name = '#…';` pour passer en `error` dès le passage suivant.
+
+### Liste complète
+
 **Cadence du cron** : il ne passe qu'une fois par heure (sauf lancement à la main par SSH, si l'offre le permet). Le scénario 6 demande trois passages (environ 2 h), le 7 un passage : **les lancer en premier mercredi**, puis dérouler les autres en attendant. Penser à remettre `MAIL_MAX_PER_HOUR` à sa valeur (90) et `MAIL_FROM` après coup.
 
 | # | Scénario | Attendu |
