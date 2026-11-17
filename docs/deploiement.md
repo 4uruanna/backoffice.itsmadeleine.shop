@@ -88,6 +88,8 @@ Le cron envoie les mails en attente (`pending`, `failed`) dans la limite du buck
 
 Suivi : requêtes prêtes à coller dans phpMyAdmin dans [`requetes-suivi.sql`](requetes-suivi.sql).
 
+Test du cron sans commande Shopify : [`test-cron.sql`](test-cron.sql) (cinq lignes fictives, résultat attendu, nettoyage).
+
 ## Mise à jour du `.env` sur le serveur
 
 Clés ajoutées depuis le premier déploiement :
