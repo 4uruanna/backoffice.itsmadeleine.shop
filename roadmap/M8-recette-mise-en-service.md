@@ -28,7 +28,7 @@ Les deux modifient le `.env` et dépendent du bucket : **l'un après l'autre**, 
 4. Annuler 14 dans Shopify (révocation).
 5. Remettre `MAIL_MAX_PER_HOUR=90`, attendre le passage du cron : 7b reçu, 14 reste `pending` révoquée, **aucun mail pour 14**.
 
-Résultat (17/11) : aucun mail sur l'heure glissante, `MAIL_MAX_PER_HOUR=1`. #1126 (7a) reçu ; #1127 (7b) et #1128 (14) en `pending` / `rate_limited` ; #1128 annulée ; `MAIL_MAX_PER_HOUR` remis à 90. En attente du passage du cron (#1127 envoyée, #1128 sans mail).
+Résultat (17/11) : aucun mail sur l'heure glissante, `MAIL_MAX_PER_HOUR=1`. #1126 (7a) reçu ; #1127 (7b) et #1128 (14) en `pending` / `rate_limited` ; #1128 annulée ; `MAIL_MAX_PER_HOUR` remis à 90. Passage de 18:00 UTC : #1127 envoyée, #1128 restée `pending` révoquée, sans mail. **Scénarios 7 et 14 validés.**
 
 **Scénario 6 (envoi en panne)** — trois passages du cron :
 
