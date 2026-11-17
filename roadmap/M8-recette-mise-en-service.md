@@ -55,8 +55,8 @@ Méthode retenue : un échec **immédiat**, détecté par l'application (ou, au 
 | 1 | Commande taguée, payée à la création | Mail reçu en quelques secondes, ligne `sent` ✅ 17/11 (#1136) |
 | 2 | Commande taguée, payée plus tard | Un seul mail, au passage à payée ✅ 17/11 (#1137) |
 | 3 | Commande non taguée | Aucun mail, ligne `ignored` ✅ 17/11 (#1138) |
-| 4 | Panier mixte (tagué + non tagué) | Un mail — 1er essai (#1139) : une seule ligne de produit dans la livraison, pas un panier mixte, à refaire |
-| 5 | Livraison en double (renvoyer depuis le tableau de bord de l'app si possible, sinon `curl` signé avec une fixture) | Aucun second mail — 17/11 (#1139) : Shopify a envoyé deux livraisons (`create` et `update`) à la même milliseconde, puis les deux ont été rejouées à l'identique (signature d'origine) → `200` et `200`, à confirmer : aucun second mail |
+| 4 | Panier mixte (tagué + non tagué) | Un mail — 17/11 (#1140) : livraison à deux lignes (une sans tag, une `retrait-qr`), à confirmer : un seul mail |
+| 5 | Livraison en double (renvoyer depuis le tableau de bord de l'app si possible, sinon `curl` signé avec une fixture) | Aucun second mail — 17/11 (#1139) : Shopify a envoyé deux livraisons (`create` et `update`) à la même milliseconde, puis les deux ont été rejouées à l'identique (signature d'origine) → `200` et `200` ; idem pour #1140 (panier mixte). À confirmer : aucun second mail pour #1139 ni #1140 |
 | 6 | Envoi en panne (`MAIL_FROM` vide dans `.env` → échec immédiat ; voir le déroulé ci-dessus) | `failed` → `error` au 3e échec, une alerte groupée |
 | 7 | Bucket saturé (`MAIL_MAX_PER_HOUR=1`, deux commandes) | Un mail, une commande `pending` / `rate_limited`, envoyée au passage suivant du cron après remise à 90 ✅ 17/11 (#1126 à #1128) |
 | 8 | Commande sans e-mail client (brouillon sans client) | `error` / `no_email`, alerte |
