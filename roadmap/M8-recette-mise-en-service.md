@@ -52,9 +52,9 @@ Méthode retenue : un échec **immédiat**, détecté par l'application (ou, au 
 
 | # | Scénario | Attendu |
 |---|---|---|
-| 1 | Commande taguée, payée à la création | Mail reçu en quelques secondes, ligne `sent` |
-| 2 | Commande taguée, payée plus tard | Un seul mail, au passage à payée |
-| 3 | Commande non taguée | Aucun mail, ligne `ignored` |
+| 1 | Commande taguée, payée à la création | Mail reçu en quelques secondes, ligne `sent` ✅ 17/11 (#1136) |
+| 2 | Commande taguée, payée plus tard | Un seul mail, au passage à payée ✅ 17/11 (#1137) |
+| 3 | Commande non taguée | Aucun mail, ligne `ignored` ✅ 17/11 (#1138) |
 | 4 | Panier mixte (tagué + non tagué) | Un mail |
 | 5 | Livraison en double (renvoyer depuis le tableau de bord de l'app si possible, sinon `curl` signé avec une fixture) | Aucun second mail |
 | 6 | Envoi en panne (`MAIL_FROM` vide dans `.env` → échec immédiat ; voir le déroulé ci-dessus) | `failed` → `error` au 3e échec, une alerte groupée |
@@ -74,6 +74,7 @@ Méthode retenue : un échec **immédiat**, détecté par l'application (ou, au 
 
 ## Mise en service
 
+- [ ] Avant de vider `MAIL_ALLOWLIST` : #1134 (17/11, `pending` / `not_allowlisted`, adresse hors liste) — commande de test à annuler, ou vraie commande qui partira à la mise en service : à vérifier dans Shopify.
 - [ ] **Vider `MAIL_ALLOWLIST`** dans le `.env` du serveur (garde-fou de M5), puis vérifier les commandes restées en attente : `SELECT order_name, created_at FROM pickup_orders WHERE status = 'pending' AND pending_reason = 'not_allowlisted';` Ce sont de vraies commandes : le cron (M7) leur enverra le mail au passage suivant.
 - [ ] Annuler et archiver toutes les commandes de test ; laisser le produit de test non publié (ou l'archiver).
 - [ ] Taguer `retrait-qr` sur les vrais produits à retirer en boutique.
