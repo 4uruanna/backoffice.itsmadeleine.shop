@@ -31,7 +31,7 @@
 
 Tests relancés dans Docker Compose (PHP 8.5.12, PHPUnit 13.4.7) : **156 tests OK**, comme dans l'environnement de développement.
 
-**Fait sur OVH le 16/11 au soir** : migration `002` exécutée, `ALERT_EMAIL` renseignée, release déployée, tâche planifiée déclarée. **Le 17/11 : le cron tourne sur OVH** et s'exécute correctement. Reste à confirmer la réception des mails de test (adresse de `MAIL_ALLOWLIST`) et de l'alerte groupée (`ALERT_EMAIL`) ; les critères d'envoi coupé et de bucket saturé, validés en local, seront rejoués en production en M8 (scénarios 6 et 7).
+**Fait sur OVH le 16/11 au soir** : migration `002` exécutée, `ALERT_EMAIL` renseignée, release déployée, tâche planifiée déclarée. **Le 17/11 : le cron tourne sur OVH** et s'exécute correctement. Aucun mail de test n'est parti : toutes les commandes de test avaient été annulées, et une commande révoquée n'est jamais envoyée (comportement attendu, vérifié en production). Reste à confirmer la réception de l'alerte groupée (`ALERT_EMAIL`), qui liste aussi les commandes en `error` annulées ; les critères d'envoi coupé et de bucket saturé, validés en local, seront rejoués en production en M8 (scénarios 6 et 7).
 
 Étapes suivies (pour mémoire) :
 
