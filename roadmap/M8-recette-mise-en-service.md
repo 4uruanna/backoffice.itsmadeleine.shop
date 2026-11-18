@@ -62,11 +62,11 @@ Méthode retenue : un échec **immédiat**, détecté par l'application (ou, au 
 | 8 | Commande sans e-mail client (brouillon sans client) | `error` / `no_email`, alerte ✅ 17/11 |
 | 9 | Scan depuis le téléphone du staff connecté à l'admin | La commande s'ouvre (app Shopify ou navigateur) ✅ 17/11 (#1136) |
 | 10 | Scan depuis un téléphone non connecté | Page de connexion Shopify ✅ 17/11 (#1136) |
-| 11 | Commande annulée **après** l'envoi, puis scan | Page d'avertissement « annulée » avec le lien vers la commande |
-| 12 | Commande remboursée en totalité, puis scan | Page d'avertissement « remboursée » |
-| 13 | Commande remboursée partiellement, puis scan | Redirection normale |
+| 11 | Commande annulée **après** l'envoi, puis scan | Page d'avertissement « annulée » avec le lien vers la commande ✅ 17/11 (#1136) |
+| 12 | Commande remboursée en totalité, puis scan | Page d'avertissement « remboursée » ✅ 17/11 (#1137) |
+| 13 | Commande remboursée partiellement, puis scan | Redirection normale ✅ 17/11 (#1140) |
 | 14 | Commande annulée **avant** l'envoi (bucket saturé) | Aucun mail ne part ✅ 17/11 (#1126 à #1128) |
-| 15 | Jeton inventé (`/r/000…`) | `404` neutre |
+| 15 | Jeton inventé (`/r/000…`) | `404` neutre ✅ 18/11 : `404` « QR code non reconnu », `no-store`, `noindex`, sans référent |
 | 16 | Mail reçu sur Gmail et sur Outlook | Hors spam, QR affiché, lien de statut correct |
 | 17 | Si possible, une vraie commande en ligne payée avec un petit montant, puis remboursée | Même résultat que 1, puis 12 |
 
