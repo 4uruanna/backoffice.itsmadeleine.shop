@@ -23,7 +23,7 @@
 | M5b | ✅ Envoi rétabli par `mail()` de l'hébergement (16/11) ; Gmail : boîte de réception | **Outlook : indésirables** → en-têtes à relever, atténuations (texte, message aux clients, consigne au staff) |
 | M6 | Code fait (16/11), testé en local ; `GET_LOCK` OK sur OVH | Déployer, commande de test |
 | M7 | ✅ En production (17/11) : le cron tourne sur OVH ; 156 tests OK sous PHP 8.5 | Validé par insertion SQL (17/11, 09:00 UTC) : 3 mails envoyés, annulée jamais envoyée, alerte groupée envoyée. Supprimer les lignes `#TEST-CRON-%` ; envoi coupé et bucket saturé rejoués en M8 |
-| M8 | À faire | — |
+| M8 | Recette faite (17-18/11) : 16 scénarios sur 17 validés, le 6 non rejoué (décision) | Mise en service : nettoyage des tests, `MAIL_ALLOWLIST` vidée, produits tagués, brief du staff |
 
 ## Planning
 

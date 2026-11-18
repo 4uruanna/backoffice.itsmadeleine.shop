@@ -67,10 +67,12 @@ Méthode retenue : un échec **immédiat**, détecté par l'application (ou, au 
 | 13 | Commande remboursée partiellement, puis scan | Redirection normale ✅ 17/11 (#1140) |
 | 14 | Commande annulée **avant** l'envoi (bucket saturé) | Aucun mail ne part ✅ 17/11 (#1126 à #1128) |
 | 15 | Jeton inventé (`/r/000…`) | `404` neutre ✅ 18/11 : `404` « QR code non reconnu », `no-store`, `noindex`, sans référent |
-| 16 | Mail reçu sur Gmail et sur Outlook | Hors spam, QR affiché, lien de statut correct |
-| 17 | Si possible, une vraie commande en ligne payée avec un petit montant, puis remboursée | Même résultat que 1, puis 12 |
+| 16 | Mail reçu sur Gmail et sur Outlook | Hors spam, QR affiché, lien de statut correct ✅ 18/11 |
+| 17 | Si possible, une vraie commande en ligne payée avec un petit montant, puis remboursée | Même résultat que 1, puis 12 ✅ 18/11 (vraie commande en ligne, puis remboursée) |
 
 - [ ] Rétablir `.env` après les scénarios 6 et 7 (`MAIL_FROM`, `MAIL_MAX_PER_HOUR`).
+
+**Bilan de la recette (18/11)** : 16 scénarios sur 17 validés en production (1 à 5, 7 à 17) ; le 6 n'a pas été rejoué (voir sa ligne). Critère de fin atteint.
 
 ## Mise en service
 
