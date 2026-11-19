@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Support;
 
+use App\Domain\Decision;
 use App\Domain\OrderSnapshot;
 use App\Repository\PickupOrderRepository;
 
@@ -51,7 +52,7 @@ final class InMemoryPickupOrderRepository implements PickupOrderRepository
     public function resumeFromPayloadError(OrderSnapshot $order, string $status, ?string $errorCode, ?string $webhookId): ?int
     {
         $row = $this->rows[$order->shopifyOrderId] ?? null;
-        if ($row === null || $row['status'] !== 'error' || $row['error_code'] !== 'payload_errors') {
+        if ($row === null || $row['status'] !== 'error' || !in_array($row['error_code'], Decision::RESUMABLE_ERRORS, true)) {
             return null;
         }
 

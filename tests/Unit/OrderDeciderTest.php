@@ -48,7 +48,35 @@ final class OrderDeciderTest extends TestCase
         $body = Payloads::order();
         $body['data']['order'] = ['name' => '#1'];
 
-        self::assertSame(Decision::RECORD_PAYLOAD_ERROR, $this->decide($body)->action);
+        $decision = $this->decide($body);
+
+        self::assertSame(Decision::RECORD_PAYLOAD_ERROR, $decision->action);
+        self::assertSame(Decision::ERROR_PAYLOAD, $decision->errorCode);
+        self::assertSame('data.order inutilisable', $decision->reason);
+    }
+
+    public function testCommandeNulleSansErrorsEstUneCommandeIntrouvable(): void
+    {
+        // Cas du 19/11 : commande supprimée dans Shopify, la requête de l'abonnement renvoie order: null.
+        $body = Payloads::order(action: 'update');
+        $body['data']['order'] = null;
+
+        $decision = $this->decide($body);
+
+        self::assertSame(Decision::RECORD_PAYLOAD_ERROR, $decision->action);
+        self::assertSame(Decision::STATUS_ERROR, $decision->status);
+        self::assertSame(Decision::ERROR_ORDER_NOT_FOUND, $decision->errorCode);
+        self::assertStringContainsString('introuvable', $decision->reason);
+        self::assertStringContainsString('update', $decision->reason);
+    }
+
+    public function testCommandeNulleSansIdentifiantNeFaitRien(): void
+    {
+        $body = Payloads::order();
+        $body['data']['order'] = null;
+        unset($body['query_variables']);
+
+        self::assertSame(Decision::NOTHING, $this->decide($body)->action);
     }
 
     public function testAnnuleeRevoquee(): void

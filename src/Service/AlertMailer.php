@@ -23,6 +23,8 @@ final readonly class AlertMailer
 
     private const CODES = [
         'payload_errors' => 'livraison Shopify avec errors : commande non traitée (une livraison valide la reprendra)',
+        'order_not_found' => 'Shopify ne trouve pas cette commande (le plus souvent : supprimée, par exemple une commande de test) : '
+            . 'ouvrir le lien ; si elle n\'existe plus, rien à envoyer, supprimer la ligne (docs/requetes-suivi.sql, requête 9)',
         'no_email' => 'commande sans e-mail client : aucun QR envoyé, retrait avec le numéro de commande et une pièce d\'identité',
         'max_attempts' => 'mail de retrait non envoyé après plusieurs essais : voir la dernière erreur',
     ];

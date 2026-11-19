@@ -47,3 +47,38 @@ SELECT id, order_name, status, pending_reason, error_code, attempts, last_error,
        (SELECT COUNT(*) FROM scans WHERE pickup_order_id = p.id) AS scans
   FROM pickup_orders p
  WHERE order_name = '#1094';
+
+-- 8. Lignes sans commande lisible (payload_errors, order_not_found) : order_name = '#<id>' quand
+--    Shopify n'a pas renvoyé la commande. Les identifiants Shopify sont chronologiques : les
+--    commandes voisines situent la date de création. Ouvrir ensuite le lien admin :
+--    https://admin.shopify.com/store/<SHOPIFY_STORE_HANDLE>/orders/<shopify_order_id>
+--    introuvable = commande supprimée (souvent une commande de test) → requête 9 ;
+--    commande existante, payée, avec un produit tagué → requête 10.
+SELECT p.id, p.shopify_order_id, p.order_name, p.error_code, p.last_error, p.webhook_id, p.created_at,
+       (SELECT q.order_name FROM pickup_orders q
+         WHERE q.shopify_order_id < p.shopify_order_id
+           AND COALESCE(q.error_code, '') NOT IN ('payload_errors', 'order_not_found')
+         ORDER BY q.shopify_order_id DESC LIMIT 1) AS commande_precedente,
+       (SELECT q.order_name FROM pickup_orders q
+         WHERE q.shopify_order_id > p.shopify_order_id
+           AND COALESCE(q.error_code, '') NOT IN ('payload_errors', 'order_not_found')
+         ORDER BY q.shopify_order_id LIMIT 1) AS commande_suivante
+  FROM pickup_orders p
+ WHERE p.status = 'error' AND p.error_code IN ('payload_errors', 'order_not_found')
+ ORDER BY p.created_at DESC;
+
+-- 9. Supprimer une ligne de commande supprimée dans Shopify (vérifiée avec la requête 8).
+--    Remplacer l'identifiant ; ne touche ni une ligne valide ni une ligne qui a un QR.
+DELETE FROM pickup_orders
+ WHERE shopify_order_id = 1234567890123
+   AND status = 'error' AND error_code IN ('payload_errors', 'order_not_found') AND token IS NULL;
+
+-- 10. Reprise manuelle d'une vraie commande (existante dans Shopify, payée, non annulée, produit
+--     tagué) : renseigner le numéro et l'e-mail lus dans l'admin. Le cron envoie le QR au passage
+--     suivant (une fois par heure). Sans lien de statut, le mail part sans ce lien.
+UPDATE pickup_orders
+   SET order_name = '#1150', customer_email = 'client@example.com', status_page_url = NULL,
+       status = 'pending', pending_reason = NULL, error_code = NULL, attempts = 0,
+       last_error = NULL, alerted_at = NULL, updated_at = UTC_TIMESTAMP()
+ WHERE shopify_order_id = 1234567890123
+   AND status = 'error' AND error_code IN ('payload_errors', 'order_not_found');

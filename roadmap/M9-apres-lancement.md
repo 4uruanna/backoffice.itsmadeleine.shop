@@ -15,6 +15,15 @@ Consolider ce qui a été sacrifié au délai, puis améliorer le service à par
 - [ ] **CI des tests** sur chaque push (PHPUnit + MySQL en service).
 - [ ] Relire les journaux pour vérifier le délai et les nouveaux essais d'Events, et documenter les valeurs observées.
 
+## Incident du 19/11 : lignes `error` / `payload_errors` « data.order inutilisable »
+
+- **Constat** : deux lignes ajoutées après la mise en service, `order_name` = `#<shopify_order_id>`, aucune commande Shopify manquante en base.
+- **Cause probable** : une livraison `Order` dont la requête s'exécute alors que la commande n'existe plus. `order(id:)` renvoie alors `null` **sans** `errors`. L'app n'ayant pas de nom à enregistrer, elle crée une ligne avec `#<id>`. Cas typique : commandes de test annulées puis supprimées dans Shopify, après suppression de leurs lignes en base lors du nettoyage de mise en service. Aucun client à servir.
+- **Vérification** : ouvrir `https://admin.shopify.com/store/<handle>/orders/<shopify_order_id>` (introuvable = supprimée) ; requête 8 de `docs/requetes-suivi.sql` (commandes voisines par identifiant, chronologique chez Shopify). Puis requête 9 (suppression) ou, si la commande existe, requête 10 (reprise manuelle).
+- [x] Code distinct `order_not_found` (au lieu de `payload_errors`), alerte qui dit quoi faire, reprise par une livraison valide ultérieure.
+- [x] Copie brute des livraisons sans commande exploitable dans `var/log/deliveries-anomalies/`, même avec `DEBUG_DELIVERIES=0` (purgée après 30 jours) : la prochaine fois, la cause se lira dans le fichier.
+- [ ] Après déploiement : vérifier que le dossier `var/log/deliveries-anomalies/` est bien créé à la première anomalie (droits d'écriture sur `var/log/`).
+
 ## Améliorations (priorité moyenne)
 
 - [ ] Filtrer côté Shopify : déplacer le contrôle du tag (et des statuts utiles) dans `query_filter`, pour ne recevoir que les commandes concernées.

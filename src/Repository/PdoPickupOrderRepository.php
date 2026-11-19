@@ -54,7 +54,7 @@ final class PdoPickupOrderRepository implements PickupOrderRepository
             "UPDATE pickup_orders
                 SET order_name = ?, customer_email = ?, status_page_url = ?, status = ?, error_code = ?,
                     attempts = 0, last_error = NULL, alerted_at = NULL, webhook_id = ?, updated_at = UTC_TIMESTAMP()
-              WHERE shopify_order_id = ? AND status = 'error' AND error_code = 'payload_errors'"
+              WHERE shopify_order_id = ? AND status = 'error' AND error_code IN ('payload_errors', 'order_not_found')"
         );
         $statement->execute([
             self::cut($order->name, 32),

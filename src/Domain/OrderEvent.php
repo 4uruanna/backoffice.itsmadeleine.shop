@@ -18,6 +18,8 @@ final readonly class OrderEvent
         public bool $hasErrors,
         public ?string $errorSummary,
         public ?string $action,
+        /** `data.order` présent et nul : réponse de Shopify pour une commande introuvable (supprimée). */
+        public bool $orderNotFound = false,
     ) {
     }
 
@@ -46,6 +48,9 @@ final readonly class OrderEvent
             hasErrors: $hasErrors,
             errorSummary: $hasErrors ? self::summarize($errors) : null,
             action: is_string($body['action'] ?? null) ? $body['action'] : null,
+            orderNotFound: is_array($body['data'] ?? null)
+                && array_key_exists('order', $body['data'])
+                && $body['data']['order'] === null,
         );
     }
 

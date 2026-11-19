@@ -88,7 +88,12 @@ final class AppFactory
             is_file($versionFile) ? trim((string) file_get_contents($versionFile)) : 'dev',
             strtolower((string) $config->get('MAIL_TRANSPORT', 'smtp')),
         ));
-        $app->post('/webhooks/shopify/order-paid', new OrderEventController($hmac, $handler, $deliveryLog));
+        $app->post('/webhooks/shopify/order-paid', new OrderEventController(
+            $hmac,
+            $handler,
+            $deliveryLog,
+            new DeliveryLog($projectRoot . '/var/log/deliveries-anomalies'),
+        ));
         $app->get('/r/{token}', new ScanController(
             $orders,
             $scans,

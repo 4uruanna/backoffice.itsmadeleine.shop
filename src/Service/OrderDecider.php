@@ -32,8 +32,18 @@ final readonly class OrderDecider
         }
 
         if ($order === null) {
-            return $event->shopifyOrderId === null
-                ? Decision::nothing('charge utile sans commande')
+            if ($event->shopifyOrderId === null) {
+                return Decision::nothing('charge utile sans commande');
+            }
+
+            // data.order nul sans errors : réponse de Shopify pour une commande qu'il ne trouve
+            // pas, en pratique une commande supprimée (19/11 : deux lignes de ce type après la
+            // mise en service). Code distinct de payload_errors pour que l'alerte le dise.
+            return $event->orderNotFound
+                ? Decision::orderNotFound(sprintf(
+                    'commande introuvable dans Shopify (data.order nul, livraison %s) : supprimée ?',
+                    $event->action ?? '?',
+                ))
                 : Decision::payloadError('data.order inutilisable');
         }
 

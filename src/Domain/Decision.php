@@ -11,7 +11,7 @@ namespace App\Domain;
 final readonly class Decision
 {
     public const RECORD = 'record';                 // payée : reprise d'une ligne payload_errors, sinon insertion
-    public const RECORD_PAYLOAD_ERROR = 'payload_error'; // errors : insertion error/payload_errors si absente
+    public const RECORD_PAYLOAD_ERROR = 'payload_error'; // errors ou commande introuvable : insertion en error si absente
     public const REVOKE = 'revoke';                 // annulée ou remboursée en totalité
     public const NOTHING = 'nothing';
 
@@ -20,6 +20,10 @@ final readonly class Decision
     public const STATUS_ERROR = 'error';
 
     public const ERROR_PAYLOAD = 'payload_errors';
+    /** `data.order` nul sans `errors` : Shopify ne trouve pas la commande (le plus souvent : supprimée). */
+    public const ERROR_ORDER_NOT_FOUND = 'order_not_found';
+    /** Codes d'erreur qu'une livraison valide ultérieure peut reprendre. */
+    public const RESUMABLE_ERRORS = [self::ERROR_PAYLOAD, self::ERROR_ORDER_NOT_FOUND];
     public const ERROR_NO_EMAIL = 'no_email';
 
     private function __construct(
@@ -39,6 +43,11 @@ final readonly class Decision
     public static function payloadError(string $reason): self
     {
         return new self(self::RECORD_PAYLOAD_ERROR, $reason, self::STATUS_ERROR, self::ERROR_PAYLOAD);
+    }
+
+    public static function orderNotFound(string $reason): self
+    {
+        return new self(self::RECORD_PAYLOAD_ERROR, $reason, self::STATUS_ERROR, self::ERROR_ORDER_NOT_FOUND);
     }
 
     public static function revoke(string $revokedReason): self

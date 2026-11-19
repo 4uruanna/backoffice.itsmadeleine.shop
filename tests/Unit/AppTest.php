@@ -52,10 +52,11 @@ final class AppTest extends TestCase
     {
         ini_set('error_log', (string) $this->previousErrorLog);
         $dir = $this->root . '/var/log/deliveries';
-        foreach (glob($dir . '/*') ?: [] as $file) {
+        $anomalies = $this->root . '/var/log/deliveries-anomalies';
+        foreach ([...(glob($dir . '/*') ?: []), ...(glob($anomalies . '/*') ?: [])] as $file) {
             unlink($file);
         }
-        foreach ([$dir, $this->root . '/var/log', $this->root . '/var', $this->root] as $path) {
+        foreach ([$dir, $anomalies, $this->root . '/var/log', $this->root . '/var', $this->root] as $path) {
             if (is_dir($path)) {
                 rmdir($path);
             }
@@ -142,6 +143,28 @@ final class AppTest extends TestCase
         $record = json_decode((string) file_get_contents($files[0]), true);
         self::assertSame($body, $record['raw_body']);
         self::assertSame('Order', $record['headers']['Shopify-Topic']);
+    }
+
+    public function testLivraisonSansCommandeExploitableToujoursCopiee(): void
+    {
+        // Sans DEBUG_DELIVERIES : seules les livraisons sans commande exploitable sont gardées,
+        // pour savoir après coup ce que Shopify a envoyé (19/11 : order null, commande supprimée).
+        $valid = json_encode(Payloads::order(action: 'create'));
+        $broken = Payloads::order(action: 'update');
+        $broken['data']['order'] = null;
+        $app = $this->app();
+
+        $this->post($app, $valid, signed: true);
+        self::assertDirectoryDoesNotExist($this->root . '/var/log/deliveries-anomalies', 'livraison valide : pas de copie');
+
+        $response = $this->post($app, json_encode($broken), signed: true);
+
+        self::assertSame(200, $response->getStatusCode());
+        $files = glob($this->root . '/var/log/deliveries-anomalies/*.json') ?: [];
+        self::assertCount(1, $files);
+        $record = json_decode((string) file_get_contents($files[0]), true);
+        self::assertSame(json_encode($broken), $record['raw_body']);
+        self::assertDirectoryDoesNotExist($this->root . '/var/log/deliveries');
     }
 
     public function testTraitementDiffereEnvoieLeMailAvecLeQr(): void

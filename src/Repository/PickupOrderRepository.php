@@ -27,7 +27,7 @@ interface PickupOrderRepository
     ): ?int;
 
     /**
-     * Reprend une ligne en `error` / `payload_errors` avec des données valides.
+     * Reprend une ligne en `error` / `payload_errors` ou `order_not_found` avec des données valides.
      *
      * @return int|null id de la ligne reprise, null si aucune ligne dans cet état
      */

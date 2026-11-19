@@ -114,6 +114,51 @@ final class OrderEventHandlerTest extends TestCase
         self::assertSame(['payload_errors'], $this->alerts->codes());
     }
 
+    public function testCommandeIntrouvableCreeUneLigneOrderNotFoundAvecAlerte(): void
+    {
+        $body = Payloads::order();
+        $body['data']['order'] = null;
+
+        $summary = $this->handle($body);
+
+        self::assertSame('error', $this->row()['status']);
+        self::assertSame('order_not_found', $this->row()['error_code']);
+        self::assertSame('#' . self::ID, $this->row()['order_name']);
+        self::assertStringContainsString('introuvable', (string) $this->row()['last_error']);
+        self::assertSame(['order_not_found'], $this->alerts->codes());
+        self::assertStringContainsString('error/order_not_found', $summary);
+        self::assertSame(0, $this->tasks->count());
+    }
+
+    public function testCommandeIntrouvableNEcrasePasUneLigneExistante(): void
+    {
+        // Commande envoyée puis supprimée dans Shopify : la ligne reste telle quelle.
+        $this->handle(Payloads::order());
+        $body = Payloads::order();
+        $body['data']['order'] = null;
+
+        $summary = $this->handle($body);
+
+        self::assertSame('pending', $this->row()['status']);
+        self::assertSame([], $this->alerts->alerts);
+        self::assertStringContainsString('ligne existante conservée', $summary);
+    }
+
+    public function testLivraisonValideApresCommandeIntrouvableReprendLaCommande(): void
+    {
+        $body = Payloads::order();
+        $body['data']['order'] = null;
+        $this->handle($body);
+
+        $summary = $this->handle(Payloads::order(), 'wh-ok');
+
+        self::assertSame('pending', $this->row()['status']);
+        self::assertNull($this->row()['error_code']);
+        self::assertSame('#1094', $this->row()['order_name']);
+        self::assertStringContainsString('reprise', $summary);
+        self::assertSame(1, $this->tasks->count());
+    }
+
     public function testErrorsNEcrasePasUneLigneValide(): void
     {
         $this->handle(Payloads::order());

@@ -18,9 +18,11 @@ Lue sur `data.order` après vérification du HMAC.
 |---|---|---|
 | `errors` présent, `data.order` inutilisable | non | Insérer `error` / `payload_errors` (avec `shopify_order_id` tiré de l'enveloppe si présent), alerte |
 | `errors` présent | oui | Rien (ne pas écraser une ligne valide) ; journaliser |
+| `data.order` nul **sans** `errors` (Shopify ne trouve pas la commande : supprimée) | non | Insérer `error` / `order_not_found`, alerte « supprimée ? » ; copie brute dans `var/log/deliveries-anomalies/` (ajout du 19/11) |
+| `data.order` nul **sans** `errors` | oui | Rien (ligne conservée) ; journaliser |
 | `cancelledAt` rempli **ou** `REFUNDED` | oui | Révoquer : `revoked_at = NOW()`, `revoked_reason` ; si le mail n'est pas encore parti, il ne partira pas |
 | `cancelledAt` rempli **ou** `REFUNDED` | non | Rien |
-| `PAID` ou `PARTIALLY_REFUNDED`, non annulée, ligne en `error` / `payload_errors` | oui | **Reprise** : mise à jour des données, `status = 'pending'`, `error_code = NULL`, `attempts = 0` |
+| `PAID` ou `PARTIALLY_REFUNDED`, non annulée, ligne en `error` / `payload_errors` ou `order_not_found` | oui | **Reprise** : mise à jour des données, `status = 'pending'`, `error_code = NULL`, `attempts = 0` |
 | `PAID` ou `PARTIALLY_REFUNDED`, non annulée | oui (autre statut) | Doublon : rien |
 | `PAID` ou `PARTIALLY_REFUNDED`, non annulée, aucun produit tagué | non | Insérer `ignored` |
 | `PAID` ou `PARTIALLY_REFUNDED`, non annulée, tagué, sans e-mail | non | Insérer `error` / `no_email`, alerte |

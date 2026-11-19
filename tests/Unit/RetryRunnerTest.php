@@ -152,6 +152,18 @@ final class RetryRunnerTest extends TestCase
         self::assertStringContainsString('payload_errors', $this->transport->sent[0]->text);
     }
 
+    public function testAlerteCommandeIntrouvableExpliqueQuoiFaire(): void
+    {
+        $this->add(1, 'error', 'order_not_found');
+
+        $this->runner()->run();
+
+        $text = $this->transport->sent[0]->text;
+        self::assertStringContainsString('order_not_found', $text);
+        self::assertStringContainsString('supprimée', $text);
+        self::assertStringContainsString('https://admin.shopify.com/store/boutique/orders/', $text);
+    }
+
     public function testAlerteReporteeQuandLeBucketEstVide(): void
     {
         $this->add(1, 'error', 'no_email');

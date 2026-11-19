@@ -18,10 +18,17 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final readonly class OrderEventController
 {
+    /**
+     * @param DeliveryLog|null $deliveryLog copie de toutes les livraisons (DEBUG_DELIVERIES=1)
+     * @param DeliveryLog|null $anomalyLog  copie des seules livraisons sans commande exploitable,
+     *                                      toujours active : sans elle, impossible de savoir après coup
+     *                                      ce que Shopify a envoyé (purge du cron après 30 jours)
+     */
     public function __construct(
         private ?ShopifyHmac $hmac,
         private OrderEventHandler $handler,
         private ?DeliveryLog $deliveryLog,
+        private ?DeliveryLog $anomalyLog = null,
     ) {
     }
 
@@ -55,7 +62,16 @@ final readonly class OrderEventController
             return $response->withStatus(200);
         }
 
-        $summary = $this->handler->handle(OrderEvent::fromPayload($body), $webhookId);
+        $event = OrderEvent::fromPayload($body);
+        if ($event->order === null && $this->deliveryLog === null && $this->anomalyLog !== null) {
+            try {
+                $this->anomalyLog->write($request, $rawBody);
+            } catch (\Throwable $e) {
+                error_log('events: copie de la livraison anormale impossible : ' . $e->getMessage());
+            }
+        }
+
+        $summary = $this->handler->handle($event, $webhookId);
         error_log(sprintf('events: %s (livraison %s)', $summary, $webhookId ?? '?'));
 
         return $response->withStatus(200);

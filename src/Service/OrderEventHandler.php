@@ -35,18 +35,22 @@ final class OrderEventHandler
         switch ($decision->action) {
             case Decision::RECORD_PAYLOAD_ERROR:
                 \assert($id !== null);
+                $code = (string) $decision->errorCode;
                 $rowId = $this->orders->insertIfAbsent(
-                    $id, $event->order, Decision::STATUS_ERROR, Decision::ERROR_PAYLOAD, $decision->reason, $webhookId,
+                    $id, $event->order, Decision::STATUS_ERROR, $code, $decision->reason, $webhookId,
                 );
                 if ($rowId === null) {
-                    return "commande $id : errors ignoré, ligne existante conservée";
+                    return "commande $id : $code ignoré, ligne existante conservée";
                 }
-                $this->alerts->alert(Decision::ERROR_PAYLOAD, 'Livraison avec errors, commande non traitée', [
-                    'shopify_order_id' => $id,
-                    'errors' => $decision->reason,
-                ]);
+                $this->alerts->alert(
+                    $code,
+                    $code === Decision::ERROR_ORDER_NOT_FOUND
+                        ? 'Commande introuvable dans Shopify (supprimée ?), rien à envoyer'
+                        : 'Livraison avec errors, commande non traitée',
+                    ['shopify_order_id' => $id, 'errors' => $decision->reason],
+                );
 
-                return "commande $id : error/payload_errors";
+                return "commande $id : error/$code";
 
             case Decision::REVOKE:
                 \assert($id !== null);
